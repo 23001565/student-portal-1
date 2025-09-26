@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// A user who can login to the system: student or admin.
+/// We separate Admin and Student models but can extend User if needed.
+model Student {
+  id             Int         @id @default(autoincrement())
+  email          String      @unique
+  name           String
+  password       String
+  year           Int
+  majorId        Int
+  major          Major       @relation(fields: [majorId], references: [id])
+  enrollments    Enrollment[]
+  sessions       Session[]
+}
+
+model Admin {
+  id          Int       @id @default(autoincrement())
+  email       String   @unique
+  username    String    
+  password    String
+  announcements   Announcement[]
+}
+
+model Major {
+  id          Int        @id @default(autoincrement())
+  name        String     @unique
+  students    Student[]
+  courses     Course[]
+  announcements   Announcement[]
+}
+
+/// Represents a Course, e.g., "Calculus I"
+model Course {
+  id          Int          @id @default(autoincrement())
+  code        String       @unique       // e.g., "MATH101"
+  name        String
+  credits     Int
+  isGlobal         Boolean  @default(false)
+  majors           Major[]  // many-to-many
+  classes     Class[]
+  
+}
+
+/// A specific class section of a course with schedule info
+model Class {
+  id            Int        @id @default(autoincrement())
+  code          String     @unique
+  courseId      Int
+  course        Course     @relation(fields: [courseId], references: [id])
+  semester      Int
+  year          Int
+  capacity      Int
+  dayOfWeek     Int
+  startPeriod   Int      // e.g. 1
+  endPeriod     Int      // e.g. 2
+  location      String
+  enrollments   Enrollment[]
+  examSchedules ExamSchedule[]
+}
+
+/// Student enrollment in a specific class
+model Enrollment {
+  id         Int      @id @default(autoincrement())
+  class      Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  classId    Int
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId  Int
+  grade      Float?
+  semester   Int
+  year       Int
+
+  @@unique([studentId, classId])  // Prevent duplicate enrollment
+}
+
+
+/// Final exam schedule for a course/class
+model ExamSchedule {
+  id          Int       @id @default(autoincrement())
+  classId     Int
+  examDate    DateTime
+  location    String?
+  class       Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+}
+
+/// User session for students — to manage login duration & re-login timing
+model Session {
+  id             Int       @id @default(autoincrement())
+  studentId      Int
+  token          String    @unique
+  startedAt      DateTime  @default(now())
+  expiresAt      DateTime
+  terminatedAt   DateTime? // when user manually logs out
+  isActive       Boolean   @default(true)
+  userAgent      String?
+  ipAddress      String?
+
+  student        Student   @relation(fields: [studentId], references: [id])
+}
+
+/// Announcements that can be global or targeted
+model Announcement {
+  id          Int       @id @default(autoincrement())
+  title       String
+  content     String
+  postedById  Int?
+  postedBy    Admin?    @relation(fields: [postedById], references: [id])
+  postedAt    DateTime  @default(now())
+  targetMajorId Int?    // null = all majors, else targeted
+  targetMajor Major?    @relation(fields: [targetMajorId], references: [id])
+}
+
+model CourseRegistrationWindow {
+  id         Int      @id @default(autoincrement())
+  startTime  DateTime
+  endTime    DateTime
+  semester   Int
+  year       Int
+  isActive   Boolean   @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+
+
+
+

@@ -1,0 +1,22 @@
+npm run dev
+Start everything with Docker (your backend, frontend, database, etc.)
+
+
+npm run frontend
+Run frontend dev server only (without Docker)
+
+npm run stop
+Stop everything
+
+npm run backend
+Run backend dev server (without Docker)
+
+>>>> Typical workflow:
+
+Change schema.prisma (add/modify models or fields)
+
+Run prisma migrate dev → applies changes to DB and generates client
+
+Use the updated Prisma Client in your code
+
+If you only change something that doesn’t affect the DB but requires updating the client, you can just run prisma generate.

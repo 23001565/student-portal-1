@@ -1,0 +1,15 @@
+
+{
+  "name": "student-portal",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "docker-compose up --build",
+    "stop": "docker-compose down",
+    "frontend": "npm --workspace frontend run dev",
+    "backend": "npm --workspace backend run dev"
+  }
+}

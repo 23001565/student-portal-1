@@ -1,0 +1,46 @@
+
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - db
+      - redis
+    volumes: #only in development, not production
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npm run dev  # Use nodemon
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"   
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    working_dir: /app
+    command: npm run dev  # If you're running a dev server
+
+  db:
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: studentportal
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  pgdata:
