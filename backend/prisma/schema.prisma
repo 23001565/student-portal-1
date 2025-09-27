@@ -7,6 +7,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ClassStatus {
+  ACTIVE
+  CANCELED
+}
+
+enum EnrollmentStatus {
+  ENROLLED     // currently taking the class
+  COMPLETED    // finished with a grade
+  DROPPED      // withdrew or dropped
+  CANCELED     // never started / revoked
+}
+
+
+
+
 /// A user who can login to the system: student or admin.
 /// We separate Admin and Student models but can extend User if needed.
 model Student {
@@ -62,6 +77,9 @@ model Class {
   startPeriod   Int      // e.g. 1
   endPeriod     Int      // e.g. 2
   location      String
+  status      ClassStatus    @default(ACTIVE)
+  canceledAt  DateTime? // optional
+  archivedAt  DateTime?
   enrollments   Enrollment[]
   examSchedules ExamSchedule[]
 }
@@ -69,14 +87,19 @@ model Class {
 /// Student enrollment in a specific class
 model Enrollment {
   id         Int      @id @default(autoincrement())
-  class      Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  class      Class    @relation(fields: [classId], references: [id])
   classId    Int
-  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  student    Student  @relation(fields: [studentId], references: [id])
   studentId  Int
   grade      Float?
   semester   Int
   year       Int
-
+  status     EnrollmentStatus @default(ENROLLED)
+  createdAt       DateTime @default(now())
+  canceledAt  DateTime?
+  archivedAt  DateTime?
+  registrationWindowId Int  // new field
+  registrationWindow   CourseRegistrationWindow @relation(fields: [registrationWindowId], references: [id])
   @@unique([studentId, classId])  // Prevent duplicate enrollment
 }
 
@@ -87,7 +110,7 @@ model ExamSchedule {
   classId     Int
   examDate    DateTime
   location    String?
-  class       Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  class       Class    @relation(fields: [classId], references: [id])
 }
 
 /// User session for students — to manage login duration & re-login timing
@@ -96,7 +119,6 @@ model Session {
   studentId      Int
   token          String    @unique
   startedAt      DateTime  @default(now())
-  expiresAt      DateTime
   terminatedAt   DateTime? // when user manually logs out
   isActive       Boolean   @default(true)
   userAgent      String?

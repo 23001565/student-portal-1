@@ -48,10 +48,10 @@ async function insertCourses() {
     // Create the course with connected majors or isGlobal
     await prisma.course.create({
       data: {
-        courseCode,
-        courseName,
-        numberOfCredits: credits,
-        isGlobal,
+        code: courseCode,
+        name: courseName,
+        credits: credits,
+        isGlobal: isGlobal,
         majors: {
           connect: majorConnections
         }
