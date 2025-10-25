@@ -7,69 +7,142 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum ClassStatus {
-  ACTIVE
-  CANCELED
-}
-
 enum EnrollmentStatus {
-  ENROLLED     // currently taking the class
-  COMPLETED    // finished with a grade
-  DROPPED      // withdrew or dropped
-  CANCELED     // never started / revoked
+  ENROLLED 
+  WITHDRAWN   
+  DROPPED      // class cancelled
 }
 
-
+enum CurriculumGroupType {
+	GENERAL
+	FIELD
+	BRANCH
+	GROUP
+	MAJOR
+}
 
 
 /// A user who can login to the system: student or admin.
 /// We separate Admin and Student models but can extend User if needed.
 model Student {
   id             Int         @id @default(autoincrement())
+
+  code		 Int	     @unique
   email          String      @unique
   name           String
   password       String
   year           Int
+
   majorId        Int
   major          Major       @relation(fields: [majorId], references: [id])
+  curriculumId	Int
+  curriculum	Curriculum   @relation(fields: [curriculumId], references: [id])
+
   enrollments    Enrollment[]
   sessions       Session[]
+
+  createdAt   DateTime	@default(now())
+  archivedAt DateTime?
+
+  isActive   Boolean @default(true) // optional
 }
 
 model Admin {
   id          Int       @id @default(autoincrement())
+
   email       String   @unique
   username    String    
   password    String
+
+  createdAt   DateTime	@default(now())
+
   announcements   Announcement[]
 }
 
 model Major {
   id          Int        @id @default(autoincrement())
+
   name        String     @unique
+
   students    Student[]
-  courses     Course[]
-  announcements   Announcement[]
+  curricula	Curriculum[]
+
+  createdAt   DateTime	@default(now())
+  archivedAt DateTime?
+
 }
+
+model Curriculum {
+	id	Int	@id @default(autoincrement())
+
+	majorId	Int
+	major	Major	@relation(fields: [majorId], references: [id])
+
+  code      String  @unique
+	startYear	Int
+	endYear		Int?
+
+	courses		CurriculumGroup[]  
+	students    Student[]
+
+	archivedAt  DateTime?
+}
+
+model CurriculumGroup {
+  id              Int       @id @default(autoincrement())
+
+  name            String?
+  type            CurriculumGroupType? // used for top-level classification
+
+  required        Boolean            @default(true)
+  totalCredits    Int
+
+  parentGroupId   Int?            // if it's a subgroup
+  parentGroup     CurriculumGroup?   @relation("GroupHierarchy", fields: [parentGroupId], references: [id])
+  subgroups       CurriculumGroup[]  @relation("GroupHierarchy")
+
+  courses         GroupCourse[]      // many-to-many through join model
+
+  curriculumId    Int
+  curriculum      Curriculum         @relation(fields: [curriculumId], references: [id])
+}
+
+
+model GroupCourse {
+  id           Int       @id @default(autoincrement())
+
+  groupId      Int
+  courseId     Int
+
+  curriculumGroup   CurriculumGroup     @relation(fields: [groupId], references: [id])
+  course       Course    @relation(fields: [courseId], references: [id])
+  
+  @@unique([groupId, courseId])     // Prevent duplicate assignments
+ }
+
+
 
 /// Represents a Course, e.g., "Calculus I"
 model Course {
   id          Int          @id @default(autoincrement())
+
   code        String       @unique       // e.g., "MATH101"
   name        String
   credits     Int
-  isGlobal         Boolean  @default(false)
-  majors           Major[]  // many-to-many
+
+  groups     GroupCourse[]
   classes     Class[]
+
+  createdAt   DateTime	@default(now())
+  archivedAt DateTime?
   
 }
 
 /// A specific class section of a course with schedule info
 model Class {
   id            Int        @id @default(autoincrement())
-  code          String     @unique
-  courseId      Int
-  course        Course     @relation(fields: [courseId], references: [id])
+
+  code          String    
   semester      Int
   year          Int
   capacity      Int
@@ -77,53 +150,86 @@ model Class {
   startPeriod   Int      // e.g. 1
   endPeriod     Int      // e.g. 2
   location      String
-  status      ClassStatus    @default(ACTIVE)
+
+  courseId      Int
+  course        Course     @relation(fields: [courseId], references: [id])
+  
+  createdAt   DateTime	@default(now())
   canceledAt  DateTime? // optional
   archivedAt  DateTime?
+
   enrollments   Enrollment[]
   examSchedules ExamSchedule[]
+  
+  @@unique([code, semester, year])
+
 }
 
 /// Student enrollment in a specific class
 model Enrollment {
   id         Int      @id @default(autoincrement())
+
   class      Class    @relation(fields: [classId], references: [id])
   classId    Int
   student    Student  @relation(fields: [studentId], references: [id])
   studentId  Int
-  grade      Float?
+
+  grade      Grade?
+
   semester   Int
   year       Int
+
   status     EnrollmentStatus @default(ENROLLED)
+
   createdAt       DateTime @default(now())
-  canceledAt  DateTime?
+  updatedAt  DateTime?
   archivedAt  DateTime?
-  registrationWindowId Int  // new field
-  registrationWindow   CourseRegistrationWindow @relation(fields: [registrationWindowId], references: [id])
-  @@unique([studentId, classId])  // Prevent duplicate enrollment
+
+  @@unique([studentId, classId, semester, year])  // Prevent duplicate enrollment
+  @@index([studentId, year, semester, status])
+}
+
+model Grade {
+  id              Int @id @default(autoincrement())
+
+  enrollment      Enrollment @relation(fields: [enrollmentId], references: [id])
+  enrollmentId    Int
+
+  midTerm         Float
+  finalExam       Float
+
+  total10Scale    Float      // Provided by teacher (or calculated before submission)
+  total4Scale     Float?     // System calculated
+  letterGrade     String?    // System calculated
 }
 
 
 /// Final exam schedule for a course/class
 model ExamSchedule {
   id          Int       @id @default(autoincrement())
-  classId     Int
+
   examDate    DateTime
   location    String?
+
+  classId     Int
   class       Class    @relation(fields: [classId], references: [id])
 }
 
 /// User session for students — to manage login duration & re-login timing
 model Session {
   id             Int       @id @default(autoincrement())
-  studentId      Int
+
   token          String    @unique
+
   startedAt      DateTime  @default(now())
   terminatedAt   DateTime? // when user manually logs out
+
   isActive       Boolean   @default(true)
+
   userAgent      String?
   ipAddress      String?
 
+  studentId      Int
   student        Student   @relation(fields: [studentId], references: [id])
 }
 
@@ -135,17 +241,21 @@ model Announcement {
   postedById  Int?
   postedBy    Admin?    @relation(fields: [postedById], references: [id])
   postedAt    DateTime  @default(now())
-  targetMajorId Int?    // null = all majors, else targeted
-  targetMajor Major?    @relation(fields: [targetMajorId], references: [id])
+  
 }
 
 model CourseRegistrationWindow {
   id         Int      @id @default(autoincrement())
+
   startTime  DateTime
   endTime    DateTime
+
   semester   Int
   year       Int
+  round       Int
+
   isActive   Boolean   @default(true)
+  
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }

@@ -1,68 +1,28 @@
-const { EnrollmentStatus } = require('@prisma/client');
+import { reserveSeat } from "../services/enrollmentService.js";
+import { validateCourseSelection } from "../services/validationService.js";
 
-// Mark as completed
-await prisma.enrollment.update({
-  where: { id: enrollmentId },
-  data: {
-    status: EnrollmentStatus.COMPLETED,
-    grade: '4.0'
+export async function saveEnrollment(req, res) {
+  const { courseId } = req.body;
+  const studentId = req.user.id;
+
+  const validation = await validateCourseSelection(studentId, { course_id: courseId });
+  if (!validation.valid) {
+    return res.status(400).json({ success: false, message: validation.message });
   }
-});
 
-// Drop a course
-await prisma.enrollment.update({
-  where: { id: enrollmentId },
-  data: {
-    status: EnrollmentStatus.DROPPED
+  const seat = await reserveSeat(courseId);
+  if (!seat.success) {
+    return res.status(400).json({ success: false, message: seat.message });
   }
-});
-// Withdraw from a course
-await prisma.enrollment.update({
-  where: { id: enrollmentId },
-    data: {
-    status: EnrollmentStatus.WITHDRAWN
-  }
-});
 
-//when admin assigns a grade to an enrollment
-await prisma.enrollment.update({
-  where: { id: enrollmentId },
-  data: {
-    grade: 4.0
-  }
-});
+  // If both valid and reserved successfully → save enrollment in DB
+  await db.query(
+    "INSERT INTO enrollments (student_id, course_id, status) VALUES ($1, $2, 'submitted')",
+    [studentId, courseId]
+  );
 
-// Fetch active enrollments for a student
-const activeEnrollments = await prisma.enrollment.findMany({
-  where: {
-    studentId: student.id,
-    archivedAt: null,
-    status: 'ENROLLED'
-  },
-  include: { class: true }
-});
-
-// Show all enrollments (past and present) for transcript:
-const allEnrollments = await prisma.enrollment.findMany({
-  where: {
-    studentId: student.id
-  },
-  orderBy: {
-    createdAt: 'desc'
-  },
-  include: {
-    class: true
-  }
-});
-
-// When a student cancels:
-// Set status = 'CANCELED', canceledAt = new Date()
-
-// When a student completes:
-// Set status = 'COMPLETED', archivedAt = new Date()
-
-// When a student drops:
-// Set status = 'DROPPED', canceledAt = new Date(), archivedAt = new Date()
+  res.status(200).json({ success: true });
+}
 
 
 
