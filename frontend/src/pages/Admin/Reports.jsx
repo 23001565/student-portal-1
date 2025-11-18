@@ -169,7 +169,7 @@ const Reports = () => {
                   <Card className="text-center">
                     <Card.Body>
                       <Card.Title className="text-primary">
-                        {reportData.studentStats.total}
+                        {reportData.studentStats.total || 0}
                       </Card.Title>
                       <Card.Text>Tổng số học sinh</Card.Text>
                     </Card.Body>
@@ -179,7 +179,7 @@ const Reports = () => {
                   <Card className="text-center">
                     <Card.Body>
                       <Card.Title className="text-success">
-                        {reportData.courseStats.total}
+                        {reportData.courseStats.total || 0}
                       </Card.Title>
                       <Card.Text>Tổng số môn học</Card.Text>
                     </Card.Body>
@@ -189,7 +189,7 @@ const Reports = () => {
                   <Card className="text-center">
                     <Card.Body>
                       <Card.Title className="text-warning">
-                        {reportData.enrollmentStats.total}
+                        {reportData.enrollmentStats.total || 0}
                       </Card.Title>
                       <Card.Text>Tổng số đăng ký</Card.Text>
                     </Card.Body>
@@ -199,7 +199,7 @@ const Reports = () => {
                   <Card className="text-center">
                     <Card.Body>
                       <Card.Title className="text-info">
-                        {reportData.gradeStats.averageGrade}
+                        {reportData.gradeStats.averageGrade || 0}
                       </Card.Title>
                       <Card.Text>Điểm trung bình</Card.Text>
                     </Card.Body>
@@ -214,7 +214,7 @@ const Reports = () => {
                       <h5 className="mb-0">Học sinh theo năm</h5>
                     </Card.Header>
                     <Card.Body>
-                      {Object.entries(reportData.studentStats.byYear).map(
+                      {Object.entries(reportData.studentStats.byYear || {}).map(
                         ([year, count]) => (
                           <div key={year} className="mb-2">
                             <div className="d-flex justify-content-between">
@@ -223,7 +223,7 @@ const Reports = () => {
                             </div>
                             <ProgressBar
                               now={
-                                (count / reportData.studentStats.total) * 100
+                                (count / (reportData.studentStats.total || 1)) * 100
                               }
                               variant="primary"
                               style={{ height: "8px" }}
@@ -240,7 +240,7 @@ const Reports = () => {
                       <h5 className="mb-0">Học sinh theo chuyên ngành</h5>
                     </Card.Header>
                     <Card.Body>
-                      {Object.entries(reportData.studentStats.byMajor).map(
+                      {Object.entries(reportData.studentStats.byMajor || {}).map(
                         ([major, count]) => (
                           <div key={major} className="mb-2">
                             <div className="d-flex justify-content-between">
@@ -249,7 +249,7 @@ const Reports = () => {
                             </div>
                             <ProgressBar
                               now={
-                                (count / reportData.studentStats.total) * 100
+                                (count / (reportData.studentStats.total || 1)) * 100
                               }
                               variant="success"
                               style={{ height: "8px" }}
@@ -277,7 +277,7 @@ const Reports = () => {
                             <td>
                               <strong>Tổng số môn học</strong>
                             </td>
-                            <td>{reportData.courseStats.total}</td>
+                            <td>{reportData.courseStats.total || 0}</td>
                           </tr>
                           <tr>
                             <td>
@@ -285,7 +285,7 @@ const Reports = () => {
                             </td>
                             <td>
                               <Badge bg="success">
-                                {reportData.courseStats.active}
+                                {reportData.courseStats.active || 0}
                               </Badge>
                             </td>
                           </tr>
@@ -295,7 +295,7 @@ const Reports = () => {
                             </td>
                             <td>
                               <Badge bg="secondary">
-                                {reportData.courseStats.archived}
+                                {reportData.courseStats.archived || 0}
                               </Badge>
                             </td>
                           </tr>
@@ -310,7 +310,7 @@ const Reports = () => {
                       <h5 className="mb-0">Môn học phổ biến</h5>
                     </Card.Header>
                     <Card.Body>
-                      {reportData.courseStats.popularCourses.map(
+                      {(reportData.courseStats.popularCourses || []).map(
                         (course, index) => (
                           <div key={index} className="mb-3 p-3 border rounded">
                             <div className="d-flex justify-content-between">
@@ -342,7 +342,7 @@ const Reports = () => {
                             <td>
                               <strong>Tổng số đăng ký</strong>
                             </td>
-                            <td>{reportData.enrollmentStats.total}</td>
+                            <td>{reportData.enrollmentStats.total || 0}</td>
                           </tr>
                           <tr>
                             <td>
@@ -350,7 +350,7 @@ const Reports = () => {
                             </td>
                             <td>
                               <Badge bg="success">
-                                {reportData.enrollmentStats.active}
+                                {reportData.enrollmentStats.active || 0}
                               </Badge>
                             </td>
                           </tr>
@@ -360,7 +360,7 @@ const Reports = () => {
                             </td>
                             <td>
                               <Badge bg="info">
-                                {reportData.enrollmentStats.completed}
+                                {reportData.enrollmentStats.completed || 0}
                               </Badge>
                             </td>
                           </tr>
@@ -370,7 +370,7 @@ const Reports = () => {
                             </td>
                             <td>
                               <Badge bg="danger">
-                                {reportData.enrollmentStats.canceled}
+                                {reportData.enrollmentStats.canceled || 0}
                               </Badge>
                             </td>
                           </tr>
@@ -386,7 +386,7 @@ const Reports = () => {
                     </Card.Header>
                     <Card.Body>
                       {Object.entries(
-                        reportData.enrollmentStats.bySemester
+                        reportData.enrollmentStats.bySemester || {}
                       ).map(([semester, count]) => (
                         <div key={semester} className="mb-2">
                           <div className="d-flex justify-content-between">
@@ -395,7 +395,7 @@ const Reports = () => {
                           </div>
                           <ProgressBar
                             now={
-                              (count / reportData.enrollmentStats.total) * 100
+                              (count / (reportData.enrollmentStats.total || 1)) * 100
                             }
                             variant="warning"
                             style={{ height: "8px" }}
@@ -417,7 +417,7 @@ const Reports = () => {
                     </Card.Header>
                     <Card.Body>
                       {Object.entries(
-                        reportData.gradeStats.gradeDistribution
+                        reportData.gradeStats.gradeDistribution || {}
                       ).map(([grade, count]) => (
                         <div key={grade} className="mb-2">
                           <div className="d-flex justify-content-between">
@@ -449,7 +449,7 @@ const Reports = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {reportData.gradeStats.topPerformers.map(
+                          {(reportData.gradeStats.topPerformers || []).map(
                             (performer, index) => (
                               <tr key={index}>
                                 <td>{performer.student}</td>
@@ -480,7 +480,7 @@ const Reports = () => {
                         <Col md={4}>
                           <div className="text-center">
                             <h3 className="text-primary">
-                              {reportData.gradeStats.averageGrade}
+                              {reportData.gradeStats.averageGrade || 0}
                             </h3>
                             <p>Average Grade</p>
                           </div>
@@ -488,7 +488,7 @@ const Reports = () => {
                         <Col md={4}>
                           <div className="text-center">
                             <h3 className="text-success">
-                              {reportData.gradeStats.passRate}%
+                              {reportData.gradeStats.passRate || 0}%
                             </h3>
                             <p>Tỷ lệ thi đỗ</p>
                           </div>
@@ -512,9 +512,9 @@ const Reports = () => {
                   <h5 className="mb-0">Hệ thống hoạt động</h5>
                 </Card.Header>
                 <Card.Body>
-                  {reportData.recentActivity.length > 0 ? (
+                  {(reportData.recentActivity || []).length > 0 ? (
                     <div>
-                      {reportData.recentActivity.map((activity) => (
+                      {(reportData.recentActivity || []).map((activity) => (
                         <div
                           key={activity.id}
                           className="mb-3 p-3 border rounded"
