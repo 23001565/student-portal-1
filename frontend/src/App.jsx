@@ -10,6 +10,12 @@ import AdminDashboard from "./pages/Admin/AdminDashboard";
 import ManageCourses from "./pages/Admin/ManageCourses";
 import ManageStudents from "./pages/Admin/ManageStudents";
 import Reports from "./pages/Admin/Reports";
+import Announcements from "./pages/Admin/Announcements";
+import PostAnnouncement from "./pages/Admin/PostAnnouncement";
+import UploadGrades from "./pages/Admin/UploadGrades";
+import UploadCurriculum from "./pages/Admin/UploadCurriculum";
+import ProgressMonitor from "./pages/Admin/ProgressMonitor";
+import CourseRegistration from "./pages/CourseRegistration";
 function App() {
   return (
     <div className="app-container">
@@ -21,10 +27,16 @@ function App() {
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/grades" element={<GradesPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/registration" element={<CourseRegistration />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/courses" element={<ManageCourses />} />
             <Route path="/admin/students" element={<ManageStudents />} />
             <Route path="/admin/reports" element={<Reports />} />
+            <Route path="/admin/announcements" element={<Announcements />} />
+            <Route path="/admin/post-announcement" element={<PostAnnouncement />} />
+            <Route path="/admin/upload-grades" element={<UploadGrades />} />
+            <Route path="/admin/upload-curriculum" element={<UploadCurriculum />} />
+            <Route path="/admin/progress-monitor" element={<ProgressMonitor />} />
           </Routes>
         </BrowserRouter>
       </div>

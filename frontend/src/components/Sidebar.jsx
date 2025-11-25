@@ -24,6 +24,9 @@ const Sidebar = () => {
         <Nav.Link as={Link} to="/profile" active={isActive("/profile")}>
           Profile
         </Nav.Link>
+        <Nav.Link as={Link} to="/registration" active={isActive("/registration")}>
+          Course Registration
+        </Nav.Link>
 
         <div className="mt-3 small text-uppercase text-muted">Admin</div>
         <Nav.Link
@@ -53,6 +56,27 @@ const Sidebar = () => {
           active={isActive("/admin/reports")}
         >
           Reports
+        </Nav.Link>
+        <Nav.Link
+          as={Link}
+          to="/admin/upload-grades"
+          active={isActive("/admin/upload-grades")}
+        >
+          Upload Grades
+        </Nav.Link>
+        <Nav.Link
+          as={Link}
+          to="/admin/upload-curriculum"
+          active={isActive("/admin/upload-curriculum")}
+        >
+          Upload Curriculum
+        </Nav.Link>
+        <Nav.Link
+          as={Link}
+          to="/admin/progress-monitor"
+          active={isActive("/admin/progress-monitor")}
+        >
+          Progress Monitor
         </Nav.Link>
       </Nav>
     </div>
