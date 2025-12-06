@@ -1,5 +1,14 @@
 import { reserveSeat } from "../services/enrollmentService.js";
 import { validateCourseSelection } from "../services/validationService.js";
+import { getStudentClasses } from "../services/registrationService";
+
+export async function getRegistrationPage(req, res) {
+  const { studentId } = req.user;
+  const { curriculumId, term, year } = req.query;
+
+  const classes = await getStudentClasses(studentId, curriculumId, term, year);
+  res.json({ classes });
+}
 
 export async function saveEnrollment(req, res) {
   const { courseId } = req.body;

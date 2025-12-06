@@ -8,7 +8,6 @@ export async function getStudentProfile(studentId) {
       id: true,
       name: true,
       email: true,
-      courses: true, // if student has enrolled courses
     },
   });
 }
