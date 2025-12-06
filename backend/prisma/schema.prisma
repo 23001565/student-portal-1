@@ -192,15 +192,16 @@ model Enrollment {
 model Grade {
   id              Int @id @default(autoincrement())
 
+  enrollmentId    Int @unique
   enrollment      Enrollment @relation(fields: [enrollmentId], references: [id])
-  enrollmentId    Int
-
+  
   midTerm         Float
   finalExam       Float
 
   total10Scale    Float      // Provided by teacher (or calculated before submission)
   total4Scale     Float?     // System calculated
   letterGrade     String?    // System calculated
+  
 }
 
 
@@ -211,7 +212,7 @@ model ExamSchedule {
   examDate    DateTime
   location    String?
 
-  classId     Int
+  classId     Int     @unique
   class       Class    @relation(fields: [classId], references: [id])
 }
 

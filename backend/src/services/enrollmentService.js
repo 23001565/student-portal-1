@@ -1,6 +1,9 @@
 import redisClient from "../data/redis.js";
 
 
+export async function getClassForCurriculum(curriculumId) {
+}
+
 export async function reserveSeat(courseId) {
   const key = `course:${courseId}:seats_taken`;
   const capacityKey = `course:${courseId}:capacity`;
