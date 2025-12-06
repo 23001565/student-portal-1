@@ -1,15 +1,7 @@
 import React, { useState, useEffect } from "react";
-import {
-  Container,
-  Row,
-  Col,
-  Card,
-  Table,
-  Badge,
-  Button,
-  Alert,
-} from "react-bootstrap";
+import { Container, Row, Col, Card, Table, Badge, Button, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -33,31 +25,31 @@ const AdminDashboard = () => {
       recentAnnouncements: [
         {
           id: 1,
-          title: "Welcome Back to Semester 1!",
+          title: "Chào mừng trở lại học kỳ 1!",
           content:
-            "The new semester starts on March 1, 2025. Please check your course schedules.",
+            "Học kỳ 1 bắt đầu vào ngày 1 tháng 3 năm 2025. Vui lòng kiểm tra lịch học của bạn.",
           postedAt: "2025-10-23 09:25:51",
-          postedBy: "admin1",
+          postedBy: "Quản trị viên 1",
         },
         {
           id: 2,
-          title: "Exam Schedule Released",
-          content: "Final exam dates are now available in the portal.",
+          title: "Ngày thi cuối kỳ đã được công bố",
+          content: "Ngày thi cuối kỳ đã được công bố trên hệ thống. Vui lòng kiểm tra lịch thi của bạn.",
           postedAt: "2025-10-23 09:25:51",
-          postedBy: "admin2",
+          postedBy: "Quản trị viên 2",
         },
       ],
       upcomingExams: [
         {
           id: 1,
-          courseName: "Introduction to Programming",
+          courseName: "Lập trình cơ bản",
           examDate: "2025-05-10 09:00:00",
           location: "A101",
           className: "CS101-1",
         },
         {
           id: 2,
-          courseName: "Data Structures",
+          courseName: "Cấu trúc dữ liệu",
           examDate: "2025-05-12 09:00:00",
           location: "A102",
           className: "CS201-1",
@@ -79,9 +71,9 @@ const AdminDashboard = () => {
 
   const getStatusBadge = (isActive) => {
     return isActive ? (
-      <Badge bg="success">Active</Badge>
+      <Badge bg="success">Hoạt động</Badge>
     ) : (
-      <Badge bg="secondary">Inactive</Badge>
+      <Badge bg="secondary">Không hoạt động</Badge>
     );
   };
 
@@ -93,7 +85,7 @@ const AdminDashboard = () => {
     <Container fluid className="py-4">
       <Row>
         <Col>
-          <h2 className="mb-4">Admin Dashboard</h2>
+          <h2 className="mb-4">Trang quản lý</h2>
         </Col>
       </Row>
 
@@ -105,7 +97,7 @@ const AdminDashboard = () => {
               <Card.Title className="text-primary">
                 {dashboardData.totalStudents}
               </Card.Title>
-              <Card.Text>Total Students</Card.Text>
+              <Card.Text>Tổng số sinh viên</Card.Text>
             </Card.Body>
           </Card>
         </Col>
@@ -115,7 +107,7 @@ const AdminDashboard = () => {
               <Card.Title className="text-success">
                 {dashboardData.totalCourses}
               </Card.Title>
-              <Card.Text>Total Courses</Card.Text>
+              <Card.Text>Tổng số môn học</Card.Text>
             </Card.Body>
           </Card>
         </Col>
@@ -125,7 +117,7 @@ const AdminDashboard = () => {
               <Card.Title className="text-warning">
                 {dashboardData.totalClasses}
               </Card.Title>
-              <Card.Text>Active Classes</Card.Text>
+              <Card.Text>Lớp học hoạt động</Card.Text>
             </Card.Body>
           </Card>
         </Col>
@@ -135,7 +127,7 @@ const AdminDashboard = () => {
               <Card.Title className="text-info">
                 {dashboardData.activeEnrollments}
               </Card.Title>
-              <Card.Text>Active Enrollments</Card.Text>
+              <Card.Text>Đăng ký hoạt động</Card.Text>
             </Card.Body>
           </Card>
         </Col>
@@ -146,13 +138,13 @@ const AdminDashboard = () => {
         <Col md={6} className="mb-4">
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Recent Announcements</h5>
+              <h5 className="mb-0">Thông báo gần đây</h5>
               <Button
                 variant="outline-primary"
                 size="sm"
                 onClick={() => navigate("/admin/announcements")}
               >
-                Manage
+                Quản lý
               </Button>
             </Card.Header>
             <Card.Body>
@@ -170,14 +162,14 @@ const AdminDashboard = () => {
                           : announcement.content}
                       </p>
                       <small className="text-muted">
-                        By {announcement.postedBy} •{" "}
+                        Bởi {announcement.postedBy} •{" "}
                         {formatDateTime(announcement.postedAt)}
                       </small>
                     </div>
                   ))}
                 </div>
               ) : (
-                <Alert variant="info">No recent announcements</Alert>
+                <Alert variant="info">Không có thông báo gần đây</Alert>
               )}
             </Card.Body>
           </Card>
@@ -187,13 +179,13 @@ const AdminDashboard = () => {
         <Col md={6} className="mb-4">
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Upcoming Exams</h5>
+              <h5 className="mb-0">Kỳ thi sắp tới</h5>
               <Button
                 variant="outline-primary"
                 size="sm"
                 onClick={() => navigate("/admin/exams")}
               >
-                Manage
+                Quản lý
               </Button>
             </Card.Header>
             <Card.Body>
@@ -201,10 +193,10 @@ const AdminDashboard = () => {
                 <Table responsive size="sm">
                   <thead>
                     <tr>
-                      <th>Course</th>
-                      <th>Class</th>
-                      <th>Date</th>
-                      <th>Location</th>
+                      <th>Môn học</th>
+                      <th>Lớp học</th>
+                      <th>Ngày</th>
+                      <th>Vị trí</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -219,7 +211,7 @@ const AdminDashboard = () => {
                   </tbody>
                 </Table>
               ) : (
-                <Alert variant="info">No upcoming exams</Alert>
+                <Alert variant="info">Không có kỳ thi sắp tới</Alert>
               )}
             </Card.Body>
           </Card>
@@ -231,13 +223,13 @@ const AdminDashboard = () => {
         <Col>
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Course Registration Windows</h5>
+              <h5 className="mb-0">Cửa sổ đăng ký</h5>
               <Button
                 variant="outline-primary"
                 size="sm"
                 onClick={() => navigate("/admin/registration-windows")}
               >
-                Manage
+                Quản lý
               </Button>
             </Card.Header>
             <Card.Body>
@@ -245,11 +237,11 @@ const AdminDashboard = () => {
                 <Table responsive>
                   <thead>
                     <tr>
-                      <th>Semester</th>
-                      <th>Year</th>
-                      <th>Start Time</th>
-                      <th>End Time</th>
-                      <th>Status</th>
+                      <th>Học kỳ</th>
+                      <th>Năm</th>
+                      <th>Giờ bắt đầu</th>
+                      <th>Giờ kết thúc</th>
+                      <th>Trạng thái</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -265,7 +257,7 @@ const AdminDashboard = () => {
                   </tbody>
                 </Table>
               ) : (
-                <Alert variant="info">No registration windows</Alert>
+                <Alert variant="info">Không có cửa sổ đăng ký</Alert>
               )}
             </Card.Body>
           </Card>
@@ -277,7 +269,7 @@ const AdminDashboard = () => {
         <Col>
           <Card>
             <Card.Header>
-              <h5 className="mb-0">Quick Actions</h5>
+              <h5 className="mb-0">Hành động nhanh</h5>
             </Card.Header>
             <Card.Body>
               <Row>
@@ -287,7 +279,7 @@ const AdminDashboard = () => {
                     className="w-100"
                     onClick={() => navigate("/admin/courses")}
                   >
-                    Manage Courses
+                    Quản lý môn học
                   </Button>
                 </Col>
                 <Col md={3} className="mb-2">
@@ -296,7 +288,7 @@ const AdminDashboard = () => {
                     className="w-100"
                     onClick={() => navigate("/admin/students")}
                   >
-                    Manage Students
+                    Quản lý sinh viên
                   </Button>
                 </Col>
                 <Col md={3} className="mb-2">
@@ -305,7 +297,7 @@ const AdminDashboard = () => {
                     className="w-100"
                     onClick={() => navigate("/admin/reports")}
                   >
-                    View Reports
+                    Xem báo cáo
                   </Button>
                 </Col>
                 <Col md={3} className="mb-2">
@@ -314,7 +306,7 @@ const AdminDashboard = () => {
                     className="w-100"
                     onClick={() => navigate("/admin/announcements")}
                   >
-                    Post Announcement
+                    Đăng bài
                   </Button>
                 </Col>
               </Row>

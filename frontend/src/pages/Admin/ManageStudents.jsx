@@ -60,7 +60,7 @@ const ManageStudents = () => {
         year: 1,
         majorId: 1,
         curriculumId: 1,
-        majorName: "Computer Science",
+        majorName: "Khoa học máy tính",
         createdAt: "2025-10-23 09:22:23",
         archivedAt: null,
         isActive: true,
@@ -74,7 +74,7 @@ const ManageStudents = () => {
         year: 2,
         majorId: 1,
         curriculumId: 1,
-        majorName: "Computer Science",
+        majorName: "Khoa học máy tính",
         createdAt: "2025-10-23 09:22:23",
         archivedAt: null,
         isActive: true,
@@ -88,7 +88,7 @@ const ManageStudents = () => {
         year: 1,
         majorId: 2,
         curriculumId: 2,
-        majorName: "Business Administration",
+        majorName: "Quản trị kinh doanh",
         createdAt: "2025-10-23 09:22:23",
         archivedAt: null,
         isActive: true,
@@ -102,14 +102,14 @@ const ManageStudents = () => {
         studentId: 1,
         semester: 1,
         year: 2025,
-        status: "active",
+        status: "đang hoạt động",
         createdAt: "2025-10-23 09:24:54",
         canceledAt: null,
         archivedAt: null,
         registrationWindowId: 1,
         studentName: "Alice Nguyen",
         className: "CS101-1",
-        courseName: "Introduction to Programming",
+        courseName: "Lập trình cơ bản",
       },
       {
         id: 2,
@@ -117,14 +117,14 @@ const ManageStudents = () => {
         studentId: 2,
         semester: 1,
         year: 2025,
-        status: "active",
+        status: "đang hoạt động",
         createdAt: "2025-10-23 09:24:54",
         canceledAt: null,
         archivedAt: null,
         registrationWindowId: 1,
         studentName: "Bob Tran",
         className: "CS201-1",
-        courseName: "Data Structures",
+        courseName: "Cấu trúc dữ liệu",
       },
       {
         id: 3,
@@ -132,14 +132,14 @@ const ManageStudents = () => {
         studentId: 3,
         semester: 1,
         year: 2025,
-        status: "active",
+        status: "đang hoạt động",
         createdAt: "2025-10-23 09:24:54",
         canceledAt: null,
         archivedAt: null,
         registrationWindowId: 1,
         studentName: "Carol Le",
         className: "BA101-1",
-        courseName: "Principles of Management",
+        courseName: "Nguyên lý quản trị",
       },
     ];
 
@@ -148,21 +148,21 @@ const ManageStudents = () => {
         id: 1,
         code: "CS101-1",
         courseId: 1,
-        courseName: "Introduction to Programming",
+        courseName: "Lập trình cơ bản",
       },
-      { id: 2, code: "CS201-1", courseId: 2, courseName: "Data Structures" },
+      { id: 2, code: "CS201-1", courseId: 2, courseName: "Cấu trúc dữ liệu" },
       {
         id: 3,
         code: "BA101-1",
         courseId: 3,
-        courseName: "Principles of Management",
+        courseName: "Nguyên lý quản trị",
       },
-      { id: 4, code: "BA202-1", courseId: 4, courseName: "Marketing Basics" },
+      { id: 4, code: "BA202-1", courseId: 4, courseName: "Marketing căn bản" },
     ];
 
     const mockMajors = [
-      { id: 1, name: "Computer Science" },
-      { id: 2, name: "Business Administration" },
+      { id: 1, name: "Khoa học máy tính" },
+      { id: 2, name: "Quản trị kinh doanh" },
     ];
 
     setStudents(mockStudents);
@@ -278,7 +278,7 @@ const ManageStudents = () => {
       classId: "",
       semester: "",
       year: "",
-      status: "active",
+      status: "đang hoạt động",
     });
   };
 
@@ -324,7 +324,7 @@ const ManageStudents = () => {
         enrollment.id === enrollmentId
           ? {
               ...enrollment,
-              status: "canceled",
+              status: "đã hủy",
               canceledAt: new Date().toISOString(),
             }
           : enrollment
@@ -348,14 +348,14 @@ const ManageStudents = () => {
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case "active":
-        return <Badge bg="success">Active</Badge>;
-      case "canceled":
-        return <Badge bg="danger">Canceled</Badge>;
-      case "completed":
-        return <Badge bg="info">Completed</Badge>;
+      case "đang hoạt động":
+        return <Badge bg="success">Đang hoạt động</Badge>;
+      case "đã hủy":
+        return <Badge bg="danger">Đã hủy</Badge>;
+      case "hoàn thành":
+        return <Badge bg="info">Hoàn thành</Badge>;
       default:
-        return <Badge bg="secondary">Unknown</Badge>;
+        return <Badge bg="secondary">Không xác định</Badge>;
     }
   };
 
@@ -364,12 +364,12 @@ const ManageStudents = () => {
       <Row>
         <Col>
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2>Manage Students & Enrollments</h2>
+            <h2>Quản lý Sinh viên & Đăng ký</h2>
             <Button
               variant="primary"
               onClick={() => navigate("/admin/dashboard")}
             >
-              Back to Dashboard
+              Quay lại Bảng điều khiển
             </Button>
           </div>
         </Col>
@@ -382,14 +382,14 @@ const ManageStudents = () => {
             onSelect={(k) => setActiveTab(k)}
             className="mb-3"
           >
-            <Tab eventKey="students" title="Students">
+            <Tab eventKey="students" title="Sinh viên">
               <Card>
                 <Card.Header className="d-flex justify-content-between align-items-center">
-                  <h5 className="mb-0">Student Management</h5>
+                  <h5 className="mb-0">Quản lý Sinh viên</h5>
                   <div className="d-flex gap-2">
                     <InputGroup style={{ width: "300px" }}>
                       <FormControl
-                        placeholder="Search students..."
+                        placeholder="Tìm kiếm sinh viên..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                       />
@@ -418,13 +418,13 @@ const ManageStudents = () => {
                   <Table responsive striped hover>
                     <thead>
                       <tr>
-                        <th>Code</th>
-                        <th>Name</th>
+                        <th>Mã sinh viên</th>
+                        <th>Tên sinh viên</th>
                         <th>Email</th>
-                        <th>Year</th>
-                        <th>Major</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th>Năm</th>
+                        <th>Chuyên ngành</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -437,9 +437,9 @@ const ManageStudents = () => {
                           <td>{student.majorName}</td>
                           <td>
                             {student.archivedAt ? (
-                              <Badge bg="secondary">Archived</Badge>
+                              <Badge bg="secondary">Đã lưu trữ</Badge>
                             ) : (
-                              <Badge bg="success">Active</Badge>
+                              <Badge bg="success">Đang hoạt động</Badge>
                             )}
                           </td>
                           <td>
@@ -449,7 +449,7 @@ const ManageStudents = () => {
                               className="me-2"
                               onClick={() => handleEditStudent(student)}
                             >
-                              Edit
+                              Chỉnh sửa
                             </Button>
                             {!student.archivedAt && (
                               <Button
@@ -457,7 +457,7 @@ const ManageStudents = () => {
                                 size="sm"
                                 onClick={() => handleArchiveStudent(student.id)}
                               >
-                                Archive
+                                Lưu trữ
                               </Button>
                             )}
                           </td>
@@ -469,14 +469,14 @@ const ManageStudents = () => {
               </Card>
             </Tab>
 
-            <Tab eventKey="enrollments" title="Enrollments">
+            <Tab eventKey="enrollments" title="Đăng ký">
               <Card>
                 <Card.Header className="d-flex justify-content-between align-items-center">
-                  <h5 className="mb-0">Enrollment Management</h5>
+                  <h5 className="mb-0">Quản lý Đăng ký</h5>
                   <div className="d-flex gap-2">
                     <InputGroup style={{ width: "300px" }}>
                       <FormControl
-                        placeholder="Search enrollments..."
+                        placeholder="Tìm kiếm đăng ký..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                       />
@@ -490,12 +490,12 @@ const ManageStudents = () => {
                           classId: "",
                           semester: "",
                           year: "",
-                          status: "active",
+                          status: "đang hoạt động",
                         });
                         setShowEnrollmentModal(true);
                       }}
                     >
-                      Add Enrollment
+                      Thêm Đăng ký
                     </Button>
                   </div>
                 </Card.Header>
@@ -503,13 +503,13 @@ const ManageStudents = () => {
                   <Table responsive striped hover>
                     <thead>
                       <tr>
-                        <th>Student</th>
-                        <th>Course</th>
-                        <th>Class</th>
-                        <th>Semester/Year</th>
-                        <th>Status</th>
-                        <th>Enrolled</th>
-                        <th>Actions</th>
+                        <th>Học sinh</th>
+                        <th>Khóa học</th>
+                        <th>Lớp</th>
+                        <th>Học kỳ/Năm</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày đăng ký</th>
+                        <th>Hoạt động</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -534,9 +534,9 @@ const ManageStudents = () => {
                               className="me-2"
                               onClick={() => handleEditEnrollment(enrollment)}
                             >
-                              Edit
+                              Chỉnh sửa
                             </Button>
-                            {enrollment.status === "active" && (
+                            {enrollment.status === "đang hoạt động" && (
                               <Button
                                 variant="outline-danger"
                                 size="sm"
@@ -544,7 +544,7 @@ const ManageStudents = () => {
                                   handleCancelEnrollment(enrollment.id)
                                 }
                               >
-                                Cancel
+                                Hủy
                               </Button>
                             )}
                           </td>
@@ -567,7 +567,7 @@ const ManageStudents = () => {
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            {editingStudent ? "Edit Student" : "Add New Student"}
+            {editingStudent ? "Chỉnh sửa sinh viên" : "Thêm sinh viên Mới"}
           </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleStudentSubmit}>
@@ -575,7 +575,7 @@ const ManageStudents = () => {
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Student Code</Form.Label>
+                  <Form.Label>Mã sinh viên</Form.Label>
                   <Form.Control
                     type="number"
                     value={studentForm.code}
@@ -603,7 +603,7 @@ const ManageStudents = () => {
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Full Name</Form.Label>
+                  <Form.Label>Họ và tên</Form.Label>
                   <Form.Control
                     type="text"
                     value={studentForm.name}
@@ -616,7 +616,7 @@ const ManageStudents = () => {
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Password</Form.Label>
+                  <Form.Label>Mật khẩu</Form.Label>
                   <Form.Control
                     type="password"
                     value={studentForm.password}
@@ -634,7 +634,7 @@ const ManageStudents = () => {
             <Row>
               <Col md={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Year</Form.Label>
+                  <Form.Label>Năm</Form.Label>
                   <Form.Select
                     value={studentForm.year}
                     onChange={(e) =>
@@ -642,17 +642,17 @@ const ManageStudents = () => {
                     }
                     required
                   >
-                    <option value="">Select Year</option>
-                    <option value="1">Year 1</option>
-                    <option value="2">Year 2</option>
-                    <option value="3">Year 3</option>
-                    <option value="4">Year 4</option>
+                    <option value="">Chọn năm</option>
+                    <option value="1">Năm 1</option>
+                    <option value="2">Năm 2</option>
+                    <option value="3">Năm 3</option>
+                    <option value="4">Năm 4</option>
                   </Form.Select>
                 </Form.Group>
               </Col>
               <Col md={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Major</Form.Label>
+                  <Form.Label>Chuyên ngành</Form.Label>
                   <Form.Select
                     value={studentForm.majorId}
                     onChange={(e) =>
@@ -663,7 +663,7 @@ const ManageStudents = () => {
                     }
                     required
                   >
-                    <option value="">Select Major</option>
+                    <option value="">Chọn chuyên ngành</option>
                     {majors.map((major) => (
                       <option key={major.id} value={major.id}>
                         {major.name}
@@ -674,7 +674,7 @@ const ManageStudents = () => {
               </Col>
               <Col md={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Curriculum ID</Form.Label>
+                  <Form.Label>ID Chương trình đào tạo</Form.Label>
                   <Form.Control
                     type="number"
                     value={studentForm.curriculumId}
@@ -695,10 +695,10 @@ const ManageStudents = () => {
               variant="secondary"
               onClick={() => setShowStudentModal(false)}
             >
-              Cancel
+              Hủy
             </Button>
             <Button variant="primary" type="submit">
-              {editingStudent ? "Update" : "Add"} Student
+              {editingStudent ? "Cập nhật" : "Thêm"} sinh viên
             </Button>
           </Modal.Footer>
         </Form>
@@ -712,7 +712,7 @@ const ManageStudents = () => {
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            {editingEnrollment ? "Edit Enrollment" : "Add New Enrollment"}
+            {editingEnrollment ? "Chỉnh sửa đăng ký" : "Thêm đăng ký mới"}
           </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleEnrollmentSubmit}>
@@ -720,7 +720,7 @@ const ManageStudents = () => {
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Student</Form.Label>
+                  <Form.Label>Sinh viên</Form.Label>
                   <Form.Select
                     value={enrollmentForm.studentId}
                     onChange={(e) =>
@@ -731,7 +731,7 @@ const ManageStudents = () => {
                     }
                     required
                   >
-                    <option value="">Select Student</option>
+                    <option value="">Chọn sinh viên</option>
                     {students
                       .filter((s) => !s.archivedAt)
                       .map((student) => (
@@ -744,7 +744,7 @@ const ManageStudents = () => {
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Class</Form.Label>
+                  <Form.Label>Lớp</Form.Label>
                   <Form.Select
                     value={enrollmentForm.classId}
                     onChange={(e) =>
@@ -755,7 +755,7 @@ const ManageStudents = () => {
                     }
                     required
                   >
-                    <option value="">Select Class</option>
+                    <option value="">Chọn lớp</option>
                     {classes.map((cls) => (
                       <option key={cls.id} value={cls.id}>
                         {cls.code} - {cls.courseName}
@@ -768,7 +768,7 @@ const ManageStudents = () => {
             <Row>
               <Col md={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Semester</Form.Label>
+                  <Form.Label>Học kỳ</Form.Label>
                   <Form.Select
                     value={enrollmentForm.semester}
                     onChange={(e) =>
@@ -779,7 +779,7 @@ const ManageStudents = () => {
                     }
                     required
                   >
-                    <option value="">Select Semester</option>
+                    <option value="">Chọn học kỳ</option>
                     <option value="1">1</option>
                     <option value="2">2</option>
                     <option value="3">3</option>
@@ -788,7 +788,7 @@ const ManageStudents = () => {
               </Col>
               <Col md={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Year</Form.Label>
+                  <Form.Label>Năm</Form.Label>
                   <Form.Control
                     type="number"
                     min="2020"
@@ -806,7 +806,7 @@ const ManageStudents = () => {
               </Col>
               <Col md={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Status</Form.Label>
+                  <Form.Label>Trạng thái</Form.Label>
                   <Form.Select
                     value={enrollmentForm.status}
                     onChange={(e) =>
@@ -817,9 +817,9 @@ const ManageStudents = () => {
                     }
                     required
                   >
-                    <option value="active">Active</option>
-                    <option value="canceled">Canceled</option>
-                    <option value="completed">Completed</option>
+                    <option value="active">Đang hoạt động</option>
+                    <option value="canceled">Đã hủy</option>
+                    <option value="completed">Đã hoàn thành</option>
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -833,7 +833,7 @@ const ManageStudents = () => {
               Cancel
             </Button>
             <Button variant="primary" type="submit">
-              {editingEnrollment ? "Update" : "Add"} Enrollment
+              {editingEnrollment ? "Cập nhật" : "Thêm"} Đăng ký
             </Button>
           </Modal.Footer>
         </Form>
