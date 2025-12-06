@@ -1,0 +1,16 @@
+/* Announcement list styles */
+.announcement-card {
+  border-left: 4px solid transparent;
+}
+
+.announcement-card.priority-high {
+  border-left-color: #dc3545; /* danger */
+}
+
+.announcement-card.priority-normal {
+  border-left-color: #0dcaf0; /* info */
+}
+
+.announcement-card.priority-low {
+  border-left-color: #6c757d; /* secondary */
+}
