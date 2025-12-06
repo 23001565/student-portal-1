@@ -24,8 +24,8 @@ const Reports = () => {
         total: 150,
         byYear: { 1: 45, 2: 38, 3: 35, 4: 32 },
         byMajor: {
-          "Computer Science": 89,
-          "Business Administration": 61,
+          "Công nghệ thông tin": 89,
+          "Quản trị kinh doanh": 61,
         },
         active: 145,
         archived: 5,
@@ -36,9 +36,9 @@ const Reports = () => {
         archived: 2,
         byCredits: { 1: 2, 2: 5, 3: 15, 4: 3 },
         popularCourses: [
-          { name: "Introduction to Programming", enrollments: 45 },
-          { name: "Data Structures", enrollments: 38 },
-          { name: "Principles of Management", enrollments: 35 },
+          { name: "Lập trình cơ bản", enrollments: 45 },
+          { name: "Cấu trúc dữ liệu", enrollments: 38 },
+          { name: "Nguyên lý quản lý", enrollments: 35 },
         ],
       },
       enrollmentStats: {
@@ -72,23 +72,23 @@ const Reports = () => {
       recentActivity: [
         {
           id: 1,
-          type: "enrollment",
-          description: "New enrollment in CS101-1",
+          type: "Đăng ký",
+          description: "Đăng ký mới trong CS101-1",
           student: "Alice Nguyen",
           timestamp: "2025-10-23 10:30:00",
         },
         {
           id: 2,
-          type: "grade",
-          description: "Grade updated for CS201",
+          type: "Điểm",
+          description: "Điểm được cập nhật cho CS201",
           student: "Bob Tran",
           timestamp: "2025-10-23 09:15:00",
         },
         {
           id: 3,
-          type: "course",
-          description: "New course added: Advanced Programming",
-          admin: "admin1",
+          type: "Môn học",
+          description: "Môn học mới được thêm: Cấu trúc dữ liệu",
+          admin: "Quản trị viên 1",
           timestamp: "2025-10-22 16:45:00",
         },
       ],
@@ -102,11 +102,11 @@ const Reports = () => {
 
   const getActivityIcon = (type) => {
     switch (type) {
-      case "enrollment":
+      case "Đăng ký":
         return "📚";
-      case "grade":
+      case "Điểm":
         return "📊";
-      case "course":
+      case "Môn học":
         return "📝";
       default:
         return "📄";
@@ -114,11 +114,11 @@ const Reports = () => {
   };
 
   const getGradeColor = (grade) => {
-    if (grade >= 9.0) return "success";
-    if (grade >= 8.0) return "info";
-    if (grade >= 7.0) return "warning";
-    if (grade >= 5.0) return "secondary";
-    return "danger";
+    if (grade >= 9.0) return "Xuất sắc";
+    if (grade >= 8.0) return "Giỏi";
+    if (grade >= 7.0) return "Khá";
+    if (grade >= 5.0) return "Trung bình";
+    return "Yếu";
   };
 
   return (
@@ -126,7 +126,7 @@ const Reports = () => {
       <Row>
         <Col>
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2>Reports & Analytics</h2>
+            <h2>Báo cáo & Phân tích</h2>
             <div className="d-flex gap-2">
               <Form.Select
                 style={{ width: "120px" }}
@@ -142,15 +142,14 @@ const Reports = () => {
                 value={filterSemester}
                 onChange={(e) => setFilterSemester(parseInt(e.target.value))}
               >
-                <option value={1}>Semester 1</option>
-                <option value={2}>Semester 2</option>
-                <option value={3}>Semester 3</option>
+                <option value={1}>Học kỳ 1</option>
+                <option value={2}>Học kỳ 2</option>
               </Form.Select>
               <Button
                 variant="primary"
                 onClick={() => navigate("/admin/dashboard")}
               >
-                Back to Dashboard
+                Quay về Trang chủ
               </Button>
             </div>
           </div>
@@ -164,15 +163,15 @@ const Reports = () => {
             onSelect={(k) => setActiveTab(k)}
             className="mb-3"
           >
-            <Tab eventKey="overview" title="Overview">
+            <Tab eventKey="overview" title="Tổng quan">
               <Row>
                 <Col md={3}>
                   <Card className="text-center">
                     <Card.Body>
                       <Card.Title className="text-primary">
-                        {reportData.studentStats.total}
+                        {reportData.studentStats.total || 0}
                       </Card.Title>
-                      <Card.Text>Total Students</Card.Text>
+                      <Card.Text>Tổng số học sinh</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -180,9 +179,9 @@ const Reports = () => {
                   <Card className="text-center">
                     <Card.Body>
                       <Card.Title className="text-success">
-                        {reportData.courseStats.total}
+                        {reportData.courseStats.total || 0}
                       </Card.Title>
-                      <Card.Text>Total Courses</Card.Text>
+                      <Card.Text>Tổng số môn học</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -190,9 +189,9 @@ const Reports = () => {
                   <Card className="text-center">
                     <Card.Body>
                       <Card.Title className="text-warning">
-                        {reportData.enrollmentStats.total}
+                        {reportData.enrollmentStats.total || 0}
                       </Card.Title>
-                      <Card.Text>Total Enrollments</Card.Text>
+                      <Card.Text>Tổng số đăng ký</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -200,9 +199,9 @@ const Reports = () => {
                   <Card className="text-center">
                     <Card.Body>
                       <Card.Title className="text-info">
-                        {reportData.gradeStats.averageGrade}
+                        {reportData.gradeStats.averageGrade || 0}
                       </Card.Title>
-                      <Card.Text>Average Grade</Card.Text>
+                      <Card.Text>Điểm trung bình</Card.Text>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -212,19 +211,19 @@ const Reports = () => {
                 <Col md={6}>
                   <Card>
                     <Card.Header>
-                      <h5 className="mb-0">Students by Year</h5>
+                      <h5 className="mb-0">Học sinh theo năm</h5>
                     </Card.Header>
                     <Card.Body>
-                      {Object.entries(reportData.studentStats.byYear).map(
+                      {Object.entries(reportData.studentStats.byYear || {}).map(
                         ([year, count]) => (
                           <div key={year} className="mb-2">
                             <div className="d-flex justify-content-between">
-                              <span>Year {year}</span>
-                              <span>{count} students</span>
+                              <span>Năm {year}</span>
+                              <span>{count} Học sinh</span>
                             </div>
                             <ProgressBar
                               now={
-                                (count / reportData.studentStats.total) * 100
+                                (count / (reportData.studentStats.total || 1)) * 100
                               }
                               variant="primary"
                               style={{ height: "8px" }}
@@ -238,19 +237,19 @@ const Reports = () => {
                 <Col md={6}>
                   <Card>
                     <Card.Header>
-                      <h5 className="mb-0">Students by Major</h5>
+                      <h5 className="mb-0">Học sinh theo chuyên ngành</h5>
                     </Card.Header>
                     <Card.Body>
-                      {Object.entries(reportData.studentStats.byMajor).map(
+                      {Object.entries(reportData.studentStats.byMajor || {}).map(
                         ([major, count]) => (
                           <div key={major} className="mb-2">
                             <div className="d-flex justify-content-between">
                               <span>{major}</span>
-                              <span>{count} students</span>
+                              <span>{count} Học sinh</span>
                             </div>
                             <ProgressBar
                               now={
-                                (count / reportData.studentStats.total) * 100
+                                (count / (reportData.studentStats.total || 1)) * 100
                               }
                               variant="success"
                               style={{ height: "8px" }}
@@ -264,39 +263,39 @@ const Reports = () => {
               </Row>
             </Tab>
 
-            <Tab eventKey="courses" title="Course Analytics">
+            <Tab eventKey="courses" title="Phân tích môn học">
               <Row>
                 <Col md={6}>
                   <Card>
                     <Card.Header>
-                      <h5 className="mb-0">Course Statistics</h5>
+                      <h5 className="mb-0">Thống kê môn học</h5>
                     </Card.Header>
                     <Card.Body>
                       <Table responsive>
                         <tbody>
                           <tr>
                             <td>
-                              <strong>Total Courses</strong>
+                              <strong>Tổng số môn học</strong>
                             </td>
-                            <td>{reportData.courseStats.total}</td>
+                            <td>{reportData.courseStats.total || 0}</td>
                           </tr>
                           <tr>
                             <td>
-                              <strong>Active Courses</strong>
+                              <strong>Môn học đang hoạt động</strong>
                             </td>
                             <td>
                               <Badge bg="success">
-                                {reportData.courseStats.active}
+                                {reportData.courseStats.active || 0}
                               </Badge>
                             </td>
                           </tr>
                           <tr>
                             <td>
-                              <strong>Archived Courses</strong>
+                              <strong>Môn học đã lưu</strong>
                             </td>
                             <td>
                               <Badge bg="secondary">
-                                {reportData.courseStats.archived}
+                                {reportData.courseStats.archived || 0}
                               </Badge>
                             </td>
                           </tr>
@@ -308,16 +307,16 @@ const Reports = () => {
                 <Col md={6}>
                   <Card>
                     <Card.Header>
-                      <h5 className="mb-0">Most Popular Courses</h5>
+                      <h5 className="mb-0">Môn học phổ biến</h5>
                     </Card.Header>
                     <Card.Body>
-                      {reportData.courseStats.popularCourses.map(
+                      {(reportData.courseStats.popularCourses || []).map(
                         (course, index) => (
                           <div key={index} className="mb-3 p-3 border rounded">
                             <div className="d-flex justify-content-between">
                               <span>{course.name}</span>
                               <Badge bg="primary">
-                                {course.enrollments} enrollments
+                                {course.enrollments} đăng ký
                               </Badge>
                             </div>
                           </div>
@@ -329,49 +328,49 @@ const Reports = () => {
               </Row>
             </Tab>
 
-            <Tab eventKey="enrollments" title="Enrollment Analytics">
+            <Tab eventKey="enrollments" title="Phân tích đăng ký">
               <Row>
                 <Col md={6}>
                   <Card>
                     <Card.Header>
-                      <h5 className="mb-0">Enrollment Status</h5>
+                      <h5 className="mb-0">Trạng thái đăng ký</h5>
                     </Card.Header>
                     <Card.Body>
                       <Table responsive>
                         <tbody>
                           <tr>
                             <td>
-                              <strong>Total Enrollments</strong>
+                              <strong>Tổng số đăng ký</strong>
                             </td>
-                            <td>{reportData.enrollmentStats.total}</td>
+                            <td>{reportData.enrollmentStats.total || 0}</td>
                           </tr>
                           <tr>
                             <td>
-                              <strong>Active</strong>
+                              <strong>Đang học</strong>
                             </td>
                             <td>
                               <Badge bg="success">
-                                {reportData.enrollmentStats.active}
+                                {reportData.enrollmentStats.active || 0}
                               </Badge>
                             </td>
                           </tr>
                           <tr>
                             <td>
-                              <strong>Completed</strong>
+                              <strong>Đã hoàn thành</strong>
                             </td>
                             <td>
                               <Badge bg="info">
-                                {reportData.enrollmentStats.completed}
+                                {reportData.enrollmentStats.completed || 0}
                               </Badge>
                             </td>
                           </tr>
                           <tr>
                             <td>
-                              <strong>Canceled</strong>
+                              <strong>Đã hủy</strong>
                             </td>
                             <td>
                               <Badge bg="danger">
-                                {reportData.enrollmentStats.canceled}
+                                {reportData.enrollmentStats.canceled || 0}
                               </Badge>
                             </td>
                           </tr>
@@ -383,20 +382,20 @@ const Reports = () => {
                 <Col md={6}>
                   <Card>
                     <Card.Header>
-                      <h5 className="mb-0">Enrollments by Semester</h5>
+                      <h5 className="mb-0">Đăng ký theo học kỳ</h5>
                     </Card.Header>
                     <Card.Body>
                       {Object.entries(
-                        reportData.enrollmentStats.bySemester
+                        reportData.enrollmentStats.bySemester || {}
                       ).map(([semester, count]) => (
                         <div key={semester} className="mb-2">
                           <div className="d-flex justify-content-between">
                             <span>Semester {semester}</span>
-                            <span>{count} enrollments</span>
+                            <span>{count} đăng ký</span>
                           </div>
                           <ProgressBar
                             now={
-                              (count / reportData.enrollmentStats.total) * 100
+                              (count / (reportData.enrollmentStats.total || 1)) * 100
                             }
                             variant="warning"
                             style={{ height: "8px" }}
@@ -409,21 +408,21 @@ const Reports = () => {
               </Row>
             </Tab>
 
-            <Tab eventKey="grades" title="Grade Analytics">
+            <Tab eventKey="grades" title="Phân tích điểm">
               <Row>
                 <Col md={6}>
                   <Card>
                     <Card.Header>
-                      <h5 className="mb-0">Grade Distribution</h5>
+                      <h5 className="mb-0">Phân phối điểm</h5>
                     </Card.Header>
                     <Card.Body>
                       {Object.entries(
-                        reportData.gradeStats.gradeDistribution
+                        reportData.gradeStats.gradeDistribution || {}
                       ).map(([grade, count]) => (
                         <div key={grade} className="mb-2">
                           <div className="d-flex justify-content-between">
                             <span>{grade}</span>
-                            <span>{count} students</span>
+                            <span>{count} học sinh</span>
                           </div>
                           <ProgressBar
                             now={(count / 100) * 100}
@@ -438,19 +437,19 @@ const Reports = () => {
                 <Col md={6}>
                   <Card>
                     <Card.Header>
-                      <h5 className="mb-0">Top Performers</h5>
+                      <h5 className="mb-0">Top Điểm cao</h5>
                     </Card.Header>
                     <Card.Body>
                       <Table responsive size="sm">
                         <thead>
                           <tr>
-                            <th>Student</th>
-                            <th>Average</th>
-                            <th>Courses</th>
+                            <th>Học sinh</th>
+                            <th>Điểm trung bình</th>
+                            <th>Môn học</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {reportData.gradeStats.topPerformers.map(
+                          {(reportData.gradeStats.topPerformers || []).map(
                             (performer, index) => (
                               <tr key={index}>
                                 <td>{performer.student}</td>
@@ -474,14 +473,14 @@ const Reports = () => {
                 <Col>
                   <Card>
                     <Card.Header>
-                      <h5 className="mb-0">Academic Performance Summary</h5>
+                      <h5 className="mb-0">Tổng quan hiệu suất học tập</h5>
                     </Card.Header>
                     <Card.Body>
                       <Row>
                         <Col md={4}>
                           <div className="text-center">
                             <h3 className="text-primary">
-                              {reportData.gradeStats.averageGrade}
+                              {reportData.gradeStats.averageGrade || 0}
                             </h3>
                             <p>Average Grade</p>
                           </div>
@@ -489,15 +488,15 @@ const Reports = () => {
                         <Col md={4}>
                           <div className="text-center">
                             <h3 className="text-success">
-                              {reportData.gradeStats.passRate}%
+                              {reportData.gradeStats.passRate || 0}%
                             </h3>
-                            <p>Pass Rate</p>
+                            <p>Tỷ lệ thi đỗ</p>
                           </div>
                         </Col>
                         <Col md={4}>
                           <div className="text-center">
                             <h3 className="text-info">85%</h3>
-                            <p>Retention Rate</p>
+                            <p>Tỷ lệ giữ học sinh</p>
                           </div>
                         </Col>
                       </Row>
@@ -507,15 +506,15 @@ const Reports = () => {
               </Row>
             </Tab>
 
-            <Tab eventKey="activity" title="Recent Activity">
+            <Tab eventKey="activity" title="Hoạt động gần đây">
               <Card>
                 <Card.Header>
-                  <h5 className="mb-0">System Activity Log</h5>
+                  <h5 className="mb-0">Hệ thống hoạt động</h5>
                 </Card.Header>
                 <Card.Body>
-                  {reportData.recentActivity.length > 0 ? (
+                  {(reportData.recentActivity || []).length > 0 ? (
                     <div>
-                      {reportData.recentActivity.map((activity) => (
+                      {(reportData.recentActivity || []).map((activity) => (
                         <div
                           key={activity.id}
                           className="mb-3 p-3 border rounded"
@@ -531,8 +530,8 @@ const Reports = () => {
                               <h6 className="mb-1">{activity.description}</h6>
                               <small className="text-muted">
                                 {activity.student &&
-                                  `Student: ${activity.student}`}
-                                {activity.admin && `Admin: ${activity.admin}`}
+                                  `Học sinh: ${activity.student}`}
+                                {activity.admin && `Quản trị viên: ${activity.admin}`}
                                 {" • "}
                                 {formatDateTime(activity.timestamp)}
                               </small>
@@ -542,7 +541,7 @@ const Reports = () => {
                       ))}
                     </div>
                   ) : (
-                    <Alert variant="info">No recent activity</Alert>
+                    <Alert variant="info">Không có hoạt động gần đây</Alert>
                   )}
                 </Card.Body>
               </Card>

@@ -19,7 +19,7 @@ import { useNavigate } from "react-router-dom";
 
 const ManageCourses = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("courses");
+  const [activeTab, setActiveTab] = useState("các khóa học của trường");
   const [courses, setCourses] = useState([]);
   const [classes, setClasses] = useState([]);
   const [showCourseModal, setShowCourseModal] = useState(false);
@@ -55,7 +55,7 @@ const ManageCourses = () => {
       {
         id: 1,
         code: "CS101",
-        name: "Introduction to Programming",
+        name: "Lập trình cơ bản",
         credits: 3,
         createdAt: "2025-10-23 09:23:13",
         archivedAt: null,
@@ -63,7 +63,7 @@ const ManageCourses = () => {
       {
         id: 2,
         code: "CS201",
-        name: "Data Structures",
+        name: "Cấu trúc dữ liệu",
         credits: 3,
         createdAt: "2025-10-23 09:23:13",
         archivedAt: null,
@@ -71,7 +71,7 @@ const ManageCourses = () => {
       {
         id: 3,
         code: "BA101",
-        name: "Principles of Management",
+        name: "Nguyên lý quản lý",
         credits: 3,
         createdAt: "2025-10-23 09:23:13",
         archivedAt: null,
@@ -79,7 +79,7 @@ const ManageCourses = () => {
       {
         id: 4,
         code: "BA202",
-        name: "Marketing Basics",
+        name: "Kinh tế học cơ bản",
         credits: 3,
         createdAt: "2025-10-23 09:23:13",
         archivedAt: null,
@@ -100,7 +100,7 @@ const ManageCourses = () => {
         midTermRatio: 0.4,
         finalExamRatio: 0.6,
         courseId: 1,
-        courseName: "Introduction to Programming",
+        courseName: "Lập trình cơ bản",
         createdAt: "2025-10-23 09:24:20",
         canceledAt: null,
         archivedAt: null,
@@ -118,7 +118,7 @@ const ManageCourses = () => {
         midTermRatio: 0.4,
         finalExamRatio: 0.6,
         courseId: 2,
-        courseName: "Data Structures",
+        courseName: "Cấu trúc dữ liệu",
         createdAt: "2025-10-23 09:24:20",
         canceledAt: null,
         archivedAt: null,
@@ -282,15 +282,15 @@ const ManageCourses = () => {
 
   const getDayName = (dayOfWeek) => {
     const days = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
+      "Chủ nhật",
+      "Thứ hai",
+      "Thứ ba",
+      "Thứ tư",
+      "Thứ tư",
+      "Thứ năm",
+      "Thứ sáu",
     ];
-    return days[dayOfWeek] || "Unknown";
+    return days[dayOfWeek] || "Không xác định";
   };
 
   return (
@@ -298,12 +298,12 @@ const ManageCourses = () => {
       <Row>
         <Col>
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2>Manage Courses & Classes</h2>
+            <h2>Quản lý môn học và lớp học</h2>
             <Button
               variant="primary"
               onClick={() => navigate("/admin/dashboard")}
             >
-              Back to Dashboard
+              Quay về Trang chủ
             </Button>
           </div>
         </Col>
@@ -316,14 +316,14 @@ const ManageCourses = () => {
             onSelect={(k) => setActiveTab(k)}
             className="mb-3"
           >
-            <Tab eventKey="courses" title="Courses">
+            <Tab eventKey="courses" title="Môn học">
               <Card>
                 <Card.Header className="d-flex justify-content-between align-items-center">
-                  <h5 className="mb-0">Course Management</h5>
+                  <h5 className="mb-0">Quản lý môn học</h5>
                   <div className="d-flex gap-2">
                     <InputGroup style={{ width: "300px" }}>
                       <FormControl
-                        placeholder="Search courses..."
+                        placeholder="Tìm kiếm môn học..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                       />
@@ -336,7 +336,7 @@ const ManageCourses = () => {
                         setShowCourseModal(true);
                       }}
                     >
-                      Add Course
+                      Thêm môn học
                     </Button>
                   </div>
                 </Card.Header>
@@ -344,12 +344,12 @@ const ManageCourses = () => {
                   <Table responsive striped hover>
                     <thead>
                       <tr>
-                        <th>Code</th>
-                        <th>Name</th>
-                        <th>Credits</th>
-                        <th>Created</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th>Mã môn học</th>
+                        <th>Tên môn học</th>
+                        <th>Số tín chỉ</th>
+                        <th>Ngày tạo</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -365,9 +365,9 @@ const ManageCourses = () => {
                           </td>
                           <td>
                             {course.archivedAt ? (
-                              <Badge bg="secondary">Archived</Badge>
+                              <Badge bg="secondary">Đã lưu</Badge>
                             ) : (
-                              <Badge bg="success">Active</Badge>
+                              <Badge bg="success">Đang hoạt động</Badge>
                             )}
                           </td>
                           <td>
@@ -377,7 +377,7 @@ const ManageCourses = () => {
                               className="me-2"
                               onClick={() => handleEditCourse(course)}
                             >
-                              Edit
+                              Sửa
                             </Button>
                             {!course.archivedAt && (
                               <Button
@@ -385,7 +385,7 @@ const ManageCourses = () => {
                                 size="sm"
                                 onClick={() => handleArchiveCourse(course.id)}
                               >
-                                Archive
+                                Lưu
                               </Button>
                             )}
                           </td>
@@ -397,14 +397,14 @@ const ManageCourses = () => {
               </Card>
             </Tab>
 
-            <Tab eventKey="classes" title="Classes">
+            <Tab eventKey="classes" title="Lớp học">
               <Card>
                 <Card.Header className="d-flex justify-content-between align-items-center">
-                  <h5 className="mb-0">Class Management</h5>
+                  <h5 className="mb-0">Quản lý lớp học</h5>
                   <div className="d-flex gap-2">
                     <InputGroup style={{ width: "300px" }}>
                       <FormControl
-                        placeholder="Search classes..."
+                        placeholder="Tìm kiếm lớp học..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                       />
@@ -429,7 +429,7 @@ const ManageCourses = () => {
                         setShowClassModal(true);
                       }}
                     >
-                      Add Class
+                      Thêm lớp học
                     </Button>
                   </div>
                 </Card.Header>
@@ -437,14 +437,14 @@ const ManageCourses = () => {
                   <Table responsive striped hover>
                     <thead>
                       <tr>
-                        <th>Code</th>
-                        <th>Course</th>
-                        <th>Semester/Year</th>
-                        <th>Schedule</th>
-                        <th>Capacity</th>
-                        <th>Location</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <th>Mã lớp học</th>
+                        <th>Môn học</th>
+                        <th>Học kỳ/Năm</th>
+                        <th>Lịch học</th>
+                        <th>Sức chứa</th>
+                        <th>Vị trí</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -464,9 +464,9 @@ const ManageCourses = () => {
                           <td>{cls.location}</td>
                           <td>
                             {cls.archivedAt ? (
-                              <Badge bg="secondary">Archived</Badge>
+                              <Badge bg="secondary">Đã lưu</Badge>
                             ) : (
-                              <Badge bg="success">Active</Badge>
+                              <Badge bg="success">Đang hoạt động</Badge>
                             )}
                           </td>
                           <td>
@@ -476,7 +476,7 @@ const ManageCourses = () => {
                               className="me-2"
                               onClick={() => handleEditClass(cls)}
                             >
-                              Edit
+                              Sửa
                             </Button>
                             {!cls.archivedAt && (
                               <Button
@@ -484,7 +484,7 @@ const ManageCourses = () => {
                                 size="sm"
                                 onClick={() => handleArchiveClass(cls.id)}
                               >
-                                Archive
+                                Lưu
                               </Button>
                             )}
                           </td>
@@ -507,7 +507,7 @@ const ManageCourses = () => {
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            {editingCourse ? "Edit Course" : "Add New Course"}
+            {editingCourse ? "Sửa môn học" : "Thêm môn học mới"}
           </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleCourseSubmit}>
@@ -515,7 +515,7 @@ const ManageCourses = () => {
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Course Code</Form.Label>
+                  <Form.Label>Mã môn học</Form.Label>
                   <Form.Control
                     type="text"
                     value={courseForm.code}
@@ -528,7 +528,7 @@ const ManageCourses = () => {
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Credits</Form.Label>
+                  <Form.Label>Số tín chỉ</Form.Label>
                   <Form.Control
                     type="number"
                     min="1"
@@ -543,7 +543,7 @@ const ManageCourses = () => {
               </Col>
             </Row>
             <Form.Group className="mb-3">
-              <Form.Label>Course Name</Form.Label>
+              <Form.Label>Tên môn học</Form.Label>
               <Form.Control
                 type="text"
                 value={courseForm.name}
@@ -559,10 +559,10 @@ const ManageCourses = () => {
               variant="secondary"
               onClick={() => setShowCourseModal(false)}
             >
-              Cancel
+              Hủy
             </Button>
             <Button variant="primary" type="submit">
-              {editingCourse ? "Update" : "Add"} Course
+              {editingCourse ? "Cập nhật" : "Thêm"} môn học
             </Button>
           </Modal.Footer>
         </Form>
@@ -576,7 +576,7 @@ const ManageCourses = () => {
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            {editingClass ? "Edit Class" : "Add New Class"}
+            {editingClass ? "Sửa lớp học" : "Thêm lớp học mới"}
           </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleClassSubmit}>
@@ -584,7 +584,7 @@ const ManageCourses = () => {
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Class Code</Form.Label>
+                  <Form.Label>Mã lớp học</Form.Label>
                   <Form.Control
                     type="text"
                     value={classForm.code}
@@ -597,7 +597,7 @@ const ManageCourses = () => {
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Course</Form.Label>
+                  <Form.Label>Môn học</Form.Label>
                   <Form.Select
                     value={classForm.courseId}
                     onChange={(e) =>
@@ -605,7 +605,7 @@ const ManageCourses = () => {
                     }
                     required
                   >
-                    <option value="">Select Course</option>
+                    <option value="">Chọn môn học</option>
                     {courses
                       .filter((c) => !c.archivedAt)
                       .map((course) => (
@@ -620,7 +620,7 @@ const ManageCourses = () => {
             <Row>
               <Col md={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Semester</Form.Label>
+                  <Form.Label>Học kỳ</Form.Label>
                   <Form.Select
                     value={classForm.semester}
                     onChange={(e) =>
@@ -628,7 +628,7 @@ const ManageCourses = () => {
                     }
                     required
                   >
-                    <option value="">Select Semester</option>
+                    <option value="">Chọn học kỳ</option>
                     <option value="1">1</option>
                     <option value="2">2</option>
                     <option value="3">3</option>
@@ -637,7 +637,7 @@ const ManageCourses = () => {
               </Col>
               <Col md={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Year</Form.Label>
+                  <Form.Label>Năm</Form.Label>
                   <Form.Control
                     type="number"
                     min="2020"
@@ -652,7 +652,7 @@ const ManageCourses = () => {
               </Col>
               <Col md={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Capacity</Form.Label>
+                  <Form.Label>Sức chứa</Form.Label>
                   <Form.Control
                     type="number"
                     min="1"
@@ -669,7 +669,7 @@ const ManageCourses = () => {
             <Row>
               <Col md={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Day of Week</Form.Label>
+                  <Form.Label>Ngày trong tuần</Form.Label>
                   <Form.Select
                     value={classForm.dayOfWeek}
                     onChange={(e) =>
@@ -677,20 +677,20 @@ const ManageCourses = () => {
                     }
                     required
                   >
-                    <option value="">Select Day</option>
-                    <option value="1">Monday</option>
-                    <option value="2">Tuesday</option>
-                    <option value="3">Wednesday</option>
-                    <option value="4">Thursday</option>
-                    <option value="5">Friday</option>
-                    <option value="6">Saturday</option>
-                    <option value="0">Sunday</option>
+                    <option value="">Chọn ngày</option>
+                    <option value="1">Thứ hai</option>
+                    <option value="2">Thứ ba</option>
+                    <option value="3">Thứ tư</option>
+                    <option value="4">Thứ năm</option>
+                    <option value="5">Thứ sáu</option>
+                    <option value="6">Thứ bảy</option>
+                    <option value="0">Chủ nhật</option>
                   </Form.Select>
                 </Form.Group>
               </Col>
               <Col md={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Start Period</Form.Label>
+                  <Form.Label>Giờ bắt đầu</Form.Label>
                   <Form.Control
                     type="number"
                     min="1"
@@ -708,7 +708,7 @@ const ManageCourses = () => {
               </Col>
               <Col md={4}>
                 <Form.Group className="mb-3">
-                  <Form.Label>End Period</Form.Label>
+                  <Form.Label>Giờ kết thúc</Form.Label>
                   <Form.Control
                     type="number"
                     min="1"
@@ -725,7 +725,7 @@ const ManageCourses = () => {
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Location</Form.Label>
+                  <Form.Label>Vị trí</Form.Label>
                   <Form.Control
                     type="text"
                     value={classForm.location}
@@ -738,7 +738,7 @@ const ManageCourses = () => {
               </Col>
               <Col md={3}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Mid-term Ratio</Form.Label>
+                  <Form.Label>Tỷ lệ điểm giữa kỳ</Form.Label>
                   <Form.Control
                     type="number"
                     min="0"
@@ -757,7 +757,7 @@ const ManageCourses = () => {
               </Col>
               <Col md={3}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Final Exam Ratio</Form.Label>
+                  <Form.Label>Tỷ lệ điểm cuối kỳ</Form.Label>
                   <Form.Control
                     type="number"
                     min="0"
@@ -781,10 +781,10 @@ const ManageCourses = () => {
               variant="secondary"
               onClick={() => setShowClassModal(false)}
             >
-              Cancel
+              Hủy
             </Button>
             <Button variant="primary" type="submit">
-              {editingClass ? "Update" : "Add"} Class
+              {editingClass ? "Cập nhật" : "Thêm"} lớp học
             </Button>
           </Modal.Footer>
         </Form>
