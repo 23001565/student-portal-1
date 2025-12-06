@@ -59,4 +59,23 @@ await prisma.enrollment.create({
   }
 });
 
+import redis from '../data/redis.js';
+import { cacheRegistrationData } from '../services/registrationService.js';
+
+
+export const startRegistrationRound = async (req, res) => {
+  const { year, semester, startTime, endTime } = req.body;
+
+  // Save active round info to Redis
+  await redis.set('registration_round:active', JSON.stringify({
+    year, semester, startTime, endTime
+  }));
+
+  // Cache all relevant data
+  await cacheRegistrationData(year, semester);
+
+  return res.status(200).json({ message: 'Registration round started and cache preloaded.' });
+};
+
+
 

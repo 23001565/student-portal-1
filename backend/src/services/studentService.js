@@ -1,4 +1,5 @@
 import prisma from '../data/prisma.js';
+import redis from '../data/redis.js';
 
 export async function getStudentProfile(studentId) {
   return await prisma.student.findUnique({
@@ -7,7 +8,9 @@ export async function getStudentProfile(studentId) {
       id: true,
       name: true,
       email: true,
-      courses: true, // if student has enrolled courses
     },
   });
 }
+
+
+
