@@ -2,14 +2,14 @@
    Global Styles & Reset
    ============================================ */
 :root {
-  --primary-color: #4f46e5;
-  --primary-dark: #4338ca;
-  --primary-light: #6366f1;
-  --secondary-color: #10b981;
+  --primary-color: #2f8f2f;
+  --primary-dark: #256e25;
+  --primary-light: #4ca84c;
+  --secondary-color: #6bbc6b;
   --danger-color: #ef4444;
   --warning-color: #f59e0b;
-  --success-color: #10b981;
-  --info-color: #3b82f6;
+  --success-color: #2f8f2f;
+  --info-color: #2f8f2f;
 
   --bg-primary: #ffffff;
   --bg-secondary: #f9fafb;
@@ -67,7 +67,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: linear-gradient(135deg, #f3fff2 0%, #d8f3d3 100%);
   position: relative;
 }
 

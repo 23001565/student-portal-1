@@ -1,6 +1,7 @@
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Login from "./pages/LoginPage";
+import HomePage from "./pages/HomePage";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import CoursesPage from "./pages/CoursesPage";
@@ -22,7 +23,8 @@ function App() {
       <div className="app-content">
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Login />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/grades" element={<GradesPage />} />
@@ -33,10 +35,19 @@ function App() {
             <Route path="/admin/students" element={<ManageStudents />} />
             <Route path="/admin/reports" element={<Reports />} />
             <Route path="/admin/announcements" element={<Announcements />} />
-            <Route path="/admin/post-announcement" element={<PostAnnouncement />} />
+            <Route
+              path="/admin/post-announcement"
+              element={<PostAnnouncement />}
+            />
             <Route path="/admin/upload-grades" element={<UploadGrades />} />
-            <Route path="/admin/upload-curriculum" element={<UploadCurriculum />} />
-            <Route path="/admin/progress-monitor" element={<ProgressMonitor />} />
+            <Route
+              path="/admin/upload-curriculum"
+              element={<UploadCurriculum />}
+            />
+            <Route
+              path="/admin/progress-monitor"
+              element={<ProgressMonitor />}
+            />
           </Routes>
         </BrowserRouter>
       </div>

@@ -6,7 +6,6 @@ const LoginPage = () => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    userType: "student", // 'student' hoặc 'admin'
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,7 +30,7 @@ const LoginPage = () => {
         localStorage.setItem("token", response.token);
 
         // Redirect dựa trên loại user
-        if (formData.userType === "admin") {
+        if (response.userType === "admin") {
           navigate("/admin/dashboard");
         } else {
           navigate("/dashboard");
@@ -98,23 +97,34 @@ const LoginPage = () => {
       ],
     };
 
-    const users = mockUsers[data.userType];
-    const user = users.find(
+    const studentUser = mockUsers.student.find(
       (u) => u.email === data.email && u.password === data.password
     );
-
-    if (user) {
+    if (studentUser) {
       return {
         success: true,
-        user: user,
+        userType: "student",
+        user: studentUser,
         token: `token_${Date.now()}`,
       };
-    } else {
+    }
+
+    const adminUser = mockUsers.admin.find(
+      (u) => u.email === data.email && u.password === data.password
+    );
+    if (adminUser) {
       return {
-        success: false,
-        message: "Email hoặc mật khẩu không đúng",
+        success: true,
+        userType: "admin",
+        user: adminUser,
+        token: `token_${Date.now()}`,
       };
     }
+
+    return {
+      success: false,
+      message: "Email hoặc mật khẩu không đúng",
+    };
   };
 
   return (
@@ -123,54 +133,9 @@ const LoginPage = () => {
         <div className="page-frame">
           <div className="page-header">
             <h1 className="page-title text-center">Đăng nhập vào hệ thống</h1>
-            <p className="page-subtitle text-center">
-              Chọn loại tài khoản để đăng nhập
-            </p>
+            <p className="page-subtitle text-center">Nhập email và mật khẩu</p>
           </div>
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* User Type Selection */}
-            <div className="form-group">
-              <label className="form-label">Loại tài khoản</label>
-              <div
-                style={{ display: "flex", gap: "1rem", marginTop: "0.5rem" }}
-              >
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    cursor: "pointer",
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="userType"
-                    value="student"
-                    checked={formData.userType === "student"}
-                    onChange={handleChange}
-                    style={{ marginRight: "0.5rem" }}
-                  />
-                  Sinh viên
-                </label>
-                <label
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    cursor: "pointer",
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="userType"
-                    value="admin"
-                    checked={formData.userType === "admin"}
-                    onChange={handleChange}
-                    style={{ marginRight: "0.5rem" }}
-                  />
-                  Quản trị viên
-                </label>
-              </div>
-            </div>
-
             {/* Email Input */}
             <div className="form-group">
               <label htmlFor="email" className="form-label">
@@ -225,26 +190,6 @@ const LoginPage = () => {
               >
                 {loading ? "Đang đăng nhập..." : "Đăng nhập"}
               </Button>
-            </div>
-
-            {/* Demo Credentials */}
-            <div
-              className="card"
-              style={{ marginTop: "1.5rem", background: "var(--bg-secondary)" }}
-            >
-              <div
-                style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}
-              >
-                <p style={{ fontWeight: "600", marginBottom: "0.5rem" }}>
-                  Tài khoản demo:
-                </p>
-                <p>
-                  <strong>Sinh viên:</strong> 22001497@hus.edu / 123456
-                </p>
-                <p>
-                  <strong>Admin:</strong> 23001497@hus.edu / 123456
-                </p>
-              </div>
             </div>
           </form>
         </div>
