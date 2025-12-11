@@ -1,0 +1,48 @@
+/* Layout Component Styles */
+.layout-container {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 2rem;
+  width: 100%;
+  align-items: start;
+  transition: grid-template-columns 0.3s ease;
+}
+
+.layout-container.collapsed {
+  grid-template-columns: 80px 1fr;
+}
+
+.layout-sidebar {
+  position: sticky;
+  top: 2rem;
+  height: fit-content;
+}
+
+.layout-main {
+  min-width: 0; /* Prevents grid overflow */
+  width: 100%;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .layout-container {
+    grid-template-columns: 240px 1fr;
+    gap: 1.5rem;
+  }
+
+  .layout-container.collapsed {
+    grid-template-columns: 80px 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .layout-container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .layout-sidebar {
+    position: relative;
+    top: 0;
+  }
+}

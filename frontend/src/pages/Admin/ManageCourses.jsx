@@ -16,6 +16,7 @@ import {
   FormControl,
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import Layout from "../../components/Layout";
 
 const ManageCourses = () => {
   const navigate = useNavigate();
@@ -294,502 +295,513 @@ const ManageCourses = () => {
   };
 
   return (
-    <Container fluid className="py-4">
-      <Row>
-        <Col>
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2>Quản lý môn học và lớp học</h2>
-            <Button
-              variant="primary"
-              onClick={() => navigate("/admin/dashboard")}
+    <Layout>
+      <Container fluid className="py-4">
+        <Row>
+          <Col>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h2>Quản lý môn học và lớp học</h2>
+              <Button
+                variant="primary"
+                onClick={() => navigate("/admin/dashboard")}
+              >
+                Quay về Trang chủ
+              </Button>
+            </div>
+          </Col>
+        </Row>
+
+        <Row>
+          <Col>
+            <Tabs
+              activeKey={activeTab}
+              onSelect={(k) => setActiveTab(k)}
+              className="mb-3"
             >
-              Quay về Trang chủ
-            </Button>
-          </div>
-        </Col>
-      </Row>
-
-      <Row>
-        <Col>
-          <Tabs
-            activeKey={activeTab}
-            onSelect={(k) => setActiveTab(k)}
-            className="mb-3"
-          >
-            <Tab eventKey="courses" title="Môn học">
-              <Card>
-                <Card.Header className="d-flex justify-content-between align-items-center">
-                  <h5 className="mb-0">Quản lý môn học</h5>
-                  <div className="d-flex gap-2">
-                    <InputGroup style={{ width: "300px" }}>
-                      <FormControl
-                        placeholder="Tìm kiếm môn học..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </InputGroup>
-                    <Button
-                      variant="success"
-                      onClick={() => {
-                        setEditingCourse(null);
-                        setCourseForm({ code: "", name: "", credits: "" });
-                        setShowCourseModal(true);
-                      }}
-                    >
-                      Thêm môn học
-                    </Button>
-                  </div>
-                </Card.Header>
-                <Card.Body>
-                  <Table responsive striped hover>
-                    <thead>
-                      <tr>
-                        <th>Mã môn học</th>
-                        <th>Tên môn học</th>
-                        <th>Số tín chỉ</th>
-                        <th>Ngày tạo</th>
-                        <th>Trạng thái</th>
-                        <th>Hành động</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredCourses.map((course) => (
-                        <tr key={course.id}>
-                          <td>{course.code}</td>
-                          <td>{course.name}</td>
-                          <td>{course.credits}</td>
-                          <td>
-                            {new Date(course.createdAt).toLocaleDateString(
-                              "vi-VN"
-                            )}
-                          </td>
-                          <td>
-                            {course.archivedAt ? (
-                              <Badge bg="secondary">Đã lưu</Badge>
-                            ) : (
-                              <Badge bg="success">Đang hoạt động</Badge>
-                            )}
-                          </td>
-                          <td>
-                            <Button
-                              variant="outline-primary"
-                              size="sm"
-                              className="me-2"
-                              onClick={() => handleEditCourse(course)}
-                            >
-                              Sửa
-                            </Button>
-                            {!course.archivedAt && (
-                              <Button
-                                variant="outline-warning"
-                                size="sm"
-                                onClick={() => handleArchiveCourse(course.id)}
-                              >
-                                Lưu
-                              </Button>
-                            )}
-                          </td>
+              <Tab eventKey="courses" title="Môn học">
+                <Card>
+                  <Card.Header className="d-flex justify-content-between align-items-center">
+                    <h5 className="mb-0">Quản lý môn học</h5>
+                    <div className="d-flex gap-2">
+                      <InputGroup style={{ width: "300px" }}>
+                        <FormControl
+                          placeholder="Tìm kiếm môn học..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                      </InputGroup>
+                      <Button
+                        variant="success"
+                        onClick={() => {
+                          setEditingCourse(null);
+                          setCourseForm({ code: "", name: "", credits: "" });
+                          setShowCourseModal(true);
+                        }}
+                      >
+                        Thêm môn học
+                      </Button>
+                    </div>
+                  </Card.Header>
+                  <Card.Body>
+                    <Table responsive striped hover>
+                      <thead>
+                        <tr>
+                          <th>Mã môn học</th>
+                          <th>Tên môn học</th>
+                          <th>Số tín chỉ</th>
+                          <th>Ngày tạo</th>
+                          <th>Trạng thái</th>
+                          <th>Hành động</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </Card.Body>
-              </Card>
-            </Tab>
+                      </thead>
+                      <tbody>
+                        {filteredCourses.map((course) => (
+                          <tr key={course.id}>
+                            <td>{course.code}</td>
+                            <td>{course.name}</td>
+                            <td>{course.credits}</td>
+                            <td>
+                              {new Date(course.createdAt).toLocaleDateString(
+                                "vi-VN"
+                              )}
+                            </td>
+                            <td>
+                              {course.archivedAt ? (
+                                <Badge bg="secondary">Đã lưu</Badge>
+                              ) : (
+                                <Badge bg="success">Đang hoạt động</Badge>
+                              )}
+                            </td>
+                            <td>
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                className="me-2"
+                                onClick={() => handleEditCourse(course)}
+                              >
+                                Sửa
+                              </Button>
+                              {!course.archivedAt && (
+                                <Button
+                                  variant="outline-warning"
+                                  size="sm"
+                                  onClick={() => handleArchiveCourse(course.id)}
+                                >
+                                  Lưu
+                                </Button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </Card.Body>
+                </Card>
+              </Tab>
 
-            <Tab eventKey="classes" title="Lớp học">
-              <Card>
-                <Card.Header className="d-flex justify-content-between align-items-center">
-                  <h5 className="mb-0">Quản lý lớp học</h5>
-                  <div className="d-flex gap-2">
-                    <InputGroup style={{ width: "300px" }}>
-                      <FormControl
-                        placeholder="Tìm kiếm lớp học..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </InputGroup>
-                    <Button
-                      variant="success"
-                      onClick={() => {
-                        setEditingClass(null);
+              <Tab eventKey="classes" title="Lớp học">
+                <Card>
+                  <Card.Header className="d-flex justify-content-between align-items-center">
+                    <h5 className="mb-0">Quản lý lớp học</h5>
+                    <div className="d-flex gap-2">
+                      <InputGroup style={{ width: "300px" }}>
+                        <FormControl
+                          placeholder="Tìm kiếm lớp học..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                      </InputGroup>
+                      <Button
+                        variant="success"
+                        onClick={() => {
+                          setEditingClass(null);
+                          setClassForm({
+                            code: "",
+                            semester: "",
+                            year: "",
+                            capacity: "",
+                            dayOfWeek: "",
+                            startPeriod: "",
+                            endPeriod: "",
+                            location: "",
+                            midTermRatio: "",
+                            finalExamRatio: "",
+                            courseId: "",
+                          });
+                          setShowClassModal(true);
+                        }}
+                      >
+                        Thêm lớp học
+                      </Button>
+                    </div>
+                  </Card.Header>
+                  <Card.Body>
+                    <Table responsive striped hover>
+                      <thead>
+                        <tr>
+                          <th>Mã lớp học</th>
+                          <th>Môn học</th>
+                          <th>Học kỳ/Năm</th>
+                          <th>Lịch học</th>
+                          <th>Sức chứa</th>
+                          <th>Vị trí</th>
+                          <th>Trạng thái</th>
+                          <th>Hành động</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredClasses.map((cls) => (
+                          <tr key={cls.id}>
+                            <td>{cls.code}</td>
+                            <td>{cls.courseName}</td>
+                            <td>
+                              {cls.semester}/{cls.year}
+                            </td>
+                            <td>
+                              {getDayName(cls.dayOfWeek)}
+                              <br />
+                              Period {cls.startPeriod}-{cls.endPeriod}
+                            </td>
+                            <td>{cls.capacity}</td>
+                            <td>{cls.location}</td>
+                            <td>
+                              {cls.archivedAt ? (
+                                <Badge bg="secondary">Đã lưu</Badge>
+                              ) : (
+                                <Badge bg="success">Đang hoạt động</Badge>
+                              )}
+                            </td>
+                            <td>
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                className="me-2"
+                                onClick={() => handleEditClass(cls)}
+                              >
+                                Sửa
+                              </Button>
+                              {!cls.archivedAt && (
+                                <Button
+                                  variant="outline-warning"
+                                  size="sm"
+                                  onClick={() => handleArchiveClass(cls.id)}
+                                >
+                                  Lưu
+                                </Button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </Card.Body>
+                </Card>
+              </Tab>
+            </Tabs>
+          </Col>
+        </Row>
+
+        {/* Course Modal */}
+        <Modal
+          show={showCourseModal}
+          onHide={() => setShowCourseModal(false)}
+          size="lg"
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>
+              {editingCourse ? "Sửa môn học" : "Thêm môn học mới"}
+            </Modal.Title>
+          </Modal.Header>
+          <Form onSubmit={handleCourseSubmit}>
+            <Modal.Body>
+              <Row>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Mã môn học</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={courseForm.code}
+                      onChange={(e) =>
+                        setCourseForm({ ...courseForm, code: e.target.value })
+                      }
+                      required
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Số tín chỉ</Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="1"
+                      max="10"
+                      value={courseForm.credits}
+                      onChange={(e) =>
+                        setCourseForm({
+                          ...courseForm,
+                          credits: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+              <Form.Group className="mb-3">
+                <Form.Label>Tên môn học</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={courseForm.name}
+                  onChange={(e) =>
+                    setCourseForm({ ...courseForm, name: e.target.value })
+                  }
+                  required
+                />
+              </Form.Group>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button
+                variant="secondary"
+                onClick={() => setShowCourseModal(false)}
+              >
+                Hủy
+              </Button>
+              <Button variant="primary" type="submit">
+                {editingCourse ? "Cập nhật" : "Thêm"} môn học
+              </Button>
+            </Modal.Footer>
+          </Form>
+        </Modal>
+
+        {/* Class Modal */}
+        <Modal
+          show={showClassModal}
+          onHide={() => setShowClassModal(false)}
+          size="lg"
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>
+              {editingClass ? "Sửa lớp học" : "Thêm lớp học mới"}
+            </Modal.Title>
+          </Modal.Header>
+          <Form onSubmit={handleClassSubmit}>
+            <Modal.Body>
+              <Row>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Mã lớp học</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={classForm.code}
+                      onChange={(e) =>
+                        setClassForm({ ...classForm, code: e.target.value })
+                      }
+                      required
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Môn học</Form.Label>
+                    <Form.Select
+                      value={classForm.courseId}
+                      onChange={(e) =>
+                        setClassForm({ ...classForm, courseId: e.target.value })
+                      }
+                      required
+                    >
+                      <option value="">Chọn môn học</option>
+                      {courses
+                        .filter((c) => !c.archivedAt)
+                        .map((course) => (
+                          <option key={course.id} value={course.id}>
+                            {course.code} - {course.name}
+                          </option>
+                        ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+              </Row>
+              <Row>
+                <Col md={4}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Học kỳ</Form.Label>
+                    <Form.Select
+                      value={classForm.semester}
+                      onChange={(e) =>
+                        setClassForm({ ...classForm, semester: e.target.value })
+                      }
+                      required
+                    >
+                      <option value="">Chọn học kỳ</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Năm</Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="2020"
+                      max="2030"
+                      value={classForm.year}
+                      onChange={(e) =>
+                        setClassForm({ ...classForm, year: e.target.value })
+                      }
+                      required
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Sức chứa</Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={classForm.capacity}
+                      onChange={(e) =>
+                        setClassForm({ ...classForm, capacity: e.target.value })
+                      }
+                      required
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+              <Row>
+                <Col md={4}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Ngày trong tuần</Form.Label>
+                    <Form.Select
+                      value={classForm.dayOfWeek}
+                      onChange={(e) =>
                         setClassForm({
-                          code: "",
-                          semester: "",
-                          year: "",
-                          capacity: "",
-                          dayOfWeek: "",
-                          startPeriod: "",
-                          endPeriod: "",
-                          location: "",
-                          midTermRatio: "",
-                          finalExamRatio: "",
-                          courseId: "",
-                        });
-                        setShowClassModal(true);
-                      }}
+                          ...classForm,
+                          dayOfWeek: e.target.value,
+                        })
+                      }
+                      required
                     >
-                      Thêm lớp học
-                    </Button>
-                  </div>
-                </Card.Header>
-                <Card.Body>
-                  <Table responsive striped hover>
-                    <thead>
-                      <tr>
-                        <th>Mã lớp học</th>
-                        <th>Môn học</th>
-                        <th>Học kỳ/Năm</th>
-                        <th>Lịch học</th>
-                        <th>Sức chứa</th>
-                        <th>Vị trí</th>
-                        <th>Trạng thái</th>
-                        <th>Hành động</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredClasses.map((cls) => (
-                        <tr key={cls.id}>
-                          <td>{cls.code}</td>
-                          <td>{cls.courseName}</td>
-                          <td>
-                            {cls.semester}/{cls.year}
-                          </td>
-                          <td>
-                            {getDayName(cls.dayOfWeek)}
-                            <br />
-                            Period {cls.startPeriod}-{cls.endPeriod}
-                          </td>
-                          <td>{cls.capacity}</td>
-                          <td>{cls.location}</td>
-                          <td>
-                            {cls.archivedAt ? (
-                              <Badge bg="secondary">Đã lưu</Badge>
-                            ) : (
-                              <Badge bg="success">Đang hoạt động</Badge>
-                            )}
-                          </td>
-                          <td>
-                            <Button
-                              variant="outline-primary"
-                              size="sm"
-                              className="me-2"
-                              onClick={() => handleEditClass(cls)}
-                            >
-                              Sửa
-                            </Button>
-                            {!cls.archivedAt && (
-                              <Button
-                                variant="outline-warning"
-                                size="sm"
-                                onClick={() => handleArchiveClass(cls.id)}
-                              >
-                                Lưu
-                              </Button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
-                </Card.Body>
-              </Card>
-            </Tab>
-          </Tabs>
-        </Col>
-      </Row>
-
-      {/* Course Modal */}
-      <Modal
-        show={showCourseModal}
-        onHide={() => setShowCourseModal(false)}
-        size="lg"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {editingCourse ? "Sửa môn học" : "Thêm môn học mới"}
-          </Modal.Title>
-        </Modal.Header>
-        <Form onSubmit={handleCourseSubmit}>
-          <Modal.Body>
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Mã môn học</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={courseForm.code}
-                    onChange={(e) =>
-                      setCourseForm({ ...courseForm, code: e.target.value })
-                    }
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Số tín chỉ</Form.Label>
-                  <Form.Control
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={courseForm.credits}
-                    onChange={(e) =>
-                      setCourseForm({ ...courseForm, credits: e.target.value })
-                    }
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-            <Form.Group className="mb-3">
-              <Form.Label>Tên môn học</Form.Label>
-              <Form.Control
-                type="text"
-                value={courseForm.name}
-                onChange={(e) =>
-                  setCourseForm({ ...courseForm, name: e.target.value })
-                }
-                required
-              />
-            </Form.Group>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button
-              variant="secondary"
-              onClick={() => setShowCourseModal(false)}
-            >
-              Hủy
-            </Button>
-            <Button variant="primary" type="submit">
-              {editingCourse ? "Cập nhật" : "Thêm"} môn học
-            </Button>
-          </Modal.Footer>
-        </Form>
-      </Modal>
-
-      {/* Class Modal */}
-      <Modal
-        show={showClassModal}
-        onHide={() => setShowClassModal(false)}
-        size="lg"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {editingClass ? "Sửa lớp học" : "Thêm lớp học mới"}
-          </Modal.Title>
-        </Modal.Header>
-        <Form onSubmit={handleClassSubmit}>
-          <Modal.Body>
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Mã lớp học</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={classForm.code}
-                    onChange={(e) =>
-                      setClassForm({ ...classForm, code: e.target.value })
-                    }
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Môn học</Form.Label>
-                  <Form.Select
-                    value={classForm.courseId}
-                    onChange={(e) =>
-                      setClassForm({ ...classForm, courseId: e.target.value })
-                    }
-                    required
-                  >
-                    <option value="">Chọn môn học</option>
-                    {courses
-                      .filter((c) => !c.archivedAt)
-                      .map((course) => (
-                        <option key={course.id} value={course.id}>
-                          {course.code} - {course.name}
-                        </option>
-                      ))}
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-            </Row>
-            <Row>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Học kỳ</Form.Label>
-                  <Form.Select
-                    value={classForm.semester}
-                    onChange={(e) =>
-                      setClassForm({ ...classForm, semester: e.target.value })
-                    }
-                    required
-                  >
-                    <option value="">Chọn học kỳ</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Năm</Form.Label>
-                  <Form.Control
-                    type="number"
-                    min="2020"
-                    max="2030"
-                    value={classForm.year}
-                    onChange={(e) =>
-                      setClassForm({ ...classForm, year: e.target.value })
-                    }
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Sức chứa</Form.Label>
-                  <Form.Control
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={classForm.capacity}
-                    onChange={(e) =>
-                      setClassForm({ ...classForm, capacity: e.target.value })
-                    }
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-            <Row>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Ngày trong tuần</Form.Label>
-                  <Form.Select
-                    value={classForm.dayOfWeek}
-                    onChange={(e) =>
-                      setClassForm({ ...classForm, dayOfWeek: e.target.value })
-                    }
-                    required
-                  >
-                    <option value="">Chọn ngày</option>
-                    <option value="1">Thứ hai</option>
-                    <option value="2">Thứ ba</option>
-                    <option value="3">Thứ tư</option>
-                    <option value="4">Thứ năm</option>
-                    <option value="5">Thứ sáu</option>
-                    <option value="6">Thứ bảy</option>
-                    <option value="0">Chủ nhật</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Giờ bắt đầu</Form.Label>
-                  <Form.Control
-                    type="number"
-                    min="1"
-                    max="12"
-                    value={classForm.startPeriod}
-                    onChange={(e) =>
-                      setClassForm({
-                        ...classForm,
-                        startPeriod: e.target.value,
-                      })
-                    }
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Giờ kết thúc</Form.Label>
-                  <Form.Control
-                    type="number"
-                    min="1"
-                    max="12"
-                    value={classForm.endPeriod}
-                    onChange={(e) =>
-                      setClassForm({ ...classForm, endPeriod: e.target.value })
-                    }
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Vị trí</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={classForm.location}
-                    onChange={(e) =>
-                      setClassForm({ ...classForm, location: e.target.value })
-                    }
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Tỷ lệ điểm giữa kỳ</Form.Label>
-                  <Form.Control
-                    type="number"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value={classForm.midTermRatio}
-                    onChange={(e) =>
-                      setClassForm({
-                        ...classForm,
-                        midTermRatio: e.target.value,
-                      })
-                    }
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Tỷ lệ điểm cuối kỳ</Form.Label>
-                  <Form.Control
-                    type="number"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value={classForm.finalExamRatio}
-                    onChange={(e) =>
-                      setClassForm({
-                        ...classForm,
-                        finalExamRatio: e.target.value,
-                      })
-                    }
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button
-              variant="secondary"
-              onClick={() => setShowClassModal(false)}
-            >
-              Hủy
-            </Button>
-            <Button variant="primary" type="submit">
-              {editingClass ? "Cập nhật" : "Thêm"} lớp học
-            </Button>
-          </Modal.Footer>
-        </Form>
-      </Modal>
-    </Container>
+                      <option value="">Chọn ngày</option>
+                      <option value="1">Thứ hai</option>
+                      <option value="2">Thứ ba</option>
+                      <option value="3">Thứ tư</option>
+                      <option value="4">Thứ năm</option>
+                      <option value="5">Thứ sáu</option>
+                      <option value="6">Thứ bảy</option>
+                      <option value="0">Chủ nhật</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Giờ bắt đầu</Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="1"
+                      max="12"
+                      value={classForm.startPeriod}
+                      onChange={(e) =>
+                        setClassForm({
+                          ...classForm,
+                          startPeriod: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Giờ kết thúc</Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="1"
+                      max="12"
+                      value={classForm.endPeriod}
+                      onChange={(e) =>
+                        setClassForm({
+                          ...classForm,
+                          endPeriod: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+              <Row>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Vị trí</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={classForm.location}
+                      onChange={(e) =>
+                        setClassForm({ ...classForm, location: e.target.value })
+                      }
+                      required
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={3}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Tỷ lệ điểm giữa kỳ</Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={classForm.midTermRatio}
+                      onChange={(e) =>
+                        setClassForm({
+                          ...classForm,
+                          midTermRatio: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={3}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Tỷ lệ điểm cuối kỳ</Form.Label>
+                    <Form.Control
+                      type="number"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={classForm.finalExamRatio}
+                      onChange={(e) =>
+                        setClassForm({
+                          ...classForm,
+                          finalExamRatio: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button
+                variant="secondary"
+                onClick={() => setShowClassModal(false)}
+              >
+                Hủy
+              </Button>
+              <Button variant="primary" type="submit">
+                {editingClass ? "Cập nhật" : "Thêm"} lớp học
+              </Button>
+            </Modal.Footer>
+          </Form>
+        </Modal>
+      </Container>
+    </Layout>
   );
 };
 

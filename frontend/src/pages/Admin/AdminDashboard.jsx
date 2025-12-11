@@ -1,320 +1,703 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Card, Table, Badge, Button, Alert } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Table,
+  Badge,
+  Button,
+  Alert,
+} from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import PageFrame from "../../components/PageFrame";
+import Layout from "../../components/Layout";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState({
     totalStudents: 0,
-    totalCourses: 0,
     totalClasses: 0,
-    activeEnrollments: 0,
+    averageScore: 0,
+    attendanceRate: 0,
+    classScores: [],
+    academicPerformance: {},
     recentAnnouncements: [],
-    upcomingExams: [],
-    registrationWindows: [],
+    dropoutRisk: null,
   });
 
   // Mock data - trong thực tế sẽ fetch từ API
   useEffect(() => {
     const mockData = {
-      totalStudents: 150,
-      totalCourses: 25,
-      totalClasses: 45,
-      activeEnrollments: 320,
+      totalStudents: 1250,
+      totalClasses: 42,
+      averageScore: 8.5,
+      attendanceRate: 98.2,
+      classScores: [
+        { className: "10A1", score: 8.2 },
+        { className: "10A2", score: 8.4 },
+        { className: "11B1", score: 8.7 },
+        { className: "11B2", score: 8.5 },
+        { className: "12A1", score: 8.6 },
+        { className: "12A2", score: 8.3 },
+      ],
+      academicPerformance: {
+        excellent: 35,
+        good: 40,
+        average: 20,
+        weak: 5,
+      },
       recentAnnouncements: [
         {
           id: 1,
-          title: "Chào mừng trở lại học kỳ 1!",
-          content:
-            "Học kỳ 1 bắt đầu vào ngày 1 tháng 3 năm 2025. Vui lòng kiểm tra lịch học của bạn.",
-          postedAt: "2025-10-23 09:25:51",
-          postedBy: "Quản trị viên 1",
+          title: "Lịch thi học kỳ II đã được cập nhật.",
+          timeAgo: "2 giờ trước",
+          icon: "🔔",
         },
         {
           id: 2,
-          title: "Ngày thi cuối kỳ đã được công bố",
-          content: "Ngày thi cuối kỳ đã được công bố trên hệ thống. Vui lòng kiểm tra lịch thi của bạn.",
-          postedAt: "2025-10-23 09:25:51",
-          postedBy: "Quản trị viên 2",
-        },
-      ],
-      upcomingExams: [
-        {
-          id: 1,
-          courseName: "Lập trình cơ bản",
-          examDate: "2025-05-10 09:00:00",
-          location: "A101",
-          className: "CS101-1",
+          title: "Thông báo nghỉ lễ Giỗ Tổ Hùng Vương.",
+          timeAgo: "1 ngày trước",
+          icon: "📅",
         },
         {
-          id: 2,
-          courseName: "Cấu trúc dữ liệu",
-          examDate: "2025-05-12 09:00:00",
-          location: "A102",
-          className: "CS201-1",
+          id: 3,
+          title: 'Cuộc thi "Rung chuông vàng" sẽ diễn ra vào tuần tới.',
+          timeAgo: "3 ngày trước",
+          icon: "🌿",
         },
       ],
-      registrationWindows: [
-        {
-          id: 1,
-          startTime: "2025-01-01 00:00:00",
-          endTime: "2025-02-01 00:00:00",
-          semester: 1,
-          year: 2025,
-          isActive: true,
-        },
-      ],
+      dropoutRisk: {
+        studentName: "Nguyễn Văn Hùng",
+        className: "10A2",
+        absences: 12,
+        riskLevel: 85,
+      },
     };
     setDashboardData(mockData);
   }, []);
 
-  const getStatusBadge = (isActive) => {
-    return isActive ? (
-      <Badge bg="success">Hoạt động</Badge>
-    ) : (
-      <Badge bg="secondary">Không hoạt động</Badge>
-    );
-  };
-
-  const formatDateTime = (dateTime) => {
-    return new Date(dateTime).toLocaleString("vi-VN");
-  };
-
   return (
-    <Container fluid className="py-4">
-      <Row>
-        <Col>
-          <h2 className="mb-4">Trang quản lý</h2>
-        </Col>
-      </Row>
-
-      {/* Statistics Cards */}
-      <Row className="mb-4">
-        <Col md={3}>
-          <Card className="text-center">
-            <Card.Body>
-              <Card.Title className="text-primary">
-                {dashboardData.totalStudents}
-              </Card.Title>
-              <Card.Text>Tổng số sinh viên</Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card className="text-center">
-            <Card.Body>
-              <Card.Title className="text-success">
-                {dashboardData.totalCourses}
-              </Card.Title>
-              <Card.Text>Tổng số môn học</Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card className="text-center">
-            <Card.Body>
-              <Card.Title className="text-warning">
-                {dashboardData.totalClasses}
-              </Card.Title>
-              <Card.Text>Lớp học hoạt động</Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card className="text-center">
-            <Card.Body>
-              <Card.Title className="text-info">
-                {dashboardData.activeEnrollments}
-              </Card.Title>
-              <Card.Text>Đăng ký hoạt động</Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      <Row>
-        {/* Recent Announcements */}
-        <Col md={6} className="mb-4">
-          <Card>
-            <Card.Header className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Thông báo gần đây</h5>
-              <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={() => navigate("/admin/announcements")}
+    <Layout>
+      <PageFrame
+        title="Bảng điều khiển"
+        subtitle="Tổng quan nhanh về hoạt động của trường học hôm nay."
+        headerActions={
+          <div style={{ display: "flex", gap: "0.75rem" }}>
+            <Button
+              variant="primary"
+              style={{
+                background: "#9333ea",
+                border: "none",
+                borderRadius: "0.5rem",
+              }}
+              onClick={() => navigate("/admin/students")}
+            >
+              + Thêm Học sinh
+            </Button>
+            <Button
+              variant="primary"
+              style={{
+                background: "#9333ea",
+                border: "none",
+                borderRadius: "0.5rem",
+              }}
+              onClick={() => navigate("/admin/reports")}
+            >
+              Tạo Báo cáo
+            </Button>
+          </div>
+        }
+      >
+        <Container fluid className="py-4">
+          {/* KPI Cards */}
+          <Row className="mb-4">
+            <Col md={3}>
+              <Card
+                className="text-center"
+                style={{
+                  borderRadius: "0.75rem",
+                  border: "none",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                }}
               >
-                Quản lý
-              </Button>
-            </Card.Header>
-            <Card.Body>
-              {dashboardData.recentAnnouncements.length > 0 ? (
-                <div>
-                  {dashboardData.recentAnnouncements.map((announcement) => (
+                <Card.Body>
+                  <Card.Title
+                    style={{
+                      fontSize: "2rem",
+                      fontWeight: "bold",
+                      color: "#111827",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    {dashboardData.totalStudents.toLocaleString()}
+                  </Card.Title>
+                  <Card.Text
+                    style={{ color: "#6b7280", marginBottom: "0.5rem" }}
+                  >
+                    Tổng số học sinh
+                  </Card.Text>
+                  <small style={{ color: "#10b981", fontWeight: "500" }}>
+                    ↑1.5%
+                  </small>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={3}>
+              <Card
+                className="text-center"
+                style={{
+                  borderRadius: "0.75rem",
+                  border: "none",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                }}
+              >
+                <Card.Body>
+                  <Card.Title
+                    style={{
+                      fontSize: "2rem",
+                      fontWeight: "bold",
+                      color: "#111827",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    {dashboardData.totalClasses}
+                  </Card.Title>
+                  <Card.Text
+                    style={{ color: "#6b7280", marginBottom: "0.5rem" }}
+                  >
+                    Lớp học hoạt động
+                  </Card.Text>
+                  <small style={{ color: "#10b981", fontWeight: "500" }}>
+                    ↑ 2 lớp
+                  </small>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={3}>
+              <Card
+                className="text-center"
+                style={{
+                  borderRadius: "0.75rem",
+                  border: "none",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                }}
+              >
+                <Card.Body>
+                  <Card.Title
+                    style={{
+                      fontSize: "2rem",
+                      fontWeight: "bold",
+                      color: "#111827",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    {dashboardData.averageScore}
+                  </Card.Title>
+                  <Card.Text
+                    style={{ color: "#6b7280", marginBottom: "0.5rem" }}
+                  >
+                    Điểm trung bình
+                  </Card.Text>
+                  <small style={{ color: "#ef4444", fontWeight: "500" }}>
+                    ↓ 0.1
+                  </small>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={3}>
+              <Card
+                className="text-center"
+                style={{
+                  borderRadius: "0.75rem",
+                  border: "none",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                }}
+              >
+                <Card.Body>
+                  <Card.Title
+                    style={{
+                      fontSize: "2rem",
+                      fontWeight: "bold",
+                      color: "#111827",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    {dashboardData.attendanceRate}%
+                  </Card.Title>
+                  <Card.Text
+                    style={{ color: "#6b7280", marginBottom: "0.5rem" }}
+                  >
+                    Tỷ lệ chuyên cần
+                  </Card.Text>
+                  <small style={{ color: "#10b981", fontWeight: "500" }}>
+                    ↑0.5%
+                  </small>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+
+          {/* Charts Row */}
+          <Row className="mb-4">
+            <Col md={6}>
+              <Card
+                style={{
+                  borderRadius: "0.75rem",
+                  border: "none",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                  height: "100%",
+                }}
+              >
+                <Card.Header
+                  style={{
+                    background: "transparent",
+                    borderBottom: "1px solid #e5e7eb",
+                    padding: "1rem",
+                  }}
+                >
+                  <h5 style={{ margin: 0, fontWeight: "600" }}>
+                    Điểm trung bình theo lớp
+                  </h5>
+                </Card.Header>
+                <Card.Body>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-end",
+                      justifyContent: "space-around",
+                      height: "200px",
+                      gap: "0.5rem",
+                    }}
+                  >
+                    {dashboardData.classScores.map((item, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          flex: 1,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "100%",
+                            height: `${(item.score / 10) * 150}px`,
+                            background:
+                              item.className === "11B1" ? "#9333ea" : "#e5e7eb",
+                            borderRadius: "0.25rem 0.25rem 0 0",
+                            marginBottom: "0.5rem",
+                            transition: "all 0.3s",
+                            cursor: "pointer",
+                          }}
+                          title={`${item.className}: ${item.score}`}
+                        />
+                        <small
+                          style={{ fontSize: "0.75rem", color: "#6b7280" }}
+                        >
+                          {item.className}
+                        </small>
+                      </div>
+                    ))}
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={6}>
+              <Card
+                style={{
+                  borderRadius: "0.75rem",
+                  border: "none",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                  height: "100%",
+                }}
+              >
+                <Card.Header
+                  style={{
+                    background: "transparent",
+                    borderBottom: "1px solid #e5e7eb",
+                    padding: "1rem",
+                  }}
+                >
+                  <h5 style={{ margin: 0, fontWeight: "600" }}>
+                    Phân loại học lực
+                  </h5>
+                </Card.Header>
+                <Card.Body>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: "200px",
+                    }}
+                  >
                     <div
-                      key={announcement.id}
-                      className="mb-3 p-3 border rounded"
+                      style={{
+                        width: "150px",
+                        height: "150px",
+                        borderRadius: "50%",
+                        background: `conic-gradient(
+                        #10b981 0% ${
+                          dashboardData.academicPerformance.excellent
+                        }%,
+                        #3b82f6 ${
+                          dashboardData.academicPerformance.excellent
+                        }% ${
+                          dashboardData.academicPerformance.excellent +
+                          dashboardData.academicPerformance.good
+                        }%,
+                        #f59e0b ${
+                          dashboardData.academicPerformance.excellent +
+                          dashboardData.academicPerformance.good
+                        }% ${
+                          dashboardData.academicPerformance.excellent +
+                          dashboardData.academicPerformance.good +
+                          dashboardData.academicPerformance.average
+                        }%,
+                        #ef4444 ${
+                          dashboardData.academicPerformance.excellent +
+                          dashboardData.academicPerformance.good +
+                          dashboardData.academicPerformance.average
+                        }% 100%
+                      )`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        position: "relative",
+                      }}
                     >
-                      <h6 className="mb-2">{announcement.title}</h6>
-                      <p className="text-muted small mb-1">
-                        {announcement.content.length > 100
-                          ? `${announcement.content.substring(0, 100)}...`
-                          : announcement.content}
-                      </p>
-                      <small className="text-muted">
-                        Bởi {announcement.postedBy} •{" "}
-                        {formatDateTime(announcement.postedAt)}
-                      </small>
+                      <div
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          borderRadius: "50%",
+                          background: "white",
+                        }}
+                      />
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <Alert variant="info">Không có thông báo gần đây</Alert>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "1rem",
+                      justifyContent: "center",
+                      marginTop: "1rem",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "12px",
+                          height: "12px",
+                          borderRadius: "50%",
+                          background: "#10b981",
+                        }}
+                      />
+                      <span style={{ fontSize: "0.875rem" }}>• Giỏi</span>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "12px",
+                          height: "12px",
+                          borderRadius: "50%",
+                          background: "#3b82f6",
+                        }}
+                      />
+                      <span style={{ fontSize: "0.875rem" }}>• Khá</span>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "12px",
+                          height: "12px",
+                          borderRadius: "50%",
+                          background: "#f59e0b",
+                        }}
+                      />
+                      <span style={{ fontSize: "0.875rem" }}>• TB</span>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "12px",
+                          height: "12px",
+                          borderRadius: "50%",
+                          background: "#ef4444",
+                        }}
+                      />
+                      <span style={{ fontSize: "0.875rem" }}>• Yếu</span>
+                    </div>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
 
-        {/* Upcoming Exams */}
-        <Col md={6} className="mb-4">
-          <Card>
-            <Card.Header className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Kỳ thi sắp tới</h5>
-              <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={() => navigate("/admin/exams")}
+          {/* Notifications and Dropout Risk */}
+          <Row>
+            <Col md={6}>
+              <Card
+                style={{
+                  borderRadius: "0.75rem",
+                  border: "none",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                }}
               >
-                Quản lý
-              </Button>
-            </Card.Header>
-            <Card.Body>
-              {dashboardData.upcomingExams.length > 0 ? (
-                <Table responsive size="sm">
-                  <thead>
-                    <tr>
-                      <th>Môn học</th>
-                      <th>Lớp học</th>
-                      <th>Ngày</th>
-                      <th>Vị trí</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {dashboardData.upcomingExams.map((exam) => (
-                      <tr key={exam.id}>
-                        <td>{exam.courseName}</td>
-                        <td>{exam.className}</td>
-                        <td>{formatDateTime(exam.examDate)}</td>
-                        <td>{exam.location}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              ) : (
-                <Alert variant="info">Không có kỳ thi sắp tới</Alert>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Registration Windows */}
-      <Row>
-        <Col>
-          <Card>
-            <Card.Header className="d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">Cửa sổ đăng ký</h5>
-              <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={() => navigate("/admin/registration-windows")}
+                <Card.Header
+                  style={{
+                    background: "transparent",
+                    borderBottom: "1px solid #e5e7eb",
+                    padding: "1rem",
+                  }}
+                >
+                  <h5 style={{ margin: 0, fontWeight: "600" }}>
+                    Dự báo nguy cơ nghỉ học
+                  </h5>
+                </Card.Header>
+                <Card.Body>
+                  {dashboardData.dropoutRisk && (
+                    <div>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.75rem",
+                          marginBottom: "1rem",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "40px",
+                            height: "40px",
+                            borderRadius: "50%",
+                            background: "#fee2e2",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#ef4444",
+                            fontSize: "1.25rem",
+                          }}
+                        >
+                          ⚠️
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: "0.875rem",
+                              color: "#6b7280",
+                              marginBottom: "0.5rem",
+                            }}
+                          >
+                            AI phân tích dựa trên chuyên cần & điểm số
+                          </p>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                            }}
+                          >
+                            <div>
+                              <p
+                                style={{
+                                  margin: 0,
+                                  fontWeight: "600",
+                                  color: "#111827",
+                                }}
+                              >
+                                {dashboardData.dropoutRisk.studentName}
+                              </p>
+                              <p
+                                style={{
+                                  margin: 0,
+                                  fontSize: "0.875rem",
+                                  color: "#6b7280",
+                                }}
+                              >
+                                {dashboardData.dropoutRisk.className} • Nghỉ{" "}
+                                {dashboardData.dropoutRisk.absences} buổi
+                              </p>
+                            </div>
+                            <Button
+                              variant="outline-primary"
+                              size="sm"
+                              style={{
+                                borderColor: "#9333ea",
+                                color: "#9333ea",
+                              }}
+                            >
+                              Xem chi tiết
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            marginBottom: "0.5rem",
+                          }}
+                        >
+                          <span
+                            style={{ fontSize: "0.875rem", color: "#6b7280" }}
+                          >
+                            Mức độ rủi ro
+                          </span>
+                          <span
+                            style={{
+                              fontSize: "0.875rem",
+                              fontWeight: "600",
+                              color: "#ef4444",
+                            }}
+                          >
+                            {dashboardData.dropoutRisk.riskLevel}%
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            width: "100%",
+                            height: "8px",
+                            background: "#fee2e2",
+                            borderRadius: "4px",
+                            overflow: "hidden",
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: `${dashboardData.dropoutRisk.riskLevel}%`,
+                              height: "100%",
+                              background: "#ef4444",
+                              transition: "width 0.3s",
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={6}>
+              <Card
+                style={{
+                  borderRadius: "0.75rem",
+                  border: "none",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                }}
               >
-                Quản lý
-              </Button>
-            </Card.Header>
-            <Card.Body>
-              {dashboardData.registrationWindows.length > 0 ? (
-                <Table responsive>
-                  <thead>
-                    <tr>
-                      <th>Học kỳ</th>
-                      <th>Năm</th>
-                      <th>Giờ bắt đầu</th>
-                      <th>Giờ kết thúc</th>
-                      <th>Trạng thái</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {dashboardData.registrationWindows.map((window) => (
-                      <tr key={window.id}>
-                        <td>{window.semester}</td>
-                        <td>{window.year}</td>
-                        <td>{formatDateTime(window.startTime)}</td>
-                        <td>{formatDateTime(window.endTime)}</td>
-                        <td>{getStatusBadge(window.isActive)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              ) : (
-                <Alert variant="info">Không có cửa sổ đăng ký</Alert>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Quick Actions */}
-      <Row className="mt-4">
-        <Col>
-          <Card>
-            <Card.Header>
-              <h5 className="mb-0">Hành động nhanh</h5>
-            </Card.Header>
-            <Card.Body>
-              <Row>
-                <Col md={3} className="mb-2">
-                  <Button
-                    variant="primary"
-                    className="w-100"
-                    onClick={() => navigate("/admin/courses")}
-                  >
-                    Quản lý môn học
-                  </Button>
-                </Col>
-                <Col md={3} className="mb-2">
-                  <Button
-                    variant="success"
-                    className="w-100"
-                    onClick={() => navigate("/admin/students")}
-                  >
-                    Quản lý sinh viên
-                  </Button>
-                </Col>
-                <Col md={3} className="mb-2">
-                  <Button
-                    variant="info"
-                    className="w-100"
-                    onClick={() => navigate("/admin/reports")}
-                  >
-                    Xem báo cáo
-                  </Button>
-                </Col>
-                <Col md={3} className="mb-2">
-                  <Button
-                    variant="warning"
-                    className="w-100"
-                    onClick={() => navigate("/admin/announcements")}
-                  >
-                    Đăng bài
-                  </Button>
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
+                <Card.Header
+                  style={{
+                    background: "transparent",
+                    borderBottom: "1px solid #e5e7eb",
+                    padding: "1rem",
+                  }}
+                >
+                  <h5 style={{ margin: 0, fontWeight: "600" }}>
+                    Thông báo mới
+                  </h5>
+                </Card.Header>
+                <Card.Body>
+                  {dashboardData.recentAnnouncements.length > 0 ? (
+                    <div>
+                      {dashboardData.recentAnnouncements.map((announcement) => (
+                        <div
+                          key={announcement.id}
+                          style={{
+                            padding: "0.75rem 0",
+                            borderBottom:
+                              announcement.id !==
+                              dashboardData.recentAnnouncements.length
+                                ? "1px solid #e5e7eb"
+                                : "none",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "flex-start",
+                              gap: "0.75rem",
+                            }}
+                          >
+                            <span style={{ fontSize: "1.25rem" }}>
+                              {announcement.icon}
+                            </span>
+                            <div style={{ flex: 1 }}>
+                              <p
+                                style={{
+                                  margin: 0,
+                                  fontSize: "0.875rem",
+                                  color: "#111827",
+                                  marginBottom: "0.25rem",
+                                }}
+                              >
+                                {announcement.title}
+                              </p>
+                              <small
+                                style={{
+                                  color: "#9ca3af",
+                                  fontSize: "0.75rem",
+                                }}
+                              >
+                                {announcement.timeAgo}
+                              </small>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      <Button
+                        variant="link"
+                        style={{
+                          marginTop: "1rem",
+                          padding: 0,
+                          color: "#9333ea",
+                          textDecoration: "none",
+                        }}
+                        onClick={() => navigate("/admin/announcements")}
+                      >
+                        Xem tất cả thông báo
+                      </Button>
+                    </div>
+                  ) : (
+                    <Alert variant="info">Không có thông báo mới</Alert>
+                  )}
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Container>
+      </PageFrame>
+    </Layout>
   );
 };
 

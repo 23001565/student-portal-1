@@ -1,6 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Container, Row, Col, Card, Button, Badge, Alert } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Badge,
+  Alert,
+} from "react-bootstrap";
 import { useLocation, useNavigate } from "react-router-dom";
+import Layout from "../../components/Layout";
 import "../../styles/announcements.css";
 
 const mockAnnouncements = [
@@ -47,7 +56,8 @@ const Announcements = () => {
     }
   }, [location.state]);
 
-  const formatDateTime = (dateTime) => new Date(dateTime).toLocaleString("vi-VN");
+  const formatDateTime = (dateTime) =>
+    new Date(dateTime).toLocaleString("vi-VN");
 
   const counts = useMemo(() => {
     return announcements.reduce(
@@ -61,64 +71,103 @@ const Announcements = () => {
   }, [announcements]);
 
   return (
-    <Container fluid className="py-4">
-      <Row className="mb-3">
-        <Col className="d-flex justify-content-between align-items-center">
-          <h2>Quản lý thông báo</h2>
-          <div className="d-flex gap-2">
-            <Button variant="primary" onClick={() => navigate("/admin/post-announcement")}>Đăng thông báo</Button>
-            <Button variant="secondary" onClick={() => navigate("/admin/dashboard")}>Trang quản lý</Button>
-          </div>
-        </Col>
-      </Row>
-
-      <Row className="mb-3">
-        <Col md={12}>
-          <Card className="mb-2">
-            <Card.Body>
-              <div className="d-flex gap-3 flex-wrap">
-                <div> Tổng: <Badge bg="primary">{counts.total}</Badge></div>
-                <div> Cao: <Badge bg="danger">{counts.high}</Badge></div>
-                <div> Bình thường: <Badge bg="info">{counts.normal}</Badge></div>
-                <div> Thấp: <Badge bg="secondary">{counts.low}</Badge></div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      <Row>
-        {announcements.length === 0 && (
-          <Col>
-            <Alert variant="info">Chưa có thông báo nào.</Alert>
+    <Layout>
+      <Container fluid className="py-4">
+        <Row className="mb-3">
+          <Col className="d-flex justify-content-between align-items-center">
+            <h2>Quản lý thông báo</h2>
+            <div className="d-flex gap-2">
+              <Button
+                variant="primary"
+                onClick={() => navigate("/admin/post-announcement")}
+              >
+                Đăng thông báo
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => navigate("/admin/dashboard")}
+              >
+                Trang quản lý
+              </Button>
+            </div>
           </Col>
-        )}
+        </Row>
 
-        {announcements.map((a) => (
-          <Col key={a.id} md={6} lg={4} className="mb-3">
-            <Card className={`announcement-card priority-${a.priority}`}>
-              <Card.Header>
-                <div className="d-flex justify-content-between align-items-center">
-                  <h6 className="mb-0">{a.title}</h6>
-                  <Badge bg={priorityVariant[a.priority] || "secondary"}>
-                    {a.priority === "high" ? "Ưu tiên cao" : a.priority === "normal" ? "Bình thường" : "Thấp"}
-                  </Badge>
-                </div>
-              </Card.Header>
+        <Row className="mb-3">
+          <Col md={12}>
+            <Card className="mb-2">
               <Card.Body>
-                <p className="mb-2 text-muted small">
-                  {a.content.length > 140 ? `${a.content.slice(0, 140)}...` : a.content}
-                </p>
-                <div className="d-flex justify-content-between align-items-center small text-muted">
-                  <span>Đối tượng: {a.audience === "all" ? "Tất cả" : a.audience === "students" ? "Sinh viên" : "Giảng viên"}</span>
-                  <span>Đăng bởi {a.postedBy} • {formatDateTime(a.postedAt)}</span>
+                <div className="d-flex gap-3 flex-wrap">
+                  <div>
+                    {" "}
+                    Tổng: <Badge bg="primary">{counts.total}</Badge>
+                  </div>
+                  <div>
+                    {" "}
+                    Cao: <Badge bg="danger">{counts.high}</Badge>
+                  </div>
+                  <div>
+                    {" "}
+                    Bình thường: <Badge bg="info">{counts.normal}</Badge>
+                  </div>
+                  <div>
+                    {" "}
+                    Thấp: <Badge bg="secondary">{counts.low}</Badge>
+                  </div>
                 </div>
               </Card.Body>
             </Card>
           </Col>
-        ))}
-      </Row>
-    </Container>
+        </Row>
+
+        <Row>
+          {announcements.length === 0 && (
+            <Col>
+              <Alert variant="info">Chưa có thông báo nào.</Alert>
+            </Col>
+          )}
+
+          {announcements.map((a) => (
+            <Col key={a.id} md={6} lg={4} className="mb-3">
+              <Card className={`announcement-card priority-${a.priority}`}>
+                <Card.Header>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <h6 className="mb-0">{a.title}</h6>
+                    <Badge bg={priorityVariant[a.priority] || "secondary"}>
+                      {a.priority === "high"
+                        ? "Ưu tiên cao"
+                        : a.priority === "normal"
+                        ? "Bình thường"
+                        : "Thấp"}
+                    </Badge>
+                  </div>
+                </Card.Header>
+                <Card.Body>
+                  <p className="mb-2 text-muted small">
+                    {a.content.length > 140
+                      ? `${a.content.slice(0, 140)}...`
+                      : a.content}
+                  </p>
+                  <div className="d-flex justify-content-between align-items-center small text-muted">
+                    <span>
+                      Đối tượng:{" "}
+                      {a.audience === "all"
+                        ? "Tất cả"
+                        : a.audience === "students"
+                        ? "Sinh viên"
+                        : "Giảng viên"}
+                    </span>
+                    <span>
+                      Đăng bởi {a.postedBy} • {formatDateTime(a.postedAt)}
+                    </span>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      </Container>
+    </Layout>
   );
 };
 

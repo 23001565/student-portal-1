@@ -1,8 +1,7 @@
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Login from "./pages/LoginPage";
-import HomePage from "./pages/HomePage";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import CoursesPage from "./pages/CoursesPage";
 import GradesPage from "./pages/GradesPage";
@@ -17,13 +16,15 @@ import UploadGrades from "./pages/Admin/UploadGrades";
 import UploadCurriculum from "./pages/Admin/UploadCurriculum";
 import ProgressMonitor from "./pages/Admin/ProgressMonitor";
 import CourseRegistration from "./pages/CourseRegistration";
+import StudentDetail from "./pages/Admin/StudentDetail";
+import EditStudent from "./pages/Admin/EditStudent";
 function App() {
   return (
     <div className="app-container">
       <div className="app-content">
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/courses" element={<CoursesPage />} />
@@ -33,6 +34,8 @@ function App() {
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/courses" element={<ManageCourses />} />
             <Route path="/admin/students" element={<ManageStudents />} />
+            <Route path="/admin/students/:id" element={<StudentDetail />} />
+            <Route path="/admin/students/:id/edit" element={<EditStudent />} />
             <Route path="/admin/reports" element={<Reports />} />
             <Route path="/admin/announcements" element={<Announcements />} />
             <Route
