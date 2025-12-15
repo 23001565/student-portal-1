@@ -43,11 +43,16 @@ export async function getStudentCourses(studentId) {
     select: { courses: true }
   });
 }
-
+// find student by name
 export async function findStudentsByName(name) {
   return await prisma.student.findMany({
     where: { name: { contains: name, mode: 'insensitive' } }
   });
 }
 
-
+//find student by id
+export async function findStudentsByName(studentId) {
+  return await prisma.student.findMany({
+    where: {id: { contains: : studentId, mode: 'insensitive' } }
+  });
+}
