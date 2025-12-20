@@ -44,3 +44,23 @@ export async function findStudentsByName(name) {
   });
 }
 
+//get student profile 
+export async function getStudentProfile(studentId) {
+  return prisma.student.findUnique({
+    where: { id: studentId },
+    select: {
+      id: true,
+      code: true,
+      name: true,
+      email: true,
+      year: true,
+      major: {
+        select: { id: true, name: true }
+      },
+      curriculum: {
+        select: { id: true, code: true }
+      }
+    }
+  });
+}
+
