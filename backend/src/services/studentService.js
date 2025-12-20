@@ -36,13 +36,7 @@ export async function getAllStudents() {
   return await prisma.student.findMany();
 }
 
-// all courses
-export async function getStudentCourses(studentId) {
-  return await prisma.student.findUnique({
-    where: { id: studentId },
-    select: { courses: true }
-  });
-}
+
 // find student by name
 export async function findStudentsByName(name) {
   return await prisma.student.findMany({
@@ -50,34 +44,3 @@ export async function findStudentsByName(name) {
   });
 }
 
-// find by name
-export async function findStudentsByName(name) {
-  return await prisma.student.findMany({
-    where: { name: { contains: name, mode: 'insensitive' } }
-  });
-}
-
-
-//add course 
-export async function addCourseToStudent(studentId, courseId) {
-  return await prisma.student.update({
-    where: { id: studentId },
-    data: {
-      courses: {
-        connect: { id: courseId },
-      },
-    },
-  });
-}
-
-// remove course
-export async function removeCourseFromStudent(studentId, courseId) {
-  return await prisma.student.update({
-    where: { id: studentId },
-    data: {
-      courses: {
-        disconnect: { id: courseId },
-      },
-    },
-  });
-}
