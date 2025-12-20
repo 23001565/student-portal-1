@@ -56,18 +56,7 @@ export async function findStudentsByName(name) {
     where: { name: { contains: name, mode: 'insensitive' } }
   });
 }
-// get student detail 
-export async function getStudentDetail(studentId) {
-  return await prisma.student.findUnique({
-    where: { id: studentId },
-    include: {
-      courses: true,
-      _count: {
-        select: { courses: true },
-      },
-    },
-  });
-}
+
 
 //add course 
 export async function addCourseToStudent(studentId, courseId) {
