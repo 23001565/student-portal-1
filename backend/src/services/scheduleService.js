@@ -56,3 +56,24 @@ export async function saveSchedule(studentId) {
   // Remove session after saving
   await redis.del(key);
 }
+
+/// update 21/12
+
+export async function getStudentSchedule(studentId, semester, year) {
+  return prisma.enrollment.findMany({
+    where: {
+      studentId,
+      semester,
+      year,
+      status: 'ENROLLED'
+    },
+    include: {
+      class: {
+        include: {
+          course: true,
+          examSchedules: true
+        }
+      }
+    }
+  });
+}
