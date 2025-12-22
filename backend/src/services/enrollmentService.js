@@ -7,7 +7,7 @@ import prisma from "../data/prisma.js";
  */
 export async function getClassForCurriculum(curriculumId) {
   return prisma.class.findMany({
-    where: {
+    where: { 
       archivedAt: null,
       canceledAt: null,
       course: {
