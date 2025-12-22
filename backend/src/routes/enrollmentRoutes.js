@@ -1,6 +1,6 @@
 import express from 'express';
 import { enroll, withdraw } from '../controllers/enrollmentController.js';
-import authMiddleware from '../middleware/auth.js';
+import authMiddleware from '../middleware/initRedisSession.js';
 
 const router = express.Router();
 
