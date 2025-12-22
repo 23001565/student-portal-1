@@ -1,9 +1,11 @@
 import {
-  getStudentProfile,
-  updateStudentProfile,
-  getStudentEnrollments,
-  getStudentSchedule
-} from '../services/studentService.js';
+  getStudentSession,
+  enrollStudent,
+  removeCourseFromSession,
+  saveSchedule,
+  clearStudentSession
+} from '../services/scheduleService.js';
+
 
 /**
  * GET /students/me
