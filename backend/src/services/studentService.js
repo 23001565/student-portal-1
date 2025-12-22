@@ -1,16 +1,16 @@
 import prisma from '../data/prisma.js'; 
 
 // get student information
-export async function getStudentProfile(studentId) {
-  return await prisma.student.findUnique({
-    where: { id: studentId },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-    },
-  });
-}
+// export async function getStudentProfile(studentId) {
+//   return await prisma.student.findUnique({
+//     where: { id: studentId },
+//     select: {
+//       id: true,
+//       name: true,
+//       email: true,
+//     },
+//   });
+// }
 
 // creat student
 export async function createStudent(data) {
