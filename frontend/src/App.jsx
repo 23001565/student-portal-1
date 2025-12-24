@@ -1,23 +1,23 @@
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import Login from "./pages/LoginPage";
+import Login from "./user/pages/LoginPage";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import Dashboard from "./pages/Dashboard";
-import CoursesPage from "./pages/CoursesPage";
-import GradesPage from "./pages/GradesPage";
-import ProfilePage from "./pages/ProfilePage";
-import AdminDashboard from "./pages/Admin/AdminDashboard";
-import ManageCourses from "./pages/Admin/ManageCourses";
-import ManageStudents from "./pages/Admin/ManageStudents";
-import Reports from "./pages/Admin/Reports";
-import Announcements from "./pages/Admin/Announcements";
-import PostAnnouncement from "./pages/Admin/PostAnnouncement";
-import UploadGrades from "./pages/Admin/UploadGrades";
-import UploadCurriculum from "./pages/Admin/UploadCurriculum";
-import ProgressMonitor from "./pages/Admin/ProgressMonitor";
-import CourseRegistration from "./pages/CourseRegistration";
-import StudentDetail from "./pages/Admin/StudentDetail";
-import EditStudent from "./pages/Admin/EditStudent";
+import Dashboard from "./user/pages/Dashboard";
+import CoursesPage from "./user/pages/CoursesPage";
+import GradesPage from "./user/pages/GradesPage";
+import ProfilePage from "./user/pages/ProfilePage";
+import AdminDashboard from "./admin/pages/AdminDashboard";
+import ManageCourses from "./admin/pages/ManageCourses";
+import ManageStudents from "./admin/pages/ManageStudents";
+import Reports from "./admin/pages/Reports";
+import Announcements from "./admin/pages/Announcements";
+import PostAnnouncement from "./admin/pages/PostAnnouncement";
+import UploadGrades from "./admin/pages/UploadGrades";
+import UploadCurriculum from "./admin/pages/UploadCurriculum";
+import ProgressMonitor from "./admin/pages/ProgressMonitor";
+import CourseRegistration from "./user/pages/CourseRegistration";
+import StudentDetail from "./admin/pages/StudentDetail";
+import EditStudent from "./admin/pages/EditStudent";
 function App() {
   return (
     <div className="app-container">

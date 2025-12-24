@@ -1,18 +1,32 @@
-# Base image
-FROM node:18
+# Multi-stage build for production
+# Stage 1: Build the React app
+FROM node:18-alpine AS build
 
-# Set working directory inside container
 WORKDIR /app
 
-# Copy package files and install dependencies
-COPY package.json ./
+# Copy package files
+COPY package.json package-lock.json ./
+
+# Install dependencies
 RUN npm install
 
-# Copy all frontend files
+# Copy source code
 COPY . .
 
-# Expose Vite dev server port
-EXPOSE 5173
+# Build the app
+RUN npm run build
 
-# Start Vite in dev mode
-CMD ["npm", "run", "dev"]
+# Stage 2: Serve with nginx
+FROM nginx:alpine
+
+# Copy built files from build stage
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose port 80
+EXPOSE 80
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
