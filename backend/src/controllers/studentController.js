@@ -1,14 +1,15 @@
 import {
   getStudentProfile,
+  // createStudent,
   updateStudentProfile,
+  // deleteStudent, 
+  // getAllStudents,
+  // findStudentsByName,
   getStudentEnrollments,
   getStudentSchedule
 } from '../services/studentService.js';
 
-/**
- * GET /students/me
- * Lấy thông tin cá nhân sinh viên đang đăng nhập
- */
+//  getStudentProfile
 export async function profile(req, res) {
   try {
     const studentId = req.user.id;
@@ -26,10 +27,7 @@ export async function profile(req, res) {
   }
 }
 
-/**
- * PUT /students/me
- * Cập nhật thông tin cá nhân (ví dụ: email, name)
- */
+//updateStudentProfile
 export async function updateProfile(req, res) {
   try {
     const studentId = req.user.id;
@@ -44,10 +42,7 @@ export async function updateProfile(req, res) {
   }
 }
 
-/**
- * GET /students/me/enrollments
- * Danh sách các lớp đã đăng ký
- */
+// getStudentEnrollments
 export async function myEnrollments(req, res) {
   try {
     const studentId = req.user.id;
@@ -61,10 +56,7 @@ export async function myEnrollments(req, res) {
   }
 }
 
-/**
- * GET /students/me/schedule?semester=&year=
- * Lịch học của sinh viên
- */
+//getStudentSchedule
 export async function mySchedule(req, res) {
   try {
     const studentId = req.user.id;
