@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
-import logoImage from "../../assets/logo.ico"; // Import logo
+import logoImage from "../../assets/logo.png"; // Import logo
 import "./LoginPage.css"; // Import file CSS mới
 
 // --- Các icon SVG đơn giản ---
@@ -95,7 +95,7 @@ const LoginPage = () => {
             {/* Email Input Custom */}
             <div className="input-group-custom">
               <label htmlFor="email" className="form-label-custom">
-                Email hoặc Mã sinh viên
+                Tài khoản
               </label>
               <div style={{ position: 'relative' }}>
                   <EmailIcon />
@@ -147,11 +147,6 @@ const LoginPage = () => {
               </Button>
             </div>
             
-            <div className="text-center mt-4">
-              <small className="text-muted">
-                 Mẹo test: Nhập email chứa "admin" để vào trang quản trị.
-              </small>
-            </div>
           </form>
         </div>
       </div>

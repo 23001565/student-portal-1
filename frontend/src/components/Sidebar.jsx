@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./Sidebar.css";
-import logoImage from "../assets/logo.ico";
+import logoImage from "../assets/logo.png";
 // Icon components giữ nguyên style cũ
 const Icon = ({ children, className = "" }) => (
   <span className={`sidebar-menu-icon ${className}`}>{children}</span>

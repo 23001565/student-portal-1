@@ -1,8 +1,8 @@
 /* src/user/pages/LoginPage.css */
 :root {
     /* Trích xuất màu xanh từ logo của bạn */
-    --login-primary: #1a56db; 
-    --login-primary-dark: #1e40af;
+    --login-primary: #334410; 
+    --login-primary-dark: #334410;
     --login-bg-light: #f8fafc;
     --login-text-dark: #1e293b;
     --login-text-muted: #64748b;
@@ -47,8 +47,8 @@
 }
 
 .login-logo-large {
-    width: 120px;
-    height: 120px;
+    width: 240px;
+    height: 240px;
     object-fit: contain;
     margin-bottom: 2rem;
     filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
@@ -167,12 +167,12 @@
     padding: 1rem;
     font-size: 1rem;
     font-weight: 600;
-    background-color: var(--login-primary);
+    background-color: #718b41;
     border: none;
     transition: background-color 0.2s;
 }
 .login-btn-custom:hover {
-    background-color: var(--login-primary-dark);
+    background-color: #334410;
 }
 
 .error-message {
