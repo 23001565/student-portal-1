@@ -24,17 +24,12 @@ export async function createStudent(data) {
   return prisma.student.create({ data });
 }
 
-// update student (logic cũ)
-export async function updateStudent(studentId, data) {
+// update student
+export async function updateStudentProfile(studentId, data) {
   return prisma.student.update({
     where: { id: studentId },
     data
   });
-}
-
-// alias cho controller (KHÔNG đổi logic)
-export async function updateStudentProfile(studentId, data) {
-  return updateStudent(studentId, data);
 }
 
 // delete student
@@ -54,7 +49,6 @@ export async function findStudentsByName(name) {
   });
 }
 
-/* ================= ENROLLMENT / SCHEDULE ================= */
 
 // controller: GET /students/me/enrollments
 export async function getStudentEnrollments(studentId) {
