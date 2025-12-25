@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageFrame from "../../components/PageFrame";
 import Button from "../../components/Button";
+import Layout from "../../components/Layout"; // <-- Thêm dòng này
 
 const CoursesPage = () => {
   const [_user, setUser] = useState(null);
@@ -32,7 +33,7 @@ const CoursesPage = () => {
   };
 
   const loadAvailableCourses = async () => {
-    // Mock data based on database: course, class tables
+    // Mock data
     const mockCourses = [
       {
         id: 1,
@@ -41,84 +42,42 @@ const CoursesPage = () => {
         credits: 3,
         classes: [
           {
-            id: 1,
-            code: "CS101-1",
-            semester: 1,
-            year: 2025,
-            capacity: 40,
-            enrolled: 25,
+            id: 101,
+            code: "CS101-01",
             dayOfWeek: 2,
             startPeriod: 1,
             endPeriod: 3,
-            location: "A101",
-            midTermRatio: 0.4,
-            finalExamRatio: 0.6,
+            location: "P.301-A2",
+            enrolled: 45,
+            capacity: 50,
+          },
+          {
+            id: 102,
+            code: "CS101-02",
+            dayOfWeek: 4,
+            startPeriod: 7,
+            endPeriod: 9,
+            location: "P.302-A2",
+            enrolled: 50,
+            capacity: 50,
           },
         ],
       },
       {
         id: 2,
-        code: "CS201",
-        name: "Cấu trúc dữ liệu",
-        credits: 3,
+        code: "MATH101",
+        name: "Giải tích 1",
+        credits: 4,
         classes: [
           {
-            id: 2,
-            code: "CS201-1",
-            semester: 1,
-            year: 2025,
-            capacity: 35,
-            enrolled: 18,
+            id: 201,
+            code: "MATH101-01",
             dayOfWeek: 3,
-            startPeriod: 2,
-            endPeriod: 4,
-            location: "A102",
-            midTermRatio: 0.4,
-            finalExamRatio: 0.6,
-          },
-        ],
-      },
-      {
-        id: 3,
-        code: "BA101",
-        name: "Nguyên lý quản lý",
-        credits: 3,
-        classes: [
-          {
-            id: 3,
-            code: "BA101-1",
-            semester: 1,
-            year: 2025,
-            capacity: 40,
-            enrolled: 30,
-            dayOfWeek: 4,
             startPeriod: 1,
-            endPeriod: 3,
-            location: "B201",
-            midTermRatio: 0.5,
-            finalExamRatio: 0.5,
-          },
-        ],
-      },
-      {
-        id: 4,
-        code: "BA202",
-        name: "Kinh tế học cơ bản",
-        credits: 3,
-        classes: [
-          {
-            id: 4,
-            code: "BA202-1",
-            semester: 1,
-            year: 2025,
-            capacity: 30,
-            enrolled: 22,
-            dayOfWeek: 5,
-            startPeriod: 2,
             endPeriod: 4,
-            location: "B202",
-            midTermRatio: 0.5,
-            finalExamRatio: 0.5,
+            location: "Giảng đường 1",
+            enrolled: 80,
+            capacity: 100,
           },
         ],
       },
@@ -127,266 +86,145 @@ const CoursesPage = () => {
   };
 
   const loadEnrolledCourses = async () => {
-    // Mock data based on enrollment table
-    const mockEnrolled = [
-      {
-        id: 1,
-        courseId: 1,
-        courseCode: "CS101",
-        courseName: "Lập trình cơ bản",
-        classCode: "CS101-1",
-        credits: 3,
-        semester: 1,
-        year: 2025,
-      },
-    ];
-    setEnrolledCourses(mockEnrolled);
+    setEnrolledCourses([]);
   };
 
-  const getDayName = (dayOfWeek) => {
-    const days = [
-      "Chủ nhật",
-      "Thứ 2",
-      "Thứ 3",
-      "Thứ 4",
-      "Thứ 5",
-      "Thứ 6",
-      "Thứ 7",
-    ];
-    return days[dayOfWeek] || "";
+  const handleRegister = (classId) => {
+    alert(`Đăng ký lớp ${classId} thành công! (Demo)`);
   };
 
-  const handleRegister = async (classId) => {
-    if (!classId) return;
-    if (!window.confirm("Bạn có chắc chắn muốn đăng ký lớp học này?")) return;
-
-    // find the course and class by classId
-    const found = availableCourses.reduce((acc, course) => {
-      const cls = course.classes.find((c) => c.id === classId);
-      return cls ? { course, classItem: cls } : acc;
-    }, null);
-
-    if (!found) {
-      alert("Lớp học không tìm thấy.");
-      return;
-    }
-
-    const { course, classItem } = found;
-
-    if (classItem.enrolled >= classItem.capacity) {
-      alert("Lớp đã đầy.");
-      return;
-    }
-
-    // create a new enrollment entry
-    const newEnrollmentId =
-      (enrolledCourses.reduce((max, e) => Math.max(max, e.id || 0), 0) || 0) +
-      1;
-    const newEnrollment = {
-      id: newEnrollmentId,
-      courseId: course.id,
-      courseCode: course.code,
-      courseName: course.name,
-      classCode: classItem.code,
-      credits: course.credits,
-      semester: classItem.semester,
-      year: classItem.year,
+  const getDayName = (day) => {
+    const days = {
+      2: "Thứ 2",
+      3: "Thứ 3",
+      4: "Thứ 4",
+      5: "Thứ 5",
+      6: "Thứ 6",
+      7: "Thứ 7",
+      8: "Chủ nhật",
     };
-
-    // add to enrolled courses
-    setEnrolledCourses((prev) => [...prev, newEnrollment]);
-
-    // increment enrolled count for the class in availableCourses
-    setAvailableCourses((prev) =>
-      prev.map((c) =>
-        c.id === course.id
-          ? {
-              ...c,
-              classes: c.classes.map((cl) =>
-                cl.id === classId ? { ...cl, enrolled: cl.enrolled + 1 } : cl
-              ),
-            }
-          : c
-      )
-    );
-
-    alert("Đăng ký thành công!");
+    return days[day] || day;
   };
 
-  const handleUnregister = async (enrollmentId) => {
-    if (!enrollmentId) return;
-    if (!window.confirm("Bạn có chắc chắn muốn hủy đăng ký?")) return;
-
-    const enrollment = enrolledCourses.find((e) => e.id === enrollmentId);
-    if (!enrollment) {
-      alert("Đăng ký không tìm thấy.");
-      return;
-    }
-
-    // remove from enrolled courses
-    setEnrolledCourses((prev) => prev.filter((e) => e.id !== enrollmentId));
-
-    // decrement enrolled count for the matching class (by classCode)
-    setAvailableCourses((prev) =>
-      prev.map((c) => ({
-        ...c,
-        classes: c.classes.map((cl) =>
-          cl.code === enrollment.classCode
-            ? { ...cl, enrolled: Math.max(0, cl.enrolled - 1) }
-            : cl
-        ),
-      }))
-    );
-
-    alert("Hủy đăng ký thành công!");
-  };
-
-  const filteredCourses = availableCourses.filter((course) => {
-    const matchesSearch =
+  // Filter logic
+  const filteredCourses = availableCourses.filter(
+    (course) =>
       course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.code.toLowerCase().includes(searchTerm.toLowerCase());
-    const isNotEnrolled = !enrolledCourses.some(
-      (enrolled) => enrolled.courseId === course.id
-    );
-    return matchesSearch && isNotEnrolled;
-  });
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải dữ liệu...</p>
-        </div>
-      </div>
-    );
-  }
+      course.code.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <PageFrame
-      title="Đăng ký môn học"
-      subtitle="Xem danh sách môn học và đăng ký các lớp học"
-      headerActions={
-        <Button variant="outline" onClick={() => navigate("/dashboard")}>
-          ← Về Trang chủ
-        </Button>
-      }
-    >
-      {/* Search */}
-      <div className="mb-6">
-        <input
-          type="text"
-          placeholder="Tìm kiếm môn học..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="form-control"
-        />
-      </div>
-
-      {/* Enrolled Courses */}
-      {enrolledCourses.length > 0 && (
-        <div className="card mb-6">
-          <div className="card-header">Môn học đã đăng ký</div>
-          <div className="table-container">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Mã MH</th>
-                  <th>Tên môn học</th>
-                  <th>Mã lớp</th>
-                  <th>Tín chỉ</th>
-                  <th>Hành động</th>
-                </tr>
-              </thead>
-              <tbody>
-                {enrolledCourses.map((course) => (
-                  <tr key={course.id}>
-                    <td>{course.courseCode}</td>
-                    <td>{course.courseName}</td>
-                    <td>{course.classCode}</td>
-                    <td>{course.credits}</td>
-                    <td>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => handleUnregister(course.id)}
-                      >
-                        Hủy đăng ký
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+    <Layout> {/* <-- Bọc Layout ở đây */}
+      <PageFrame
+        title="Đăng ký lớp học phần"
+        subtitle="Danh sách các lớp đang mở cho học kỳ này"
+      >
+        <div className="mb-6">
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Tìm kiếm môn học theo tên hoặc mã..."
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "0.5rem 1rem",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "0.375rem",
+                }}
+              />
+            </div>
           </div>
         </div>
-      )}
 
-      {/* Available Courses */}
-      <div className="card">
-        <div className="card-header">Danh sách môn học</div>
-        <div className="divide-y divide-gray-200">
-          {filteredCourses.map((course) => (
-            <div key={course.id} className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {course.code} - {course.name}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    {course.credits} tín chỉ
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 space-y-3">
-                {course.classes.map((classItem) => (
-                  <div
-                    key={classItem.id}
-                    className="border border-gray-200 rounded-lg p-4 flex justify-between items-center"
-                  >
-                    <div className="flex-1">
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-500">Mã lớp:</span>
-                          <p className="font-medium">{classItem.code}</p>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Thời gian:</span>
-                          <p className="font-medium">
-                            {getDayName(classItem.dayOfWeek)} - Tiết{" "}
-                            {classItem.startPeriod}-{classItem.endPeriod}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Phòng:</span>
-                          <p className="font-medium">{classItem.location}</p>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Số chỗ:</span>
-                          <p className="font-medium">
-                            {classItem.enrolled}/{classItem.capacity}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <Button
-                        onClick={() => handleRegister(classItem.id)}
-                        disabled={classItem.enrolled >= classItem.capacity}
-                      >
-                        {classItem.enrolled >= classItem.capacity
-                          ? "Đã đầy"
-                          : "Đăng ký"}
-                      </Button>
+        <div className="space-y-6">
+          {loading ? (
+            <div className="text-center py-8">Đang tải dữ liệu...</div>
+          ) : (
+            <div className="d-flex flex-column gap-4">
+              {filteredCourses.map((course) => (
+                <div
+                  key={course.id}
+                  className="card shadow-sm"
+                  style={{ border: "1px solid #e2e8f0" }}
+                >
+                  <div className="card-header bg-light">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <h3 className="h5 mb-0 font-weight-bold">
+                        {course.name} <span className="text-muted">({course.code})</span>
+                      </h3>
+                      <span className="badge bg-primary">
+                        {course.credits} Tín chỉ
+                      </span>
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="card-body p-0">
+                    {course.classes.map((classItem, idx) => (
+                      <div
+                        key={classItem.id}
+                        className={`p-3 d-flex justify-content-between align-items-center ${
+                          idx !== 0 ? "border-top" : ""
+                        }`}
+                      >
+                        <div className="flex-grow-1">
+                          <div className="d-flex gap-4">
+                            <div style={{ minWidth: "120px" }}>
+                              <span className="text-muted d-block small">Mã lớp:</span>
+                              <span className="fw-bold">{classItem.code}</span>
+                            </div>
+                            <div style={{ minWidth: "180px" }}>
+                              <span className="text-muted d-block small">Thời gian:</span>
+                              <span className="fw-medium">
+                                {getDayName(classItem.dayOfWeek)} (Tiết{" "}
+                                {classItem.startPeriod}-{classItem.endPeriod})
+                              </span>
+                            </div>
+                            <div style={{ minWidth: "150px" }}>
+                              <span className="text-muted d-block small">Phòng:</span>
+                              <span>{classItem.location}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted d-block small">Sĩ số:</span>
+                              <span
+                                className={
+                                  classItem.enrolled >= classItem.capacity
+                                    ? "text-danger fw-bold"
+                                    : "text-success"
+                                }
+                              >
+                                {classItem.enrolled}/{classItem.capacity}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="ms-3">
+                          <Button
+                            variant={
+                              classItem.enrolled >= classItem.capacity
+                                ? "secondary"
+                                : "primary"
+                            }
+                            onClick={() => handleRegister(classItem.id)}
+                            disabled={classItem.enrolled >= classItem.capacity}
+                            size="sm"
+                          >
+                            {classItem.enrolled >= classItem.capacity
+                              ? "Đã đầy"
+                              : "Đăng ký"}
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
-      </div>
-    </PageFrame>
+      </PageFrame>
+    </Layout>
   );
 };
 

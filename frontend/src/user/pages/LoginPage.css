@@ -1,0 +1,206 @@
+/* src/user/pages/LoginPage.css */
+:root {
+    /* Trích xuất màu xanh từ logo của bạn */
+    --login-primary: #1a56db; 
+    --login-primary-dark: #1e40af;
+    --login-bg-light: #f8fafc;
+    --login-text-dark: #1e293b;
+    --login-text-muted: #64748b;
+    --login-border: #e2e8f0;
+}
+
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    width: 100%;
+    background-color: #fff;
+    overflow: hidden;
+}
+
+/* --- CỘT TRÁI: BANNER THƯƠNG HIỆU --- */
+.login-banner-side {
+    display: none; /* Ẩn trên mobile */
+    flex: 1;
+    background: linear-gradient(135deg, var(--login-primary), var(--login-primary-dark));
+    color: white;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Hiệu ứng nền nhẹ cho banner */
+.login-banner-side::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at top right, rgba(255,255,255,0.1) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.banner-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+}
+
+.login-logo-large {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    margin-bottom: 2rem;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+    mix-blend-mode: multiply;
+}
+
+.banner-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    letter-spacing: -0.025em;
+}
+
+.banner-subtitle {
+    font-size: 1.125rem;
+    opacity: 0.9;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* --- CỘT PHẢI: FORM ĐĂNG NHẬP --- */
+.login-form-side {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background-color: var(--login-bg-light);
+}
+
+.login-form-wrapper {
+    width: 100%;
+    max-width: 440px;
+    padding: 2.5rem;
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01);
+}
+
+/* Logo trên mobile (khi banner trái ẩn đi) */
+.mobile-logo-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2.5rem;
+}
+.mobile-logo {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 1rem;
+    mix-blend-mode: multiply;
+}
+
+.login-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--login-text-dark);
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.login-subtitle {
+    text-align: center;
+    color: var(--login-text-muted);
+    margin-bottom: 2.5rem;
+}
+
+/* Custom Input Fields */
+.input-group-custom {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.input-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--login-text-muted);
+    pointer-events: none;
+    transition: color 0.2s;
+}
+
+.form-control-custom {
+    width: 100%;
+    padding: 0.875rem 1rem 0.875rem 2.75rem; /* Padding left để né icon */
+    border: 1.5px solid var(--login-border);
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: all 0.2s;
+    background-color: var(--login-bg-light);
+}
+
+.form-control-custom:focus {
+    outline: none;
+    border-color: var(--login-primary);
+    background-color: white;
+    box-shadow: 0 0 0 4px rgba(26, 86, 219, 0.1);
+}
+
+.form-control-custom:focus + .input-icon {
+    color: var(--login-primary);
+}
+
+.form-label-custom {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--login-text-dark);
+    font-size: 0.875rem;
+}
+
+/* Button Custom Override */
+.login-btn-custom {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    background-color: var(--login-primary);
+    border: none;
+    transition: background-color 0.2s;
+}
+.login-btn-custom:hover {
+    background-color: var(--login-primary-dark);
+}
+
+.error-message {
+    color: #ef4444;
+    background-color: #fef2f2;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    border: 1px solid #fee2e2;
+}
+
+/* Responsive Design */
+@media (min-width: 768px) {
+    .login-banner-side {
+        display: flex; /* Hiện banner trên desktop */
+        flex: 1.2; /* Banner rộng hơn một chút */
+    }
+    .login-form-side {
+        flex: 1;
+        background-color: white; /* Nền trắng trên desktop cho sạch */
+    }
+    .login-form-wrapper {
+        box-shadow: none; /* Bỏ shadow trên desktop cho phẳng */
+        padding: 2rem;
+    }
+    .mobile-logo-section {
+        display: none; /* Ẩn logo mobile trên desktop */
+    }
+}

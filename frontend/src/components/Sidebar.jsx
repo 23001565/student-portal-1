@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./Sidebar.css";
-
-// Icon components
+import logoImage from "../assets/logo.ico";
+// Icon components giữ nguyên style cũ
 const Icon = ({ children, className = "" }) => (
   <span className={`sidebar-menu-icon ${className}`}>{children}</span>
 );
@@ -10,13 +10,15 @@ const Icon = ({ children, className = "" }) => (
 const Sidebar = ({ isCollapsed = false, onToggle }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
 
-  const isActive = (path) => {
-    if (path === "/dashboard") {
-      return location.pathname === "/dashboard";
+  // Lấy thông tin user và role từ localStorage khi sidebar load
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      setUser(JSON.parse(userData));
     }
-    return location.pathname.startsWith(path);
-  };
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -24,31 +26,37 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
     navigate("/login");
   };
 
-  // Menu items configuration
-  const menuItems = [
+  // Logic xác định menu active
+  const isActive = (path) => {
+    if (path === "/dashboard" || path === "/admin/dashboard") {
+      return location.pathname === path;
+    }
+    return location.pathname.startsWith(path);
+  };
+
+  // Xác định quyền Admin (dựa trên field 'role' hoặc 'userType' được lưu lúc login)
+  const isAdmin = user?.role === "admin" || user?.userType === "admin";
+
+  // --- MENU CẤU HÌNH CHO ADMIN ---
+  const adminMenuItems = [
     {
-      section: "MENU",
+      section: "QUẢN TRỊ",
       items: [
         {
-          path: "/dashboard",
+          path: "/admin/dashboard", // Sửa: Link đúng về Admin Dashboard
           label: "Tổng quan",
           icon: "📊",
           exact: true,
         },
         {
           path: "/admin/students",
-          label: "Học sinh",
+          label: "Quản lý Học sinh",
           icon: "👥",
         },
         {
           path: "/admin/courses",
-          label: "Lớp học",
+          label: "Quản lý Lớp học",
           icon: "📚",
-        },
-        {
-          path: "/grades",
-          label: "Điểm số",
-          icon: "🎓",
         },
         {
           path: "/admin/announcements",
@@ -63,122 +71,108 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
       ],
     },
     {
-      section: "HỆ THỐNG",
+      section: "HỌC VỤ",
       items: [
         {
           path: "/admin/upload-grades",
-          label: "Tải điểm",
-          icon: "📤",
+          label: "Nhập điểm",
+          icon: "📝",
         },
         {
           path: "/admin/upload-curriculum",
-          label: "Tải chương trình",
-          icon: "📋",
+          label: "CT Đào tạo",
+          icon: "🎓",
         },
         {
           path: "/admin/progress-monitor",
-          label: "Theo dõi tiến độ",
-          icon: "📊",
-        },
-        {
-          path: "/profile",
-          label: "Cài đặt",
-          icon: "⚙️",
+          label: "Tiến độ học tập",
+          icon: "👁️",
         },
       ],
     },
   ];
 
-  // Student menu items (non-admin)
+  // --- MENU CẤU HÌNH CHO SINH VIÊN ---
   const studentMenuItems = [
     {
-      section: "MENU",
+      section: "SINH VIÊN",
       items: [
         {
-          path: "/dashboard",
+          path: "/dashboard", // Link về User Dashboard
           label: "Tổng quan",
           icon: "📊",
           exact: true,
         },
         {
           path: "/courses",
-          label: "Khóa học",
+          label: "Lớp học phần",
           icon: "📚",
         },
         {
-          path: "/grades",
-          label: "Điểm số",
-          icon: "🎓",
+          path: "/registration",
+          label: "Đăng ký môn",
+          icon: "✍️",
         },
         {
-          path: "/registration",
-          label: "Đăng ký môn học",
+          path: "/grades",
+          label: "Kết quả học tập",
           icon: "📝",
         },
-      ],
-    },
-    {
-      section: "HỆ THỐNG",
-      items: [
         {
           path: "/profile",
-          label: "Hồ sơ",
+          label: "Hồ sơ cá nhân",
           icon: "👤",
-        },
-        {
-          path: "/profile",
-          label: "Cài đặt",
-          icon: "⚙️",
         },
       ],
     },
   ];
 
-  // Check if user is admin
-  const userData = localStorage.getItem("user");
-  const user = userData ? JSON.parse(userData) : null;
-  const isAdmin =
-    user?.role === "admin" || location.pathname.startsWith("/admin");
-
-  const itemsToShow = isAdmin ? menuItems : studentMenuItems;
+  // Chọn menu hiển thị dựa trên quyền
+  const menuItems = isAdmin ? adminMenuItems : studentMenuItems;
 
   return (
     <div className={`sidebar-menu ${isCollapsed ? "collapsed" : ""}`}>
       {/* Header */}
       <div className="sidebar-header">
-        <div className="sidebar-logo">🎓</div>
-        {!isCollapsed && (
-          <div className="sidebar-title">
-            <h3>StudentManager</h3>
-            <span>Phiên bản Pro 2.0</span>
+        <div className="sidebar-brand">
+          {/* --- SỬA ĐOẠN NÀY --- */}
+          {/* Thay vì hiển thị chữ SP nên nền màu, ta hiển thị thẻ img */}
+          <div className="sidebar-logo">
+             <img src={logoImage} alt="Logo" />
           </div>
-        )}
-        <button
-          className="sidebar-toggle"
-          onClick={onToggle}
-          aria-label="Toggle sidebar"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
+          {/* ------------------- */}
+
+          {!isCollapsed && (
+            <div className="sidebar-brand-text">
+              <span>Student</span>
+              <span className="text-primary">Portal</span>
+            </div>
+          )}
+        </div>
+        <button className="sidebar-toggle" onClick={onToggle}>
+          {isCollapsed ? "→" : "←"}
         </button>
       </div>
 
-      {/* Menu Sections */}
-      {itemsToShow.map((section, sectionIndex) => (
-        <div key={sectionIndex} className="sidebar-section">
-          {!isCollapsed && (
+      {/* User Info (Hiển thị avatar nhỏ) */}
+      {!isCollapsed && user && (
+        <div className="sidebar-user">
+          <div className="sidebar-user-avatar">
+            {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+          </div>
+          <div className="sidebar-user-info">
+            <div className="sidebar-user-name">{user.name}</div>
+            <div className="sidebar-user-role">
+              {isAdmin ? "Administrator" : "Student"}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Menu Lists */}
+      {menuItems.map((section, idx) => (
+        <div key={idx} className="sidebar-section">
+          {!isCollapsed && section.section && (
             <div className="sidebar-section-title">{section.section}</div>
           )}
           <ul className="sidebar-menu-list">
@@ -217,6 +211,7 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
             border: "none",
             width: "100%",
             textAlign: "left",
+            cursor: "pointer",
           }}
         >
           <Icon className="sidebar-logout-icon">🚪</Icon>

@@ -118,16 +118,7 @@ const Dashboard = () => {
       <PageFrame
         title="Dashboard"
         subtitle={`Chào mừng, ${user?.name || ""}`}
-        headerActions={
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <span
-              className="text-sm"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              MSSV: {user?.code}
-            </span>
-          </div>
-        }
+        // Đã xóa prop headerActions ở đây để mất dòng MSSV thừa
       >
         <div className="grid grid-2 lg:grid-3 gap-6">
           {/* Thông báo */}

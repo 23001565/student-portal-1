@@ -1,12 +1,43 @@
+// src/user/pages/LoginPage.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
+import logoImage from "../../assets/logo.ico"; // Import logo
+import "./LoginPage.css"; // Import file CSS mới
+
+// --- Các icon SVG đơn giản ---
+const EmailIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="input-icon"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+);
+const LockIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="input-icon"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+);
+
+// Hàm giả lập API đăng nhập (Giữ nguyên logic cũ của bạn)
+const simulateLogin = async (formData) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      if (formData.email.includes("admin")) {
+        resolve({
+          success: true,
+          token: "mock-admin-token-123",
+          userType: "admin",
+          user: { id: 999, name: "Quản trị viên Hệ thống", email: formData.email, avatarUrl: null },
+        });
+      } else {
+        resolve({
+          success: true,
+          token: "mock-student-token-456",
+          userType: "student",
+          user: { id: 1001, name: "Nguyễn Văn An", email: formData.email || "student@hus.edu.vn", avatarUrl: null, code: "SV2024001" },
+        });
+      }
+    }, 1000);
+  });
+};
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -15,170 +46,94 @@ const LoginPage = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     try {
-      // Simulate API call - trong thực tế sẽ gọi API backend
       const response = await simulateLogin(formData);
-
       if (response.success) {
-        // Lưu thông tin user vào localStorage
-        localStorage.setItem("user", JSON.stringify(response.user));
+        const userToSave = { ...response.user, role: response.userType };
+        localStorage.setItem("user", JSON.stringify(userToSave));
         localStorage.setItem("token", response.token);
-
-        // Redirect dựa trên loại user
-        if (response.userType === "admin") {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/dashboard");
-        }
+        navigate(response.userType === "admin" ? "/admin/dashboard" : "/dashboard");
       } else {
-        setError(response.message);
+        setError(response.message || "Đăng nhập thất bại");
       }
-    } catch {
+    } catch (err) {
       setError("Đã xảy ra lỗi khi đăng nhập");
     } finally {
       setLoading(false);
     }
   };
 
-  // Hàm simulate login - trong thực tế sẽ gọi API
-  const simulateLogin = async (data) => {
-    // Simulate delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Mock data dựa trên database
-    const mockUsers = {
-      student: [
-        {
-          id: 1,
-          code: 1001,
-          email: "22001497@hus.edu",
-          name: "Alice Nguyen",
-          password: "123456",
-          year: 1,
-          majorId: 1,
-        },
-        {
-          id: 2,
-          code: 1002,
-          email: "22001496@hus.edu",
-          name: "Bob Tran",
-          password: "123456",
-          year: 2,
-          majorId: 1,
-        },
-        {
-          id: 3,
-          code: 1003,
-          email: "22001495@student.edu",
-          name: "Carol Le",
-          password: "123456",
-          year: 1,
-          majorId: 2,
-        },
-      ],
-      admin: [
-        {
-          id: 1,
-          email: "23001497@hus.edu",
-          username: "admin1",
-          password: "123456",
-        },
-        {
-          id: 2,
-          email: "23001565@hus.edu",
-          username: "admin2",
-          password: "1234567",
-        },
-      ],
-    };
-
-    const studentUser = mockUsers.student.find(
-      (u) => u.email === data.email && u.password === data.password
-    );
-    if (studentUser) {
-      return {
-        success: true,
-        userType: "student",
-        user: studentUser,
-        token: `token_${Date.now()}`,
-      };
-    }
-
-    const adminUser = mockUsers.admin.find(
-      (u) => u.email === data.email && u.password === data.password
-    );
-    if (adminUser) {
-      return {
-        success: true,
-        userType: "admin",
-        user: adminUser,
-        token: `token_${Date.now()}`,
-      };
-    }
-
-    return {
-      success: false,
-      message: "Email hoặc mật khẩu không đúng",
-    };
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full">
-        <div className="page-frame">
-          <div className="page-header">
-            <h1 className="page-title text-center">Đăng nhập vào hệ thống</h1>
-            <p className="page-subtitle text-center">Nhập email và mật khẩu</p>
+    <div className="login-container">
+      {/* --- CỘT TRÁI: BANNER (Chỉ hiện trên Desktop) --- */}
+      <div className="login-banner-side">
+        <div className="banner-content">
+          <img src={logoImage} alt="Student Portal Logo" className="login-logo-large" />
+          <h1 className="banner-title">Student Portal</h1>
+          <p className="banner-subtitle">
+            Nền tảng quản lý đào tạo và học tập trực tuyến hiện đại.
+          </p>
+        </div>
+      </div>
+
+      {/* --- CỘT PHẢI: FORM ĐĂNG NHẬP --- */}
+      <div className="login-form-side">
+        <div className="login-form-wrapper">
+          {/* Logo & Tiêu đề trên Mobile */}
+          <div className="mobile-logo-section d-md-none">
+             <img src={logoImage} alt="Logo" className="mobile-logo" />
           </div>
+          <h2 className="login-title">Đăng nhập</h2>
+          <p className="login-subtitle">Chào mừng bạn quay trở lại!</p>
+
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Email Input */}
-            <div className="form-group">
-              <label htmlFor="email" className="form-label">
-                Email
+            {/* Email Input Custom */}
+            <div className="input-group-custom">
+              <label htmlFor="email" className="form-label-custom">
+                Email hoặc Mã sinh viên
               </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="form-control"
-                placeholder="Email"
-                value={formData.email}
-                onChange={handleChange}
-              />
+              <div style={{ position: 'relative' }}>
+                  <EmailIcon />
+                  <input
+                    id="email"
+                    name="email"
+                    type="text"
+                    required
+                    className="form-control-custom"
+                    placeholder="ví dụ: sv123@school.edu"
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
+              </div>
             </div>
 
-            {/* Password Input */}
-            <div className="form-group">
-              <label htmlFor="password" className="form-label">
+            {/* Password Input Custom */}
+            <div className="input-group-custom">
+              <label htmlFor="password" className="form-label-custom">
                 Mật khẩu
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="form-control"
-                placeholder="Mật khẩu"
-                value={formData.password}
-                onChange={handleChange}
-              />
+              <div style={{ position: 'relative' }}>
+                  <LockIcon />
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    className="form-control-custom"
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={handleChange}
+                  />
+              </div>
             </div>
 
             {/* Error Message */}
-            {error && (
-              <div
-                className="text-center"
-                style={{ color: "var(--danger-color)", fontSize: "0.875rem" }}
-              >
-                {error}
-              </div>
-            )}
+            {error && <div className="error-message">{error}</div>}
 
             {/* Submit Button */}
             <div>
@@ -186,10 +141,16 @@ const LoginPage = () => {
                 type="submit"
                 disabled={loading}
                 loading={loading}
-                className="btn-block"
+                className="login-btn-custom"
               >
-                {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+                {loading ? "Đang xử lý..." : "Đăng nhập ngay"}
               </Button>
+            </div>
+            
+            <div className="text-center mt-4">
+              <small className="text-muted">
+                 Mẹo test: Nhập email chứa "admin" để vào trang quản trị.
+              </small>
             </div>
           </form>
         </div>

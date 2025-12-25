@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageFrame from "../../components/PageFrame";
 import Button from "../../components/Button";
+import Layout from "../../components/Layout"; // <-- Thêm dòng này
 
 const GradesPage = () => {
   const [_user, setUser] = useState(null);
@@ -22,7 +23,7 @@ const GradesPage = () => {
 
   const loadGrades = async () => {
     try {
-      // Mock data based on grade, enrollment, class, course tables
+      // Mock data
       const mockGrades = [
         {
           id: 1,
@@ -44,211 +45,128 @@ const GradesPage = () => {
           credits: 3,
           semester: 1,
           year: 2025,
-          midTerm: null,
-          finalExam: null,
-          total10Scale: null,
-          total4Scale: null,
-          letterGrade: null,
-        },
-        {
-          id: 3,
-          courseCode: "MATH101",
-          courseName: "Giải tích 1",
-          credits: 4,
-          semester: 2,
-          year: 2024,
           midTerm: 8.5,
           finalExam: 9.0,
           total10Scale: 8.8,
-          total4Scale: 3.7,
+          total4Scale: 4.0,
           letterGrade: "A",
         },
       ];
       setGrades(mockGrades);
     } catch (error) {
-      console.error("Lỗi khi tải điểm:", error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  const getSemesters = () => {
-    const semesters = [
-      ...new Set(grades.map((g) => `${g.year}-${g.semester}`)),
-    ];
-    return semesters.sort().reverse();
+  const getGradeColor = (grade) => {
+    if (!grade) return "";
+    if (grade.startsWith("A")) return "text-success";
+    if (grade.startsWith("B")) return "text-primary";
+    if (grade.startsWith("C")) return "text-warning";
+    if (grade.startsWith("D")) return "text-warning";
+    return "text-danger";
   };
 
-  const filteredGrades = grades.filter((grade) => {
-    if (selectedSemester === "all") return true;
-    return `${grade.year}-${grade.semester}` === selectedSemester;
-  });
+  const filteredGrades =
+    selectedSemester === "all"
+      ? grades
+      : grades.filter((g) => g.semester.toString() === selectedSemester);
 
-  const calculateGPA = () => {
-    const completedGrades = filteredGrades.filter(
-      (g) => g.total4Scale !== null
-    );
-    if (completedGrades.length === 0) return null;
-
-    const totalPoints = completedGrades.reduce(
-      (sum, g) => sum + g.total4Scale * g.credits,
-      0
-    );
-    const totalCredits = completedGrades.reduce((sum, g) => sum + g.credits, 0);
-
-    return totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : "0.00";
-  };
-
-  const getGradeColor = (letterGrade) => {
-    if (!letterGrade) return "text-gray-500";
-    if (letterGrade.includes("A")) return "text-green-600";
-    if (letterGrade.includes("B")) return "text-blue-600";
-    if (letterGrade.includes("C")) return "text-yellow-600";
-    if (letterGrade.includes("D")) return "text-orange-600";
-    return "text-red-600";
-  };
-
-  const gpa = calculateGPA();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải dữ liệu...</p>
-        </div>
-      </div>
-    );
-  }
+  // Tính GPA (giả định)
+  const gpa =
+    grades.reduce((acc, curr) => acc + curr.total4Scale * curr.credits, 0) /
+    (grades.reduce((acc, curr) => acc + curr.credits, 0) || 1);
 
   return (
-    <PageFrame
-      title="Bảng điểm"
-      subtitle="Xem điểm số và GPA của các môn học"
-      headerActions={
-        <Button variant="outline" onClick={() => navigate("/dashboard")}>
-          ← Về Dashboard
-        </Button>
-      }
-    >
-      {/* Filter and Stats */}
-      <div className="card mb-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-          <label className="form-label">
-            Học kỳ:
-            <select
-              value={selectedSemester}
-              onChange={(e) => setSelectedSemester(e.target.value)}
-              className="form-control ml-2"
-              style={{ display: "inline-block", width: "auto" }}
-            >
-              <option value="all">Tất cả</option>
-              {getSemesters().map((semester) => (
-                <option key={semester} value={semester}>
-                  Học kỳ {semester.split("-")[1]} - {semester.split("-")[0]}
-                </option>
-              ))}
-            </select>
-          </label>
-          {gpa && (
-            <div className="text-lg">
-              <span className="text-gray-600">GPA: </span>
-              <span
-                className="font-bold"
-                style={{ color: "var(--primary-color)" }}
-              >
-                {gpa}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Grades Table */}
-      <div className="table-container">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Mã MH</th>
-              <th>Tên môn học</th>
-              <th>Tín chỉ</th>
-              <th>Giữa kỳ</th>
-              <th>Cuối kỳ</th>
-              <th>Tổng kết (10)</th>
-              <th>Tổng kết (4)</th>
-              <th>Chữ cái</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredGrades.map((grade) => (
-              <tr key={grade.id}>
-                <td>{grade.courseCode}</td>
-                <td>{grade.courseName}</td>
-                <td>{grade.credits}</td>
-                <td>
-                  {grade.midTerm !== null ? grade.midTerm.toFixed(1) : "-"}
-                </td>
-                <td>
-                  {grade.finalExam !== null ? grade.finalExam.toFixed(1) : "-"}
-                </td>
-                <td>
-                  {grade.total10Scale !== null
-                    ? grade.total10Scale.toFixed(1)
-                    : "-"}
-                </td>
-                <td>
-                  {grade.total4Scale !== null
-                    ? grade.total4Scale.toFixed(2)
-                    : "-"}
-                </td>
-                <td>
-                  <span
-                    className={`text-sm font-bold ${getGradeColor(
-                      grade.letterGrade
-                    )}`}
-                  >
-                    {grade.letterGrade || "-"}
-                  </span>
-                </td>
-              </tr>
-            ))}
-            {filteredGrades.length === 0 && (
-              <tr>
-                <td colSpan="8" className="text-center">
-                  Không có dữ liệu điểm
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Legend */}
-      <div
-        className="card mt-6"
-        style={{
-          background: "rgba(59, 130, 246, 0.05)",
-          border: "1px solid rgba(59, 130, 246, 0.2)",
-        }}
+    <Layout> {/* <-- Bọc Layout ở đây */}
+      <PageFrame
+        title="Kết quả học tập"
+        subtitle={`GPA Tích lũy: ${gpa.toFixed(2)}`}
+        headerActions={
+          <select
+            className="form-select"
+            value={selectedSemester}
+            onChange={(e) => setSelectedSemester(e.target.value)}
+            style={{ minWidth: "200px" }}
+          >
+            <option value="all">Tất cả học kỳ</option>
+            <option value="1">Học kỳ 1 (2024-2025)</option>
+            <option value="2">Học kỳ 2 (2024-2025)</option>
+          </select>
+        }
       >
-        <h3
-          className="text-sm font-semibold mb-2"
-          style={{ color: "var(--info-color)" }}
-        >
-          Chú thích:
-        </h3>
-        <div
-          className="grid grid-2 md:grid-5 gap-2 text-xs"
-          style={{ color: "var(--info-color)" }}
-        >
-          <div>A (4.0): Xuất sắc</div>
-          <div>B+ (3.5): Khá tốt</div>
-          <div>B (3.0): Khá</div>
-          <div>C+ (2.5): Trung bình khá</div>
-          <div>C (2.0): Trung bình</div>
+        <div className="card shadow-sm border-0">
+          <div className="table-responsive">
+            <table className="table table-hover mb-0 align-middle">
+              <thead className="bg-light">
+                <tr>
+                  <th className="py-3 ps-4">Mã HP</th>
+                  <th className="py-3">Tên học phần</th>
+                  <th className="py-3 text-center">TC</th>
+                  <th className="py-3 text-center">Giữa kỳ</th>
+                  <th className="py-3 text-center">Cuối kỳ</th>
+                  <th className="py-3 text-center">TK (10)</th>
+                  <th className="py-3 text-center">TK (4)</th>
+                  <th className="py-3 text-center">Điểm chữ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredGrades.map((grade) => (
+                  <tr key={grade.id}>
+                    <td className="ps-4 fw-medium">{grade.courseCode}</td>
+                    <td>{grade.courseName}</td>
+                    <td className="text-center">{grade.credits}</td>
+                    <td className="text-center">{grade.midTerm}</td>
+                    <td className="text-center">{grade.finalExam}</td>
+                    <td className="text-center fw-bold">
+                      {grade.total10Scale.toFixed(1)}
+                    </td>
+                    <td className="text-center">{grade.total4Scale.toFixed(1)}</td>
+                    <td className="text-center">
+                      <span
+                        className={`badge ${
+                          grade.letterGrade.startsWith("A")
+                            ? "bg-success"
+                            : grade.letterGrade.startsWith("B")
+                            ? "bg-primary"
+                            : grade.letterGrade.startsWith("C")
+                            ? "bg-warning text-dark"
+                            : "bg-danger"
+                        }`}
+                      >
+                        {grade.letterGrade}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {filteredGrades.length === 0 && (
+                  <tr>
+                    <td colSpan="8" className="text-center py-4 text-muted">
+                      Không có dữ liệu điểm cho học kỳ này
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
-    </PageFrame>
+
+        <div className="card mt-4 bg-light border-0">
+          <div className="card-body">
+            <h6 className="card-title text-muted mb-3">Chú thích điểm:</h6>
+            <div className="d-flex flex-wrap gap-4 text-sm">
+              <div><span className="badge bg-success me-2">A</span> Xuất sắc (4.0)</div>
+              <div><span className="badge bg-primary me-2">B+</span> Khá giỏi (3.5)</div>
+              <div><span className="badge bg-primary me-2">B</span> Khá (3.0)</div>
+              <div><span className="badge bg-warning text-dark me-2">C</span> Trung bình (2.0)</div>
+              <div><span className="badge bg-danger me-2">F</span> Không đạt (&lt; 4.0)</div>
+            </div>
+          </div>
+        </div>
+      </PageFrame>
+    </Layout>
   );
 };
 
