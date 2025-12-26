@@ -1,9 +1,20 @@
 import express from 'express';
-import { profile } from '../controllers/studentController.js';
-import authMiddleware from '../middleware/auth.js';
+import {
+  profile,
+  updateProfile,
+  myEnrollments,
+  mySchedule
+} from '../controllers/studentController.js';
+import initRedisSession from '../middleware/initRedisSession.js';
 
 const router = express.Router();
 
-router.get('/profile', authMiddleware, profile);
+// Thông tin cá nhân
+router.get('/me', initRedisSession, profile);
+router.put('/me', initRedisSession, updateProfile);
+
+// Đăng ký & lịch học
+router.get('/me/enrollments', initRedisSession, myEnrollments);
+router.get('/me/schedule', initRedisSession, mySchedule);
 
 export default router;

@@ -56,3 +56,50 @@ export async function saveSchedule(studentId) {
   // Remove session after saving
   await redis.del(key);
 }
+/**
+ * Gỡ một course khỏi session đăng ký tạm (chưa ghi DB)
+ */
+export async function removeCourseFromSession(studentId, courseId) {
+  const key = `student:${studentId}:session`;
+  const raw = await redis.get(key);
+
+  if (!raw) throw new Error('No active session');
+
+  const session = JSON.parse(raw);
+
+  session.courses = session.courses.filter(
+    c => c.courseId !== courseId
+  );
+
+  session.lastUpdated = Date.now();
+  await redis.set(key, JSON.stringify(session), 'EX', 3600);
+
+  return session;
+}
+
+/**
+ * Huỷ toàn bộ session đăng ký tạm
+ */
+export async function clearStudentSession(studentId) {
+  const key = `student:${studentId}:session`;
+  await redis.del(key);
+}
+/**
+ * Kiểm tra session có course nào không
+ */
+export async function isSessionEmpty(studentId) {
+  const key = `student:${studentId}:session`;
+  const raw = await redis.get(key);
+
+  if (!raw) return true;
+
+  const session = JSON.parse(raw);
+  return session.courses.length === 0;
+}
+/**
+ * Lấy danh sách courseId hiện có trong session
+ */
+export async function getSessionCourseIds(studentId) {
+  const session = await getStudentSession(studentId);
+  return session.courses.map(c => c.courseId);
+}

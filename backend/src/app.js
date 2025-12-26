@@ -1,21 +1,34 @@
-const express = require('express');
+//const express = require('express');
+//const app = express();
+// const adminRoutes = require('./routes/adminRoutes');
+
+// app.use('/api/admin', adminRoutes);
+
+// module.exports = app;
+
+import express from 'express';
+
+import adminRoutes from './routes/adminRoutes.js';
+import studentRoutes from './routes/studentRoutes.js';
+import enrollmentRoutes from './routes/enrollmentRoutes.js';
+import classRoutes from './routes/classRoutes.js';
+
 const app = express();
-const cors = require('cors');
 
-// Built-in middleware
+/**
+ * Global middleware
+ */
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true
-}));
 
-// Routes
-const adminRoutes = require('./routes/adminRoutes');
-const authRoutes = require('./routes/auth');
-
+/**
+ * Routes
+ */
 app.use('/api/admin', adminRoutes);
 app.use('/auth', authRoutes);
+app.use('/api/students', studentRoutes);
+app.use('/api/enrollments', enrollmentRoutes);
+app.use('/api/classes', classRoutes);
 
-module.exports = app;
 
+
+export default app;
