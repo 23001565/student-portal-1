@@ -13,3 +13,23 @@ export async function validateCourseSelection(studentId, newCourse) {
 
   return { valid: true };
 }
+export function validateSemesterYear(semester, year) {
+  if (!semester || !year) {
+    throw new Error('Semester and year are required');
+  }
+  if (semester < 1 || semester > 3) {
+    throw new Error('Invalid semester');
+  }
+  if (year < 2000) {
+    throw new Error('Invalid year');
+  }
+}
+
+export function validateStudentUpdate(data) {
+  const allowedFields = ['name', 'email', 'password'];
+  Object.keys(data).forEach(key => {
+    if (!allowedFields.includes(key)) {
+      throw new Error(`Cannot update field: ${key}`);
+    }
+  });
+}
