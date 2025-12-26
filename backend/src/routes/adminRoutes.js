@@ -1,5 +1,5 @@
 const express = require('express');
-const { archiveOldClasses, archiveFinalizedEnrollments } = require('./archiveUtils');
+const { archiveOldClasses, archiveFinalizedEnrollments } = require('../utils/archiveUtils');
 const router = express.Router();
 const multer = require('multer');
 const { uploadClasses } = require('../controllers/adminController');

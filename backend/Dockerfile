@@ -1,5 +1,5 @@
 # Base image
-FROM node:18
+FROM node:20
 
 # Set working directory inside container
 WORKDIR /app
@@ -9,7 +9,7 @@ COPY package.json ./
 RUN npm install
 
 # Copy the rest of your backend code
-COPY . .
+#COPY . .
 
 # Expose port (e.g., 5000 for Express)
 EXPOSE 5000

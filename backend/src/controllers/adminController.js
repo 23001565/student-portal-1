@@ -60,7 +60,7 @@ await prisma.enrollment.create({
 });
 
 import redis from '../data/redis.js';
-import { cacheRegistrationData } from '../services/registrationService.js';
+import { cacheRegistrationData } from '../services/courseRegistration/registrationService.js';
 
 
 export const startRegistrationRound = async (req, res) => {

@@ -1,4 +1,4 @@
-import redisClient from '../data/redis.js';
+import redisClient from '../../data/redis.js';
 
 export const setCache = async (key, value, ttlSec = 3600) => {
   await redisClient.set(key, JSON.stringify(value), { EX: ttlSec });

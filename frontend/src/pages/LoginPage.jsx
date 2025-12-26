@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../components/Button";
+import api, { login as apiLogin } from "../services/api";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -22,22 +23,15 @@ const LoginPage = () => {
     setError("");
 
     try {
-      // Simulate API call - trong thực tế sẽ gọi API backend
-      const response = await simulateLogin(formData);
+      const resp = await apiLogin(formData.email, formData.password, formData.userType);
+      // resp expected: { token, user }
+      localStorage.setItem("token", resp.token);
+      localStorage.setItem("user", JSON.stringify(resp.user));
 
-      if (response.success) {
-        // Lưu thông tin user vào localStorage
-        localStorage.setItem("user", JSON.stringify(response.user));
-        localStorage.setItem("token", response.token);
-
-        // Redirect dựa trên loại user
-        if (formData.userType === "admin") {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/dashboard");
-        }
+      if (formData.userType === "admin") {
+        navigate("/admin/dashboard");
       } else {
-        setError(response.message);
+        navigate("/dashboard");
       }
     } catch {
       setError("Đã xảy ra lỗi khi đăng nhập");
@@ -46,76 +40,7 @@ const LoginPage = () => {
     }
   };
 
-  // Hàm simulate login - trong thực tế sẽ gọi API
-  const simulateLogin = async (data) => {
-    // Simulate delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Mock data dựa trên database
-    const mockUsers = {
-      student: [
-        {
-          id: 1,
-          code: 1001,
-          email: "22001497@hus.edu",
-          name: "Alice Nguyen",
-          password: "123456",
-          year: 1,
-          majorId: 1,
-        },
-        {
-          id: 2,
-          code: 1002,
-          email: "22001496@hus.edu",
-          name: "Bob Tran",
-          password: "123456",
-          year: 2,
-          majorId: 1,
-        },
-        {
-          id: 3,
-          code: 1003,
-          email: "22001495@student.edu",
-          name: "Carol Le",
-          password: "123456",
-          year: 1,
-          majorId: 2,
-        },
-      ],
-      admin: [
-        {
-          id: 1,
-          email: "23001497@hus.edu",
-          username: "admin1",
-          password: "123456",
-        },
-        {
-          id: 2,
-          email: "23001565@hus.edu",
-          username: "admin2",
-          password: "1234567",
-        },
-      ],
-    };
-
-    const users = mockUsers[data.userType];
-    const user = users.find(
-      (u) => u.email === data.email && u.password === data.password
-    );
-
-    if (user) {
-      return {
-        success: true,
-        user: user,
-        token: `token_${Date.now()}`,
-      };
-    } else {
-      return {
-        success: false,
-        message: "Email hoặc mật khẩu không đúng",
-      };
-    }
-  };
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">

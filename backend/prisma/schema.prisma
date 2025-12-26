@@ -9,16 +9,16 @@ datasource db {
 
 enum EnrollmentStatus {
   ENROLLED 
-  WITHDRAWN   
-  DROPPED      // class cancelled
+  CANCELLED  // class cancelled
+  DROPPED      
 }
 
 enum CurriculumGroupType {
-	GENERAL
-	FIELD
-	BRANCH
-	GROUP
-	MAJOR
+	CHUNG
+	LINHVUC
+	KHOINGANH
+	NHOMNGANH
+	NGANH
 }
 
 
@@ -198,7 +198,7 @@ model Grade {
   midTerm         Float
   finalExam       Float
 
-  total10Scale    Float      // Provided by teacher (or calculated before submission)
+  total10Scale    Float      
   total4Scale     Float?     // System calculated
   letterGrade     String?    // System calculated
   

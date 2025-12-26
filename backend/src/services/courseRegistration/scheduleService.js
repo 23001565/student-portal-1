@@ -1,5 +1,5 @@
-import prisma from '../data/prisma.js';
-import redis from '../data/redis.js';
+import prisma from '../../data/prisma.js';
+import redis from '../../data/redis.js';
 import { checkConflicts } from './redisValidationService.js';
 
 export async function getStudentSession(studentId) {

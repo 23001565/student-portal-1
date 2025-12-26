@@ -1,0 +1,46 @@
+# Node
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.*
+env.local
+
+# Logs
+logs
+*.log
+.next/
+
+# Build
+dist/
+build/
+coverage/
+.parcel-cache/
+.cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Docker
+*.env.*.local
+docker-compose.override.yml
+
+# Prisma
+/.prisma/
+prisma/.env
+
+# Misc
+.nyc_output/
+coverage/
+pids/
+*.pid
+*.seed

@@ -1,4 +1,4 @@
-import redisClient from "../data/redis.js";
+import redisClient from "../../data/redis.js";
 
 
 export async function getClassForCurriculum(curriculumId) {
