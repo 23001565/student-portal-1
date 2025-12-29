@@ -145,7 +145,7 @@ export default function CourseRegistration() {
         subtitle="Học kỳ 1 - Năm học 2024-2025"
         headerActions={
             <Button variant="outline" onClick={loadCourses} disabled={loading}>
-                🔄 Làm mới
+                Làm mới
             </Button>
         }
       >

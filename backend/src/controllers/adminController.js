@@ -1,7 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const csv = require('csv-parser');
-const { createClassesFromCSV } = require('../services/csvService');
+const { createClassesFromCSV } = require('../services/csvService.js');
 const streamifier = require('streamifier'); 
 //fs reads files from the filesystem(disk), when admin uploads files, it's usually in memory (RAM). streamifier helps convert buffer data (in memory) to a stream, so csv-parser can read it.
 
