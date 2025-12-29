@@ -131,7 +131,7 @@ const StudentDetail = () => {
             </Button>
             <Button
               onClick={() => window.print()}
-              style={{ background: "#3b82f6", border: "none" }}
+              variant="outline"
             >
               In hồ sơ
             </Button>

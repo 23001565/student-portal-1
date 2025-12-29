@@ -82,7 +82,7 @@
 .sidebar-brand-text {
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--text-primary, #1e293b);
+  color: #29702b;
   white-space: nowrap;
   line-height: 1.2;
   display: flex;
@@ -90,7 +90,7 @@
 }
 
 .sidebar-brand-text .text-primary {
-  color: var(--primary-color, #2563eb);
+  color: #29702b !important; 
   font-size: 0.875rem;
 }
 

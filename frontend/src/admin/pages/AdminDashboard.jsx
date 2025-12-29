@@ -85,21 +85,24 @@ const AdminDashboard = () => {
         subtitle="Tổng quan nhanh về hoạt động của trường học hôm nay."
         headerActions={
           <div style={{ display: "flex", gap: "0.75rem" }}>
+            {/* --- NÚT 1: THÊM HỌC SINH (ĐÃ SỬA) --- */}
             <Button
-              variant="primary"
+              variant="success" // Đổi thành success (màu xanh lá)
               style={{
-                background: "#9333ea",
+                // Đã xóa dòng background: "#9333ea"
                 border: "none",
                 borderRadius: "0.5rem",
               }}
               onClick={() => navigate("/admin/students")}
             >
-              + Thêm Học sinh
+              Thêm Học sinh
             </Button>
+
+            {/* --- NÚT 2: TẠO BÁO CÁO (ĐÃ SỬA) --- */}
             <Button
-              variant="primary"
+              variant="success" // Đổi thành success
               style={{
-                background: "#9333ea",
+                // Đã xóa dòng background: "#9333ea"
                 border: "none",
                 borderRadius: "0.5rem",
               }}
@@ -286,7 +289,7 @@ const AdminDashboard = () => {
                             width: "100%",
                             height: `${(item.score / 10) * 150}px`,
                             background:
-                              item.className === "11B1" ? "#9333ea" : "#e5e7eb",
+                              item.className === "11B1" ? "#10b981" : "#e5e7eb", // Sửa lại màu cột highlight cho đồng bộ xanh lá luôn (nếu muốn)
                             borderRadius: "0.25rem 0.25rem 0 0",
                             marginBottom: "0.5rem",
                             transition: "all 0.3s",

@@ -20,7 +20,7 @@ import Layout from "../../components/Layout";
 
 const ManageCourses = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("các khóa học của trường");
+  const [activeTab, setActiveTab] = useState("courses");
   const [courses, setCourses] = useState([]);
   const [classes, setClasses] = useState([]);
   const [showCourseModal, setShowCourseModal] = useState(false);

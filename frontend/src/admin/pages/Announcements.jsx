@@ -78,13 +78,13 @@ const Announcements = () => {
             <h2>Quản lý thông báo</h2>
             <div className="d-flex gap-2">
               <Button
-                variant="primary"
+                variant="success"
                 onClick={() => navigate("/admin/post-announcement")}
               >
                 Đăng thông báo
               </Button>
               <Button
-                variant="secondary"
+                variant="success"
                 onClick={() => navigate("/admin/dashboard")}
               >
                 Trang quản lý
@@ -128,39 +128,69 @@ const Announcements = () => {
           )}
 
           {announcements.map((a) => (
-            <Col key={a.id} md={6} lg={4} className="mb-3">
-              <Card className={`announcement-card priority-${a.priority}`}>
+            <Col key={a.id} md={6} lg={4} className="mb-4">
+              <Card className={`announcement-card h-100 priority-${a.priority}`}>
                 <Card.Header>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <h6 className="mb-0">{a.title}</h6>
-                    <Badge bg={priorityVariant[a.priority] || "secondary"}>
-                      {a.priority === "high"
-                        ? "Ưu tiên cao"
-                        : a.priority === "normal"
-                        ? "Bình thường"
-                        : "Thấp"}
-                    </Badge>
-                  </div>
-                </Card.Header>
-                <Card.Body>
-                  <p className="mb-2 text-muted small">
+  {/* Đổi align-items-center thành align-items-start để căn lề trên */}
+  <div className="d-flex justify-content-between align-items-start">
+    
+    {/* --- SỬA Ở ĐÂY: Bỏ text-truncate và maxWidth --- */}
+    <h6 className="mb-0 me-3" style={{ lineHeight: '1.4' }}>
+        {a.title}
+    </h6>
+    {/* ----------------------------------------------- */}
+
+    {/* Thêm whiteSpace: 'nowrap' để giữ Badge luôn thẳng hàng, không bị méo */}
+    <Badge 
+      bg={priorityVariant[a.priority] || "secondary"} 
+      style={{ whiteSpace: 'nowrap', marginTop: '2px' }}
+    >
+      {a.priority === "high"
+        ? "Ưu tiên cao"
+        : a.priority === "normal"
+        ? "Bình thường"
+        : "Thấp"}
+    </Badge>
+  </div>
+</Card.Header>
+                <Card.Body className="d-flex flex-column">
+                  <p className="mb-3 text-secondary small flex-grow-1">
                     {a.content.length > 140
                       ? `${a.content.slice(0, 140)}...`
                       : a.content}
                   </p>
-                  <div className="d-flex justify-content-between align-items-center small text-muted">
-                    <span>
-                      Đối tượng:{" "}
-                      {a.audience === "all"
-                        ? "Tất cả"
-                        : a.audience === "students"
-                        ? "Sinh viên"
-                        : "Giảng viên"}
-                    </span>
-                    <span>
-                      Đăng bởi {a.postedBy} • {formatDateTime(a.postedAt)}
-                    </span>
-                  </div>
+                  
+                  {/* --- PHẦN ĐÃ SỬA GIAO DIỆN --- */}
+                  {/* --- ĐOẠN CODE ĐÃ SỬA: 3 DÒNG RIÊNG BIỆT --- */}
+<div className="mt-auto pt-3 border-top">
+
+  {/* Dòng 1: ĐỐI TƯỢNG */}
+  <div className="mb-2">
+    <span className="text-muted fw-bold text-uppercase me-2" style={{ fontSize: '0.7rem' }}>
+      ĐỐI TƯỢNG:
+    </span>
+    <span className="fw-bold text-dark">
+      {a.audience === "all"
+        ? "Tất cả"
+        : a.audience === "students"
+        ? "Sinh viên"
+        : "Giảng viên"}
+    </span>
+  </div>
+
+  {/* Dòng 2: NGƯỜI ĐĂNG */}
+  <div className="text-muted small mb-1">
+    Đăng bởi <strong>{a.postedBy}</strong>
+  </div>
+
+  {/* Dòng 3: NGÀY GIỜ */}
+  <div className="text-muted" style={{ fontSize: '0.75rem' }}>
+    {formatDateTime(a.postedAt)}
+  </div>
+
+</div>
+                  {/* ----------------------------- */}
+
                 </Card.Body>
               </Card>
             </Col>

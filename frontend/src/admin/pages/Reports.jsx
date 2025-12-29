@@ -514,7 +514,7 @@ const Reports = () => {
                               <h3 className="text-success">
                                 {reportData.gradeStats.passRate || 0}%
                               </h3>
-                              <p>Tỷ lệ thi đỗ</p>
+                              <p>Tỷ lệ qua môn</p>
                             </div>
                           </Col>
                           <Col md={4}>
