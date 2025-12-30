@@ -1,27 +1,24 @@
-# Node modules (will be installed inside container)
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
 node_modules
-
-# Environment variables
 .env
+/.pnp
+.pnp.js
+config.js
+# testing
+/coverage
 
-# Logs
+# production
+/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-*.log
-
-# OS files
-.DS_Store
-
-# Editor/IDE files
-.vscode
-.idea
-
-# Build files (if any)
-dist
-build
-
-#Temporary files
-Temporary
-tmp
-*.tmp
