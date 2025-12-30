@@ -165,4 +165,19 @@ const adminLogIn = async (req, res) => {
         res.send({ message: 'Email and password are required' });
     }
 };
+const getAdminDetail = async (req, res) => {
+    try {
+        let admin = await Admin.findById(req.params.id);
+        if (admin) {
+            admin.password = undefined;
+            res.send(admin);
+        } else {
+            res.send({ message: 'No admin found' });
+        }
+    } catch (err) {
+        res.status(500).json(err);
+    }
+};
+
+module.exports = { adminRegister, adminLogIn, getAdminDetail };
 
