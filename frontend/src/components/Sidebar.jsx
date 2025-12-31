@@ -45,6 +45,13 @@ const Sidebar = () => {
         </Nav.Link>
         <Nav.Link
           as={Link}
+          to="/admin/upload-courses"
+          active={isActive("/admin/upload-courses")}
+        >
+          Upload Courses
+        </Nav.Link>
+        <Nav.Link
+          as={Link}
           to="/admin/students"
           active={isActive("/admin/students")}
         >
@@ -66,10 +73,10 @@ const Sidebar = () => {
         </Nav.Link>
         <Nav.Link
           as={Link}
-          to="/admin/upload-curriculum"
-          active={isActive("/admin/upload-curriculum")}
+          to="/admin/manage-curricula"
+          active={isActive("/admin/manage-curricula")}
         >
-          Upload Curriculum
+          Manage Curricula
         </Nav.Link>
         <Nav.Link
           as={Link}

@@ -1,3 +1,4 @@
+/*
 import { checkTimeConflict, checkDuplicateCourse, checkSeatAvailability } from "./redisValidationService.js";
 
 export async function validateCourseSelection(studentId, newCourse) {
@@ -33,3 +34,4 @@ export function validateStudentUpdate(data) {
     }
   });
 }
+  */

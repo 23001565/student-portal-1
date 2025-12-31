@@ -1,10 +1,8 @@
+/*
 import redisClient from "../../data/redis.js";
 import prisma from "../data/prisma.js";
 
-// /**
-//  * Lấy danh sách các lớp (Class) thuộc chương trình đào tạo
-//  * Dùng khi frontend load danh sách lớp để sinh viên đăng ký
-//  */
+
 export async function getClassForCurriculum(curriculumId) {
   return prisma.class.findMany({
     where: { 
@@ -26,10 +24,10 @@ export async function getClassForCurriculum(curriculumId) {
   });
 }
 
-// /**
-//  * Khởi tạo capacity & seats_taken cho class trong Redis
-//  * Gọi khi mở đợt đăng ký hoặc khi server restart
-//  */
+// 
+//  Khởi tạo capacity & seats_taken cho class trong Redis
+//  Gọi khi mở đợt đăng ký hoặc khi server restart
+//  
 export async function initClassCapacity(classId) {
   const keyTaken = `class:${classId}:seats_taken`;
   const keyCapacity = `class:${classId}:capacity`;
@@ -46,11 +44,11 @@ export async function initClassCapacity(classId) {
   await redisClient.set(keyTaken, 0);
 }
 
-// /**
-//  * Giữ chỗ cho 1 sinh viên khi đăng ký lớp
-//  * ✔ Chống race condition
-//  * ✔ Không vượt quá capacity
-//  */
+// 
+//  Giữ chỗ cho 1 sinh viên khi đăng ký lớp
+//   ✔ Chống race condition
+//   ✔ Không vượt quá capacity
+//  
 export async function reserveSeat(classId) {
   const key = `class:${classId}:seats_taken`;
   const capacityKey = `class:${classId}:capacity`;
@@ -81,10 +79,11 @@ export async function reserveSeat(classId) {
   return { success: true };
 }
 
-// /**
-//  * Trả lại chỗ khi sinh viên huỷ đăng ký
-//  */
+// 
+//   Trả lại chỗ khi sinh viên huỷ đăng ký
+//  
 export async function releaseSeat(classId) {
   const key = `class:${classId}:seats_taken`;
   await redisClient.decr(key);
 }
+*/

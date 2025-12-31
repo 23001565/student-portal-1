@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageFrame from "../components/PageFrame";
 import Button from "../components/Button";
+import { useAuth } from '../context/authContext.jsx';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -11,14 +12,15 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Lấy thông tin user từ localStorage
-    const userData = localStorage.getItem("user");
-    if (!userData) {
+    
+    const { user, loading } = useAuth();
+    
+    if (!user) {
       navigate("/login");
       return;
     }
 
-    setUser(JSON.parse(userData));
+    setUser(JSON.parse(user));
     loadDashboardData();
   }, [navigate]);
 

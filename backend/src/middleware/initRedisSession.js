@@ -1,3 +1,4 @@
+/*
 // backend/src/middleware/initRedisSession.js
 import redis from "../data/redis.js";
 import prisma from "../data/prisma.js";
@@ -44,3 +45,4 @@ export async function initRedisSession(req, res, next) {
     res.status(500).json({ error: 'Failed to init registration session' });
   }
 }
+*/

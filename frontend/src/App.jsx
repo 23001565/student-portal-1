@@ -1,3 +1,4 @@
+import React from "react";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Login from "./pages/LoginPage";
@@ -13,7 +14,8 @@ import Reports from "./pages/Admin/Reports";
 import Announcements from "./pages/Admin/Announcements";
 import PostAnnouncement from "./pages/Admin/PostAnnouncement";
 import UploadGrades from "./pages/Admin/UploadGrades";
-import UploadCurriculum from "./pages/Admin/UploadCurriculum";
+import ManageCurricula from "./pages/Admin/ManageCurricula";
+import UploadCourses from "./pages/Admin/UploadCourses";
 import ProgressMonitor from "./pages/Admin/ProgressMonitor";
 import CourseRegistration from "./pages/CourseRegistration";
 function App() {
@@ -30,12 +32,14 @@ function App() {
             <Route path="/registration" element={<CourseRegistration />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/courses" element={<ManageCourses />} />
+            <Route path="/admin/upload-courses" element={<UploadCourses />} />
             <Route path="/admin/students" element={<ManageStudents />} />
             <Route path="/admin/reports" element={<Reports />} />
             <Route path="/admin/announcements" element={<Announcements />} />
             <Route path="/admin/post-announcement" element={<PostAnnouncement />} />
             <Route path="/admin/upload-grades" element={<UploadGrades />} />
-            <Route path="/admin/upload-curriculum" element={<UploadCurriculum />} />
+            <Route path="/admin/upload-curriculum" element={<ManageCurricula />} />
+            <Route path="/admin/manage-curricula" element={<ManageCurricula />} />
             <Route path="/admin/progress-monitor" element={<ProgressMonitor />} />
           </Routes>
         </BrowserRouter>

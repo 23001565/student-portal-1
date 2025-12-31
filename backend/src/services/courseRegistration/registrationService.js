@@ -1,3 +1,4 @@
+/*
 export async function getStudentClasses(studentId, curriculumId, term, year) {
   const curriculumCoursesKey = `curriculum:${curriculumId}:courses`;
   let courseIds = JSON.parse(await redis.get(curriculumCoursesKey));
@@ -26,3 +27,4 @@ export async function getStudentClasses(studentId, curriculumId, term, year) {
 
   return classLists;
 }
+  */

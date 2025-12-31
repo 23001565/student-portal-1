@@ -1,15 +1,16 @@
-import Redis from 'redis';
+// src/data/redis.js
+/*
+const { createClient } = require ("redis");
 
-const redis = Redis.createClient({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: 6379,
-  //url: process.env.REDIS_URL || 'redis://localhost:6379'
+const redis = createClient({
+  url: process.env.REDIS_URL || "redis://redis:6379",
 });
 
-redis.on('error', (err) => {
-  console.error('Redis Client Error', err);
+redis.on("error", (err) => {
+  console.error("Redis Client Error", err);
 });
 
 await redis.connect();
 
-export default redis;
+module.exports = redis;
+*/

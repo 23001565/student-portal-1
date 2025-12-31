@@ -1,63 +1,239 @@
 import React, { useMemo, useState } from 'react';
-import FileUpload from '../../components/FileUpload';
-import CSVPreviewTable from '../../components/CSVPreviewTable';
-import { uploadCurriculum } from '../../api/curriculumApi';
+import { uploadCurriculum } from '../../api/curriculumApi.js';
 
-function parseCSV(text) {
-  const lines = text.split(/\r?\n/).filter(l => l.trim().length);
-  const rows = lines.map(l => l.split(','));
-  return rows;
+// Simple ID generator for client-side tree editing
+function uid() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+function GroupEditor({ group, onChange, onDelete }) {
+  const [courseInput, setCourseInput] = useState('');
+
+  const updateField = (key, value) => {
+    onChange({ ...group, [key]: value });
+  };
+
+  const addCourse = () => {
+    const code = courseInput.trim();
+    if (!code) return;
+    if (group.courses.includes(code)) return;
+    onChange({ ...group, courses: [...group.courses, code] });
+    setCourseInput('');
+  };
+
+  const removeCourse = (code) => {
+    onChange({ ...group, courses: group.courses.filter(c => c !== code) });
+  };
+
+  const addSubgroup = () => {
+    const newSub = {
+      _id: uid(),
+      name: '',
+      type: '', // optional free-text or enum string
+      required: true,
+      totalCredits: 0,
+      courses: [],
+      subgroups: [],
+    };
+    onChange({ ...group, subgroups: [...group.subgroups, newSub] });
+  };
+
+  const updateSubgroup = (id, updated) => {
+    onChange({
+      ...group,
+      subgroups: group.subgroups.map(g => (g._id === id ? updated : g)),
+    });
+  };
+
+  const deleteSubgroup = (id) => {
+    onChange({ ...group, subgroups: group.subgroups.filter(g => g._id !== id) });
+  };
+
+  return (
+    <div style={{ borderLeft: '2px solid #e2e8f0', marginLeft: 12, paddingLeft: 12, marginTop: 12 }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        <input
+          type="text"
+          placeholder="Group name"
+          value={group.name}
+          onChange={(e) => updateField('name', e.target.value)}
+          style={{ padding: 8, border: '1px solid #cbd5e1', borderRadius: 6, minWidth: 180 }}
+        />
+        <input
+          type="text"
+          placeholder="Type (e.g., CORE/ELECTIVE)"
+          value={group.type || ''}
+          onChange={(e) => updateField('type', e.target.value)}
+          style={{ padding: 8, border: '1px solid #cbd5e1', borderRadius: 6, minWidth: 180 }}
+        />
+        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#334155' }}>
+          <input
+            type="checkbox"
+            checked={group.required}
+            onChange={(e) => updateField('required', e.target.checked)}
+          />
+          Required
+        </label>
+        <input
+          type="number"
+          min={0}
+          placeholder="Total Credits"
+          value={group.totalCredits}
+          onChange={(e) => updateField('totalCredits', Number(e.target.value) || 0)}
+          style={{ padding: 8, border: '1px solid #cbd5e1', borderRadius: 6, width: 140 }}
+        />
+        <button
+          onClick={onDelete}
+          style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: 6, padding: '8px 12px' }}
+        >Delete group</button>
+      </div>
+
+      {/* Courses */}
+      <div style={{ marginTop: 8 }}>
+        <div style={{ fontWeight: 600, color: '#334155', marginBottom: 6 }}>Courses in this group</div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <input
+            type="text"
+            placeholder="Course code (e.g., CS101)"
+            value={courseInput}
+            onChange={(e) => setCourseInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCourse(); } }}
+            style={{ padding: 8, border: '1px solid #cbd5e1', borderRadius: 6, minWidth: 180 }}
+          />
+          <button
+            onClick={addCourse}
+            style={{ background: '#2563eb', color: 'white', border: 'none', borderRadius: 6, padding: '8px 12px' }}
+          >Add course</button>
+        </div>
+        {group.courses.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+            {group.courses.map((c) => (
+              <span key={c} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#e2e8f0', padding: '4px 8px', borderRadius: 999 }}>
+                <span style={{ color: '#0f172a' }}>{c}</span>
+                <button onClick={() => removeCourse(c)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#ef4444' }}>✕</button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Subgroups */}
+      <div style={{ marginTop: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ fontWeight: 600, color: '#334155' }}>Subgroups</div>
+          <button
+            onClick={addSubgroup}
+            style={{ background: '#10b981', color: 'white', border: 'none', borderRadius: 6, padding: '6px 10px' }}
+          >Add subgroup</button>
+        </div>
+        {group.subgroups.length > 0 && (
+          <div style={{ marginTop: 8 }}>
+            {group.subgroups.map((sg) => (
+              <GroupEditor
+                key={sg._id}
+                group={sg}
+                onChange={(u) => updateSubgroup(sg._id, u)}
+                onDelete={() => deleteSubgroup(sg._id)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default function UploadCurriculum() {
-  const [file, setFile] = useState(null);
-  const [headers, setHeaders] = useState([]);
-  const [rows, setRows] = useState([]);
-  const [mapping, setMapping] = useState({
-    programId: '', programName: '', courseCode: '', courseName: '', credits: '', term: '', prerequisites: ''
-  });
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const headerOptions = useMemo(() => headers, [headers]);
+  // Curriculum metadata
+  const [code, setCode] = useState('');
+  const [majorId, setMajorId] = useState('');
+  const [startYear, setStartYear] = useState('');
+  const [endYear, setEndYear] = useState('');
 
-  const onFileSelected = async (f) => {
-    setFile(f);
-    setMessage('');
-    try {
-      const text = await f.text();
-      const r = parseCSV(text);
-      if (!r.length) { setHeaders([]); setRows([]); return; }
-      setHeaders(r[0]);
-      setRows(r.slice(1));
-      const lower = r[0].map(h => h.toLowerCase().trim());
-      setMapping(m => ({
-        programId: m.programId || (r[0][lower.indexOf('programid')] || r[0][lower.indexOf('ctdtid')] || ''),
-        programName: m.programName || (r[0][lower.indexOf('programname')] || r[0][lower.indexOf('tenctdt')] || ''),
-        courseCode: m.courseCode || (r[0][lower.indexOf('coursecode')] || r[0][lower.indexOf('mamh')] || ''),
-        courseName: m.courseName || (r[0][lower.indexOf('coursename')] || r[0][lower.indexOf('tenmh')] || ''),
-        credits: m.credits || (r[0][lower.indexOf('credits')] || r[0][lower.indexOf('sotinchi')] || ''),
-        term: m.term || (r[0][lower.indexOf('term')] || r[0][lower.indexOf('hocky')] || ''),
-        prerequisites: m.prerequisites || (r[0][lower.indexOf('prerequisites')] || r[0][lower.indexOf('tienquyet')] || ''),
-      }));
-    } catch (e) {
-      console.error(e);
-      setMessage('Không thể đọc file CSV');
-    }
+  // Tree: top-level groups
+  const [groups, setGroups] = useState([]);
+
+  const addTopLevelGroup = () => {
+    setGroups((gs) => ([
+      ...gs,
+      {
+        _id: uid(),
+        name: '',
+        type: '',
+        required: true,
+        totalCredits: 0,
+        courses: [],
+        subgroups: [],
+      }
+    ]));
   };
 
-  const handleUpload = async () => {
-    if (!file) return;
-    setLoading(true);
+  const updateGroup = (id, updated) => {
+    const walk = (arr) => arr.map((g) => {
+      if (g._id === id) return updated;
+      if (g.subgroups?.length) return { ...g, subgroups: walk(g.subgroups) };
+      return g;
+    });
+    setGroups((gs) => walk(gs));
+  };
+
+  const deleteGroup = (id) => {
+    const walk = (arr) => arr
+      .filter((g) => g._id !== id)
+      .map((g) => ({ ...g, subgroups: g.subgroups ? walk(g.subgroups) : [] }));
+    setGroups((gs) => walk(gs));
+  };
+
+  const stripForSubmit = (g) => ({
+    name: g.name?.trim() || null,
+    type: g.type?.trim() || null,
+    required: !!g.required,
+    totalCredits: Number(g.totalCredits) || 0,
+    courses: g.courses || [],
+    subgroups: (g.subgroups || []).map(stripForSubmit),
+  });
+
+  const validate = () => {
+    if (!code.trim()) return 'Mã chương trình (code) là bắt buộc';
+    const sy = Number(startYear);
+    if (!sy || sy < 1900 || sy > 3000) return 'Năm bắt đầu không hợp lệ';
+    if (endYear) {
+      const ey = Number(endYear);
+      if (!ey || ey < sy) return 'Năm kết thúc không hợp lệ';
+    }
+    // optional: ensure at least one group or course
+    if (groups.length === 0) return 'Cần ít nhất một group trong CTĐT';
+    return '';
+  };
+
+  const handleSubmit = async () => {
     setMessage('');
+    const err = validate();
+    if (err) { setMessage(err); return; }
+    setLoading(true);
     try {
+      const payload = {
+        code: code.trim(),
+        majorId: majorId ? Number(majorId) : null,
+        startYear: Number(startYear),
+        endYear: endYear ? Number(endYear) : null,
+        groups: groups.map(stripForSubmit),
+      };
+
+      // Keep existing API shape by sending multipart with a 'payload' field
       const form = new FormData();
-      form.append('file', file);
-      form.append('mapping', JSON.stringify(mapping));
+      form.append('payload', JSON.stringify(payload));
+
       const res = await uploadCurriculum(form);
-      setMessage(`Tải lên thành công: ${res?.inserted || 0} dòng`);
+      setMessage(`Tải lên thành công${res?.inserted ? `: ${res.inserted} bản ghi` : ''}`);
+
+      // Optional: reset
+      // setCode(''); setMajorId(''); setStartYear(''); setEndYear(''); setGroups([]);
     } catch (e) {
-      setMessage(e.message || 'Tải lên thất bại');
+      setMessage(e?.message || 'Tải lên thất bại');
     } finally {
       setLoading(false);
     }
@@ -65,56 +241,92 @@ export default function UploadCurriculum() {
 
   return (
     <div style={{ padding: 20 }}>
-      <h2>Upload chương trình học (CSV)</h2>
-      <p style={{ color: '#64748b' }}>Định dạng khuyến nghị: programId,programName,courseCode,courseName,credits,term,prerequisites</p>
+      <h2>Nhập chương trình học </h2>
+      <p style={{ color: '#64748b' }}>
+        Tạo CTĐT theo cấu trúc cây: Nhóm (có thể lồng) và các học phần trong từng nhóm. Trường backend sẽ nhận cấu trúc này để ghi DB.
+      </p>
 
-      <div style={{ marginTop: 16 }}>
-        <FileUpload onFileSelected={onFileSelected} />
+      {/* Metadata */}
+      <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16 }}>
+        <div>
+          <label style={{ display: 'block', fontWeight: 500, marginBottom: 6 }}>Mã chương trình (code)</label>
+          <input
+            type="text"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="e.g., IT2024-01"
+            style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 6, width: '100%' }}
+          />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontWeight: 500, marginBottom: 6 }}>Major ID</label>
+          <input
+            type="number"
+            value={majorId}
+            onChange={(e) => setMajorId(e.target.value)}
+            placeholder="e.g., 1"
+            style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 6, width: '100%' }}
+          />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontWeight: 500, marginBottom: 6 }}>Năm bắt đầu</label>
+          <input
+            type="number"
+            value={startYear}
+            onChange={(e) => setStartYear(e.target.value)}
+            placeholder="e.g., 2024"
+            style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 6, width: '100%' }}
+          />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontWeight: 500, marginBottom: 6 }}>Năm kết thúc (tùy chọn)</label>
+          <input
+            type="number"
+            value={endYear}
+            onChange={(e) => setEndYear(e.target.value)}
+            placeholder="e.g., 2028"
+            style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 6, width: '100%' }}
+          />
+        </div>
       </div>
 
-      {headers.length > 0 && (
-        <div style={{ marginTop: 24 }}>
-          <h3>Mapping cột</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16 }}>
-            {Object.keys(mapping).map((key) => (
-              <div key={key}>
-                <label style={{ display: 'block', fontWeight: 500, marginBottom: 6 }}>{key}</label>
-                <select
-                  value={mapping[key]}
-                  onChange={(e) => setMapping({ ...mapping, [key]: e.target.value })}
-                  style={{ padding: 8, border: '1px solid #cbd5e1', borderRadius: 6, width: '100%' }}
-                >
-                  <option value="">-- chọn cột --</option>
-                  {headerOptions.map((h, idx) => (
-                    <option key={idx} value={h}>{h}</option>
-                  ))}
-                </select>
-              </div>
-            ))}
-          </div>
+      {/* Groups builder */}
+      <div style={{ marginTop: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h3 style={{ margin: 0 }}>Nhóm (top-level)</h3>
+          <button
+            onClick={addTopLevelGroup}
+            style={{ background: '#10b981', color: 'white', border: 'none', borderRadius: 6, padding: '8px 12px' }}
+          >Thêm nhóm</button>
         </div>
-      )}
-
-      {rows.length > 0 && (
-        <div style={{ marginTop: 24 }}>
-          <h3>Xem trước</h3>
-          <CSVPreviewTable headers={headers} rows={rows} />
+        {groups.length === 0 && (
+          <div style={{ marginTop: 8, color: '#64748b' }}>Chưa có nhóm nào. Nhấn "Thêm nhóm" để bắt đầu.</div>
+        )}
+        <div style={{ marginTop: 8 }}>
+          {groups.map(g => (
+            <GroupEditor
+              key={g._id}
+              group={g}
+              onChange={(u) => updateGroup(g._id, u)}
+              onDelete={() => deleteGroup(g._id)}
+            />
+          ))}
         </div>
-      )}
+      </div>
 
+      {/* Submit */}
       <div style={{ marginTop: 24 }}>
         <button
-          onClick={handleUpload}
-          disabled={!file || loading}
-          style={{
-            background: '#2563eb', color: 'white', padding: '10px 16px', borderRadius: 6,
-            border: 'none', cursor: loading ? 'not-allowed' : 'pointer'
-          }}
-        >{loading ? 'Đang tải...' : 'Tải lên'}</button>
+          onClick={handleSubmit}
+          disabled={loading}
+          style={{ background: '#2563eb', color: 'white', padding: '10px 16px', borderRadius: 6, border: 'none', cursor: loading ? 'not-allowed' : 'pointer' }}
+        >{loading ? 'Đang gửi...' : 'Lưu CTĐT'}</button>
       </div>
 
       {message && (
-        <div style={{ marginTop: 16, color: message.includes('thất bại') ? '#dc2626' : '#16a34a' }}>{message}</div>
+        <div style={{ marginTop: 16, color: message.toLowerCase().includes('thất bại') || message.toLowerCase().includes('không hợp l��') ? '#dc2626' : '#16a34a' }}>
+          {message}
+        </div>
       )}
     </div>
   );

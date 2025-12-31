@@ -1,37 +1,9 @@
+/*
 import { prisma } from '../../data/prisma.js';
 import redis from '../../data/redis.js';
 
-/**
- * Cache all relevant courses and classes when admin starts a registration round.
- */
-/** 
- * async function curriculumCourseCache() {
-  const curricula = await prisma.curriculum.findMany({
-    where: { archivedAt: null },
-    select: { id: true } 
-    });
 
-  for (const curriculum of curricula) {
-    // fetch all groups for this curriculum
-    const groups = await prisma.curriculumGroup.findMany({
-      where: { curriculumId: curriculum.id },
-      select: { id: true },
-    });
-    const groupIds = groups.map(g => g.id);
-
-    // fetch all courses linked to these groups
-    const groupCourses = await prisma.groupCourse.findMany({
-      where: { groupId: { in: groupIds } },
-      select: { courseId: true },
-    });
-    const courseIds = [...new Set(groupCourses.map(gc => gc.courseId))]; // remove duplicates
-
-    // cache it
-    await redis.set(`curriculum:${curriculum.id}:courses`, JSON.stringify(courseIds));
-    console.log(` Cached ${courseIds.length} courses for curriculum ${curriculum.id}`);
-  }
-}
-*/
+ 
 
 
 //better version
@@ -135,43 +107,7 @@ async function getCachedCourseIds(curriculumId) {
 
   return courseIds;
 }
-/** 
- * async function buildCurriculumClassList(curriculumId, term, year) {
-  // 1. Get cached course IDs
-  const courseIds = await getCachedCourseIds(curriculumId);
-  if (courseIds.length === 0) {
-    console.warn(`No courses cached for curriculum ${curriculumId}`);
-    return [];
-  }
 
-  // 2. Fetch classes for these courses and the current registration round
-  const classes = await prisma.class.findMany({
-    where: {
-      courseId: { in: courseIds },
-      term, // dynamic argument
-      year, // dynamic argument
-    },
-    select: {
-      id: true,
-      courseId: true,
-      code: true,
-      capacity: true,
-      dayOfWeek: true,
-      startPeriod: true,
-      endPeriod: true,
-      location: true,
-    },
-  });
-
-  // 3. Cache in Redis using term and year
-  const key = `curriculum:${curriculumId}:classes:${term}:${year}`;
-  await redis.set(key, JSON.stringify(classes));
-
-  console.log(`Cached ${classes.length} classes for curriculum ${curriculumId} (${term} ${year})`);
-  return classes;
-}
-
- **/
 
   async function cacheCurriculumClassesForRound(term, year) {
   // Step 1: get all curriculum IDs
@@ -182,11 +118,7 @@ async function getCachedCourseIds(curriculumId) {
 
   for (const curriculum of curricula) {
     // Step 2: get course IDs from Redis
-    /**
-     * const courseIdsStr = await redis.get(`curriculum:${curriculum.id}:courses`);
-    if (!courseIdsStr) continue; // skip if curriculum has no courses cached
-    const courseIds = JSON.parse(courseIdsStr);
-     */
+    
     
 
     const courseIds = getCachedCourseIds(curriculum.id);
@@ -296,10 +228,7 @@ async function cacheAllCurriculumClassesForRound(term, year) {
 
 
 
-/**
- * Fetch curriculum course list from cache, rebuild if missing.
- * Returns an array of courseIds.
- */
+
 async function getOrRebuildCurriculumCourses(curriculumId) {
   const redisKey = `curriculum:${curriculumId}:courses`;
 
@@ -387,3 +316,4 @@ async function prepareRegistrationRound(term, year, round) {
   console.log(` Cache ready for Round ${round}`);
 }
 
+*/

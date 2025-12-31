@@ -1,3 +1,4 @@
+/*
 import { reserveSeat } from "../services/enrollmentService.js";
 import { validateCourseSelection } from "../services/validationService.js";
 import { getStudentClasses } from "../services/registrationService";
@@ -33,6 +34,6 @@ export async function saveEnrollment(req, res) {
   res.status(200).json({ success: true });
 }
 
-
+*/
 
 

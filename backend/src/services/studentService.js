@@ -1,88 +1,220 @@
-import prisma from '../data/prisma.js';
-// get student profile 
-export async function getStudentProfile(studentId) {
-  return prisma.student.findUnique({
-    where: { id: studentId },
-    select: {
+const prisma = require('../data/prisma');
+const bcrypt = require('bcrypt');
+const SALT_ROUNDS = Number(process.env.SALT_ROUNDS) || 12;
+
+function transform(student) {
+  return {
+    code: student.code,
+    name: student.name,
+    email: student.email,
+    year: student.year,
+    majorName: student.major.name,
+    curriculumCode: student.curriculum.code,
+    isActive: student.isActive,
+  };
+}
+
+async function getByCode(code) {
+  const student = await prisma.student.findUnique({
+    where: { code },
+    include: {
+      code: true,
+      email: true,
+      name: true,
+      year: true,
+      major: true,
+      curriculum: true,
+      isActive: true,
+      archivedAt: true,
+    },
+  });
+  if (!student || student.archivedAt) {
+    return null;
+  }
+  return transform(student);
+}
+
+async function updateByCode(code, payload) {
+  const {
+    majorName,
+    curriculumCode,
+    ...rest
+  } = payload;
+
+  const data = { ...rest };
+
+  if (majorName) {
+    const major = await prisma.major.findUnique({
+      where: { name: majorName },
+      select: { id: true },
+    });
+
+    if (!major) {
+      throw new Error('Invalid majorName');
+    }
+
+    data.majorId = major.id;
+  }
+
+  if (curriculumCode) {
+    const curriculum = await prisma.curriculum.findUnique({
+      where: { code: curriculumCode },
+      select: { id: true },
+    });
+
+    if (!curriculum) {
+      throw new Error('Invalid curriculumCode');
+    }
+
+    data.curriculumId = curriculum.id;
+  }
+
+  const student = await prisma.student.update({
+    where: { code },
+    data,
+    include: {
+      code: true,
+      email: true,
+      name: true,
+      year: true,
+      major: true,
+      curriculum: true,
+      isActive: true,
+    },
+  });
+
+  return transform(student);
+}
+
+
+async function archiveByCode(code) {
+  return prisma.student.update({
+    where: { code },
+    data: {
+      archivedAt: new Date(),
+      isActive: false,
+    },
+  });
+}
+
+async function removeByCode(code) {
+  return prisma.student.delete({
+    where: { code },
+  });
+}
+
+async function create(payload) {
+  const {
+    majorName,
+    curriculumCode,
+    password,
+    ...rest
+  } = payload;
+
+  // 1. Validate required fields
+  const required = ['code', 'email', 'name', 'year', 'password'];
+  for (const field of required) {
+    if (!payload[field]) {
+      throw new Error(`Missing required field: ${field}`);
+    }
+  }
+
+  // 2. Resolve major
+  const major = await prisma.major.findUnique({
+    where: { name: majorName },
+    select: { id: true },
+  });
+
+  if (!major) {
+    throw new Error('Invalid majorCode');
+  }
+
+  // 3. Resolve curriculum
+  const curriculum = await prisma.curriculum.findUnique({
+    where: { code: curriculumCode },
+    select: { id: true },
+  });
+
+  if (!curriculum) {
+    throw new Error('Invalid curriculumCode');
+  }
+
+  // Optional consistency check
+  if (curriculum.majorId !== major.id) {
+    throw new Error('Curriculum does not belong to major');
+  }
+
+  // 4. Hash password
+  const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+
+  // 5. Create student
+  const student = await prisma.student.create({
+    data: {
+      ...rest,
+      password: hashedPassword,
+      majorId: major.id,
+      curriculumId: curriculum.id,
+    },
+    include: {
+      code: true,
+      email: true,
+      name: true,
+      year: true,
+      major: true,
+      curriculum: true,
+    },
+  });
+  return transform(student);
+}
+
+async function filter({
+  year,
+  studentCode,
+  majorName,
+  curriculumCode,
+}) {
+  const students = await prisma.student.findMany({
+    where: {
+      archivedAt: null,
+
+      ...(year !== undefined && { year }),
+      ...(studentCode !== undefined && { code: studentCode }),
+
+      ...(majorName && {
+        major: {
+          name: majorName,
+        },
+      }),
+
+      ...(curriculumCode && {
+        curriculum: {
+          code: curriculumCode,
+        },
+      }),
+    },
+    include: {
       id: true,
       code: true,
-      name: true,
       email: true,
+      name: true,
       year: true,
-      major: {
-        select: { id: true, name: true }
-      },
-      curriculum: {
-        select: { id: true, code: true }
-      }
-    }
-  });
-}
-
-// create student
-export async function createStudent(data) {
-  return prisma.student.create({ data });
-}
-
-// update student
-export async function updateStudentProfile(studentId, data) {
-  return prisma.student.update({
-    where: { id: studentId },
-    data
-  });
-}
-
-// delete student
-export async function deleteStudent(studentId) {
-  return prisma.student.delete({ where: { id: studentId } });
-}
-
-// query list
-export async function getAllStudents() {
-  return prisma.student.findMany();
-}
-
-// find student by name
-export async function findStudentsByName(name) {
-  return prisma.student.findMany({
-    where: { name: { contains: name, mode: 'insensitive' } }
-  });
-}
-
-
-// controller: GET /students/me/enrollments
-export async function getStudentEnrollments(studentId) {
-  return prisma.enrollment.findMany({
-    where: { studentId },
-    include: {
-      class: {
-        include: {
-          course: true
-        }
-      }
+      major: true,
+      curriculum: true,
+      isActive: true,
     },
-    orderBy: {
-      createdAt: 'desc'
-    }
   });
+  if (!students || students.length === 0) {
+    return [];
+  }
+  return students.map(transform);
 }
 
-// controller: GET /students/me/schedule
-export async function getStudentSchedule(studentId, semester, year) {
-  return prisma.enrollment.findMany({
-    where: {
-      studentId,
-      class: {
-        semester,
-        year
-      }
-    },
-    include: {
-      class: {
-        include: {
-          course: true
-        }
-      }
-    }
-  });
-}
+
+module.exports = {
+  getByCode,
+  updateByCode,
+  archiveByCode,
+  removeByCode,
+  create,
+  filter,
+};

@@ -1,76 +1,52 @@
-import {
-  getStudentProfile,
-  // createStudent,
-  updateStudentProfile,
-  // deleteStudent, 
-  // getAllStudents,
-  // findStudentsByName,
-  getStudentEnrollments,
-  getStudentSchedule
-} from '../services/studentService.js';
+const studentService = require('../services/studentService');
 
-//  getStudentProfile
-export async function profile(req, res) {
-  try {
-    const studentId = req.user.id;
+async function getProfile(req, res) {
+  const { role, id } = req.user;
 
-    const student = await getStudentProfile(studentId);
+  // student → only own profile
+  const studentCode = role === 'student' ? id : Number(req.params.code);
 
-    if (!student) {
-      return res.status(404).json({ error: 'Student not found' });
-    }
-
-    res.json(student);
-  } catch (err) {
-    console.error('Student profile error:', err);
-    res.status(500).json({ error: 'Failed to fetch profile' });
+  const student = await studentService.getByCode(studentCode);
+  if (!student) {
+    return res.status(404).json({ message: 'Student not found' });
   }
+
+  res.json(student);
 }
 
-//updateStudentProfile
-export async function updateProfile(req, res) {
-  try {
-    const studentId = req.user.id;
-    const data = req.body;
+async function updateProfile(req, res) {
+  const { role, id } = req.user;
+  const studentCode = role === 'student' ? id : Number(req.params.code);
 
-    const updated = await updateStudentProfile(studentId, data);
-
-    res.json(updated);
-  } catch (err) {
-    console.error('Update student profile error:', err);
-    res.status(500).json({ error: 'Failed to update profile' });
-  }
+  const student = await studentService.updateByCode(studentCode, req.body);
+  res.json(student);
 }
 
-// getStudentEnrollments
-export async function myEnrollments(req, res) {
-  try {
-    const studentId = req.user.id;
-
-    const enrollments = await getStudentEnrollments(studentId);
-
-    res.json(enrollments);
-  } catch (err) {
-    console.error('Get enrollments error:', err);
-    res.status(500).json({ error: 'Failed to fetch enrollments' });
-  }
+async function archive(req, res) {
+  await studentService.archiveByCode(Number(req.params.code));
+  res.status(204).end();
 }
 
-//getStudentSchedule
-export async function mySchedule(req, res) {
-  try {
-    const studentId = req.user.id;
-    const { semester, year } = req.query;
-
-    const schedule = await getStudentSchedule(
-      studentId,
-      Number(semester),
-      Number(year)
-    );
-
-    res.json(schedule);
-  } catch (err) {
-    console.error('Get schedule error:', err);
-    res.status(500).json({ error: 'Failed to fetch schedule' });
-  }
+async function create(req, res) {
+  const student = await studentService.create(req.body);
+  res.status(201).json(student);
 }
+
+async function remove(req, res) {
+  await studentService.removeByCode(Number(req.params.code));
+  res.status(204).end();
+}
+
+async function list(req, res) {
+  const students = await studentService.filter(req.query);
+  res.json(students);
+}
+
+module.exports = {
+  getProfile,
+  updateProfile,
+  archive,
+  create,
+  remove,
+  list,
+};

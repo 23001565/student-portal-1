@@ -1,3 +1,4 @@
+/*
 import redisClient from '../../data/redis.js';
 
 export async function checkTimeConflict(studentId, newCourse) {
@@ -50,3 +51,4 @@ export async function checkSeatAvailability(courseId) {
 
   return { valid: true };
 }
+  */

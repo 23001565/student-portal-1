@@ -1,3 +1,4 @@
+/**
 import prisma from '../../data/prisma.js';
 import redis from '../../data/redis.js';
 import { checkConflicts } from './redisValidationService.js';
@@ -58,7 +59,7 @@ export async function saveSchedule(studentId) {
 }
 /**
  * Gỡ một course khỏi session đăng ký tạm (chưa ghi DB)
- */
+ 
 export async function removeCourseFromSession(studentId, courseId) {
   const key = `student:${studentId}:session`;
   const raw = await redis.get(key);
@@ -76,17 +77,18 @@ export async function removeCourseFromSession(studentId, courseId) {
 
   return session;
 }
-
+*/
 /**
  * Huỷ toàn bộ session đăng ký tạm
- */
+
 export async function clearStudentSession(studentId) {
   const key = `student:${studentId}:session`;
   await redis.del(key);
 }
+   */
 /**
  * Kiểm tra session có course nào không
- */
+ 
 export async function isSessionEmpty(studentId) {
   const key = `student:${studentId}:session`;
   const raw = await redis.get(key);
@@ -96,10 +98,12 @@ export async function isSessionEmpty(studentId) {
   const session = JSON.parse(raw);
   return session.courses.length === 0;
 }
+  */
 /**
  * Lấy danh sách courseId hiện có trong session
- */
+ 
 export async function getSessionCourseIds(studentId) {
   const session = await getStudentSession(studentId);
   return session.courses.map(c => c.courseId);
 }
+*/

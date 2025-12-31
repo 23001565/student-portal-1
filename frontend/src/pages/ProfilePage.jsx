@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageFrame from "../components/PageFrame";
 import Button from "../components/Button";
+import { getMyProfile } from '../api/studentApi';
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
@@ -11,43 +12,9 @@ const ProfilePage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const userData = localStorage.getItem("user");
-    if (!userData) {
-      navigate("/");
-      return;
-    }
-    const parsedUser = JSON.parse(userData);
-    loadProfile(parsedUser.id);
+   getMyProfile().then(setProfile).catch(console.error);
   }, [navigate]);
-  const loadProfile = async (userId) => {
-    try {
-      // Mock data based on student, major, curriculum tables
-      const mockProfile = {
-        id: userId,
-        code: 1001,
-        name: "Alice Nguyen",
-        email: "22001497@hus.edu",
-        year: 1,
-        major: {
-          id: 1,
-          name: "Computer Science",
-        },
-        curriculum: {
-          id: 1,
-          startYear: 2023,
-          endYear: 2027,
-        },
-        createdAt: "2025-10-23",
-        isActive: true,
-      };
-      setProfile(mockProfile);
-      setFormData(mockProfile);
-    } catch (error) {
-      console.error("Lỗi khi tải hồ sơ:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -204,9 +171,7 @@ const ProfilePage = () => {
               <input
                 type="text"
                 value={
-                  formData.curriculum
-                    ? `${formData.curriculum.startYear} - ${formData.curriculum.endYear}`
-                    : ""
+                  formData.curriculum?.code || ""
                 }
                 disabled
                 className="form-control"
@@ -217,24 +182,7 @@ const ProfilePage = () => {
               />
             </div>
 
-            {/* Ngày tạo */}
-            <div className="form-group">
-              <label className="form-label">Ngày tạo tài khoản</label>
-              <input
-                type="text"
-                value={
-                  formData.createdAt
-                    ? new Date(formData.createdAt).toLocaleDateString("vi-VN")
-                    : ""
-                }
-                disabled
-                className="form-control"
-                style={{
-                  backgroundColor: "var(--bg-tertiary)",
-                  color: "var(--text-tertiary)",
-                }}
-              />
-            </div>
+  
 
             {/* Trạng thái */}
             <div className="form-group">

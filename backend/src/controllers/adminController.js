@@ -1,3 +1,4 @@
+/*
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const csv = require('csv-parser');
@@ -78,4 +79,4 @@ export const startRegistrationRound = async (req, res) => {
 };
 
 
-
+*/
