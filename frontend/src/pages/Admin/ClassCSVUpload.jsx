@@ -47,7 +47,8 @@ const ClassCSVUpload = ({ onSuccess }) => {
         {error && <Alert variant="danger">{error}</Alert>}
         {result && (
           <Alert variant="success">
-            Upload thành công: {result.created || 0} lớp
+            Upload thành công: {result.inserted || 0}  lớp
+            , cập nhật {result.updated || 0} lớp
             {result.skipped ? `, bỏ qua ${result.skipped}` : ''}
           </Alert>
         )}

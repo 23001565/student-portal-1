@@ -5,11 +5,14 @@ const cors = require('cors');
 const authRoutes = require ('./routes/auth/authRoutes.js');
 //const adminRoutes =  require('./routes/adminRoutes.js');
 const studentRoutes = require ('./routes/studentRoutes.js');
+const adminStudentRoutes = require('./routes/adminStudentRoutes.js');
 //const enrollmentRoutes = require('./routes/enrollmentRoutes.js');
 const classRoutes = require ('./routes/classRoutes.js');
 const curriculumRoutes = require ('./routes/curriculumRoutes.js');
 const courseRoutes = require ('./routes/courseRoutes.js');
 const auth = require('./routes/auth/auth.js');
+const announcementRoutes = require('./routes/announcementRoutes.js');
+const adminAnnouncementRoutes = require('./routes/adminAnnouncementRoutes.js');
 
 const app = express();
 
@@ -37,10 +40,13 @@ app.use('/auth', auth);
 //app.use('/api/admin', adminRoutes);
 app.use('/auth', authRoutes);
 app.use('/api/students', studentRoutes);
+app.use('/api/admin/students', adminStudentRoutes);
 //app.use('/api/enrollments', enrollmentRoutes);
-app.use('/api/classes', classRoutes);
+app.use('/api/admin/classes', classRoutes);
 app.use('/api/admin/curriculum', curriculumRoutes);
 app.use('/api/admin/courses', courseRoutes);
+app.use('/api/announcements', announcementRoutes);
+app.use('/api/admin/announcements', adminAnnouncementRoutes);
 
 
 app.use((err, req, res, next) => {

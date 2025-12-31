@@ -2,7 +2,7 @@ import { http } from './http.js';
 
 export async function uploadGrades(formData) {
   // Stub endpoint - replace with real API
-  return http('/admin/grades/upload', {
+  return http('/api/admin/grades/upload', {
     method: 'POST',
     body: formData,
   });
@@ -10,7 +10,7 @@ export async function uploadGrades(formData) {
 
 export async function validateGradesMapping(mapping) {
   // Optional validation step for mapping columns
-  return http('/admin/grades/validate-mapping', {
+  return http('/api/admin/grades/validate-mapping', {
     method: 'POST',
     body: JSON.stringify(mapping),
   });

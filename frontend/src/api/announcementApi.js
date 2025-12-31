@@ -4,7 +4,7 @@ import { http } from './http.js';
  * Get all announcements (authenticated users)
  */
 export function listAnnouncements() {
-  return http('/announcements');
+  return http('/api/announcements');
 }
 
 /**
@@ -12,7 +12,7 @@ export function listAnnouncements() {
  * @param {{ title: string, content: string }} payload
  */
 export function createAnnouncement(payload) {
-  return http('/admin/announcements', {
+  return http('/api/admin/announcements', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
@@ -23,7 +23,7 @@ export function createAnnouncement(payload) {
  * @param {number} id
  */
 export function deleteAnnouncement(id) {
-  return http(`/admin/announcements/${id}`, {
+  return http(`/api/admin/announcements/${id}`, {
     method: 'DELETE',
   });
 }
@@ -32,7 +32,7 @@ export function deleteAnnouncement(id) {
  * Delete all announcements (admin only)
  */
 export function deleteAllAnnouncements() {
-  return http('/admin/announcements', {
+  return http('/api/admin/announcements', {
     method: 'DELETE',
   });
 }

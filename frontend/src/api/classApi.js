@@ -16,7 +16,7 @@ export async function listClasses({
   if (year !== undefined && year !== '') params.set('year', String(year));
   if (includeArchived) params.set('includeArchived', '1');
 
-  const url = `/admin/classes${params.toString() ? `?${params.toString()}` : ''}`;
+  const url = `/api/admin/classes${params.toString() ? `?${params.toString()}` : ''}`;
   return http(url);
 }
 
@@ -24,7 +24,7 @@ export async function listClasses({
    CREATE CLASS
 ========================= */
 export async function createClass(body) {
-  return http('/admin/classes', {
+  return http('/api/admin/classes', {
     method: 'POST',
     body: JSON.stringify(body),
   });
@@ -36,7 +36,7 @@ export async function createClass(body) {
 ========================= */
 export async function updateClass(code, semester, year, body) {
   return http(
-    `/admin/classes/${encodeURIComponent(code)}/${semester}/${year}`,
+    `/api/admin/classes/${encodeURIComponent(code)}/${semester}/${year}`,
     {
       method: 'PATCH',
       body: JSON.stringify(body),
@@ -49,7 +49,7 @@ export async function updateClass(code, semester, year, body) {
 ========================= */
 export async function archiveClass(code, semester, year) {
   return http(
-    `/admin/classes/${encodeURIComponent(code)}/${semester}/${year}/archive`,
+    `/api/admin/classes/${encodeURIComponent(code)}/${semester}/${year}/archive`,
     { method: 'POST' },
   );
 }
@@ -59,7 +59,7 @@ export async function archiveClass(code, semester, year) {
 ========================= */
 export async function deleteClass(code, semester, year) {
   return http(
-    `/admin/classes/${encodeURIComponent(code)}/${semester}/${year}`,
+    `/api/admin/classes/${encodeURIComponent(code)}/${semester}/${year}`,
     { method: 'DELETE' },
   );
 }
@@ -68,7 +68,7 @@ export async function deleteClass(code, semester, year) {
    UPLOAD CLASSES FROM CSV
 ========================= */
 export async function uploadClasses(formData) {
-  return http('/admin/classes/upload', {
+  return http('/api/admin/classes/upload', {
     method: 'POST',
     body: formData,
   });

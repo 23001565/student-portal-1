@@ -2,11 +2,11 @@ const prisma = require('../data/prisma');
 
 async function getAllAnnouncements() {
   return prisma.announcement.findMany({
-    orderBy: { createdAt: 'desc' },
+    orderBy: { postedAt: 'desc' },
     select: {
         title: true,
         content: true,
-        createdAt: true,
+        postedAt: true,
     }
   });
 }
@@ -24,7 +24,7 @@ async function createAnnouncement({ title, content, postedById }) {
     data: {
       title,
       content,
-      postedById, 
+      postedById,
     },
   });
 }
