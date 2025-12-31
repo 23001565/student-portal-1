@@ -1,56 +1,37 @@
-// src/api/adminApi.js
 import axiosClient from './axiosClient';
 
 const adminApi = {
-  // --- DASHBOARD ---
-  getDashboardStats: () => {
-    return axiosClient.get('/admin/stats');
-  },
+  // --- Dashboard & Thống kê ---
+  getDashboardStats: () => axiosClient.get('/admin/stats'),
 
-  // --- QUẢN LÝ SINH VIÊN (ManageStudents.jsx) ---
-  getAllStudents: (params) => {
-    // params có thể là { search: '...', page: 1 }
-    return axiosClient.get('/admin/students', { params });
-  },
-  getStudentById: (id) => {
-    return axiosClient.get(`/admin/students/${id}`);
-  },
-  createStudent: (data) => {
-    return axiosClient.post('/admin/students', data);
-  },
-  updateStudent: (id, data) => {
-    return axiosClient.put(`/admin/students/${id}`, data);
-  },
-  deleteStudent: (id) => {
-    return axiosClient.delete(`/admin/students/${id}`);
-  },
+  // --- Quản lý Sinh viên ---
+  getAllStudents: () => axiosClient.get('/admin/students'),
+  createStudent: (data) => axiosClient.post('/admin/students', data),
+  updateStudent: (id, data) => axiosClient.put(`/admin/students/${id}`, data),
+  deleteStudent: (id) => axiosClient.delete(`/admin/students/${id}`),
+  getReports: (params) => axiosClient.get('/admin/reports', { params }),
+  getAcademicProgress: () => axiosClient.get('/admin/progress'),
 
-  // --- QUẢN LÝ MÔN HỌC (ManageCourses.jsx) ---
-  getAllCourses: () => {
-    return axiosClient.get('/admin/courses');
-  },
-  createCourse: (data) => {
-    return axiosClient.post('/admin/courses', data);
-  },
-  updateCourse: (id, data) => {
-    return axiosClient.put(`/admin/courses/${id}`, data);
-  },
+  // --- Quản lý Môn học (Courses) ---
+  getAllCourses: () => axiosClient.get('/admin/courses'),
+  createCourse: (data) => axiosClient.post('/admin/courses', data),
+  updateCourse: (id, data) => axiosClient.put(`/admin/courses/${id}`, data),
+
+  // --- Quản lý Lớp học phần (Classes) ---
+  getAllClasses: () => axiosClient.get('/admin/classes'),
+  createClass: (data) => axiosClient.post('/admin/classes', data),
   
-  // --- QUẢN LÝ LỚP HỌC PHẦN (Classes) ---
-  getAllClasses: () => {
-    return axiosClient.get('/admin/classes');
-  },
-  createClass: (data) => {
-    return axiosClient.post('/admin/classes', data);
-  },
+  // --- Thông báo ---
+  getAllAnnouncements: () => axiosClient.get('/admin/announcements'),
+  createAnnouncement: (data) => axiosClient.post('/admin/announcements', data),
   
-  // --- THÔNG BÁO (Announcements.jsx) ---
-  getAllAnnouncements: () => {
-    return axiosClient.get('/admin/announcements');
-  },
-  createAnnouncement: (data) => {
-    return axiosClient.post('/admin/announcements', data);
-  }
+  // --- Upload ---
+  uploadGrades: (formData) => axiosClient.post('/admin/grades/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  uploadCurriculum: (formData) => axiosClient.post('/admin/curriculum/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
 };
 
 export default adminApi;

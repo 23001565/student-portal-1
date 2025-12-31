@@ -1,139 +1,80 @@
 import React, { useState, useEffect } from "react";
 import {
-  Container,
-  Row,
-  Col,
-  Card,
-  Table,
-  Button,
-  Form,
-  Badge,
-  Alert,
-  Tabs,
-  Tab,
-  InputGroup,
-  FormControl,
-  ProgressBar,
+  Container, Row, Col, Card, Table, Button, Form, Badge, Alert, Tabs, Tab, ProgressBar
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout";
+import adminApi from "../../api/adminApi"; // Import API thật
 
 const Reports = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
+  const [loading, setLoading] = useState(true);
+  
+  // State dữ liệu mặc định (tránh lỗi undefined khi chưa tải xong)
   const [reportData, setReportData] = useState({
-    studentStats: {},
-    courseStats: {},
-    enrollmentStats: {},
-    gradeStats: {},
+    studentStats: { total: 0, byYear: {}, byMajor: {} },
+    courseStats: { total: 0, popularCourses: [] },
+    enrollmentStats: { total: 0, bySemester: {} },
+    gradeStats: { averageGrade: 0, gradeDistribution: {}, topPerformers: [] },
     recentActivity: [],
   });
+
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [filterSemester, setFilterSemester] = useState(1);
 
-  // Mock data - trong thực tế sẽ fetch từ API
+  // Gọi API thật thay vì Mock Data
   useEffect(() => {
-    const mockData = {
-      studentStats: {
-        total: 150,
-        byYear: { 1: 45, 2: 38, 3: 35, 4: 32 },
-        byMajor: {
-          "Công nghệ thông tin": 89,
-          "Quản trị kinh doanh": 61,
-        },
-        active: 145,
-        archived: 5,
-      },
-      courseStats: {
-        total: 25,
-        active: 23,
-        archived: 2,
-        byCredits: { 1: 2, 2: 5, 3: 15, 4: 3 },
-        popularCourses: [
-          { name: "Lập trình cơ bản", enrollments: 45 },
-          { name: "Cấu trúc dữ liệu", enrollments: 38 },
-          { name: "Nguyên lý quản lý", enrollments: 35 },
-        ],
-      },
-      enrollmentStats: {
-        total: 320,
-        active: 285,
-        completed: 25,
-        canceled: 10,
-        bySemester: { 1: 180, 2: 140 },
-        byStatus: {
-          active: 285,
-          completed: 25,
-          canceled: 10,
-        },
-      },
-      gradeStats: {
-        averageGrade: 7.8,
-        gradeDistribution: {
-          "A (9.0-10.0)": 15,
-          "B+ (8.0-8.9)": 25,
-          "B (7.0-7.9)": 35,
-          "C+ (6.0-6.9)": 20,
-          "C (5.0-5.9)": 5,
-        },
-        passRate: 85.5,
-        topPerformers: [
-          { student: "Alice Nguyen", average: 9.2, courses: 5 },
-          { student: "Bob Tran", average: 8.8, courses: 4 },
-          { student: "Carol Le", average: 8.5, courses: 3 },
-        ],
-      },
-      recentActivity: [
-        {
-          id: 1,
-          type: "Đăng ký",
-          description: "Đăng ký mới trong CS101-1",
-          student: "Alice Nguyen",
-          timestamp: "2025-10-23 10:30:00",
-        },
-        {
-          id: 2,
-          type: "Điểm",
-          description: "Điểm được cập nhật cho CS201",
-          student: "Bob Tran",
-          timestamp: "2025-10-23 09:15:00",
-        },
-        {
-          id: 3,
-          type: "Môn học",
-          description: "Môn học mới được thêm: Cấu trúc dữ liệu",
-          admin: "Quản trị viên 1",
-          timestamp: "2025-10-22 16:45:00",
-        },
-      ],
-    };
-    setReportData(mockData);
+    loadReports();
   }, [filterYear, filterSemester]);
 
+  const loadReports = async () => {
+    setLoading(true);
+    try {
+      const data = await adminApi.getReports({ year: filterYear, semester: filterSemester });
+      setReportData(data);
+    } catch (error) {
+      console.error("Lỗi tải báo cáo:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatDateTime = (dateTime) => {
-    return new Date(dateTime).toLocaleString("vi-VN");
+    // Nếu timestamp là ID hoặc string chưa chuẩn, xử lý an toàn
+    if (!dateTime) return "Vừa xong";
+    try {
+        return new Date().toLocaleDateString("vi-VN"); // Demo ngày hiện tại vì DB enrollment chưa có createdAt
+    } catch { return ""; }
   };
 
   const getActivityIcon = (type) => {
     switch (type) {
-      case "Đăng ký":
-        return "📚";
-      case "Điểm":
-        return "📊";
-      case "Môn học":
-        return "📝";
-      default:
-        return "📄";
+      case "Đăng ký": return "📚";
+      case "Điểm": return "📊";
+      case "Môn học": return "📝";
+      default: return "📄";
     }
   };
 
   const getGradeColor = (grade) => {
-    if (grade >= 9.0) return "Xuất sắc";
-    if (grade >= 8.0) return "Giỏi";
-    if (grade >= 7.0) return "Khá";
-    if (grade >= 5.0) return "Trung bình";
-    return "Yếu";
+    if (grade >= 8.5) return "success"; // A
+    if (grade >= 7.0) return "primary"; // B
+    if (grade >= 5.5) return "info";    // C
+    if (grade >= 4.0) return "warning"; // D
+    return "danger"; // F
   };
+
+  if (loading) {
+    return (
+        <Layout>
+            <Container fluid className="py-4 text-center">
+                <div className="spinner-border text-primary" role="status"></div>
+                <p className="mt-2">Đang tổng hợp dữ liệu báo cáo...</p>
+            </Container>
+        </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -153,18 +94,15 @@ const Reports = () => {
                   <option value={2026}>2026</option>
                 </Form.Select>
                 <Form.Select
-                  style={{ width: "100px" }}
+                  style={{ width: "120px" }}
                   value={filterSemester}
                   onChange={(e) => setFilterSemester(parseInt(e.target.value))}
                 >
                   <option value={1}>Học kỳ 1</option>
                   <option value={2}>Học kỳ 2</option>
                 </Form.Select>
-                <Button
-                  variant="primary"
-                  onClick={() => navigate("/admin/dashboard")}
-                >
-                  Quay về Trang chủ
+                <Button variant="primary" onClick={() => navigate("/admin/dashboard")}>
+                  Quay về Dashboard
                 </Button>
               </div>
             </div>
@@ -173,105 +111,81 @@ const Reports = () => {
 
         <Row>
           <Col>
-            <Tabs
-              activeKey={activeTab}
-              onSelect={(k) => setActiveTab(k)}
-              className="mb-3"
-            >
+            <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)} className="mb-3">
+              
+              {/* TAB 1: TỔNG QUAN */}
               <Tab eventKey="overview" title="Tổng quan">
-                <Row>
+                <Row className="g-3 mb-4">
                   <Col md={3}>
-                    <Card className="text-center">
+                    <Card className="text-center shadow-sm h-100">
                       <Card.Body>
-                        <Card.Title className="text-primary">
+                        <Card.Title className="text-primary display-6 fw-bold">
                           {reportData.studentStats.total || 0}
                         </Card.Title>
-                        <Card.Text>Tổng số học sinh</Card.Text>
+                        <Card.Text className="text-muted">Tổng sinh viên</Card.Text>
                       </Card.Body>
                     </Card>
                   </Col>
                   <Col md={3}>
-                    <Card className="text-center">
+                    <Card className="text-center shadow-sm h-100">
                       <Card.Body>
-                        <Card.Title className="text-success">
+                        <Card.Title className="text-success display-6 fw-bold">
                           {reportData.courseStats.total || 0}
                         </Card.Title>
-                        <Card.Text>Tổng số môn học</Card.Text>
+                        <Card.Text className="text-muted">Tổng môn học</Card.Text>
                       </Card.Body>
                     </Card>
                   </Col>
                   <Col md={3}>
-                    <Card className="text-center">
+                    <Card className="text-center shadow-sm h-100">
                       <Card.Body>
-                        <Card.Title className="text-warning">
+                        <Card.Title className="text-warning display-6 fw-bold">
                           {reportData.enrollmentStats.total || 0}
                         </Card.Title>
-                        <Card.Text>Tổng số đăng ký</Card.Text>
+                        <Card.Text className="text-muted">Lượt đăng ký</Card.Text>
                       </Card.Body>
                     </Card>
                   </Col>
                   <Col md={3}>
-                    <Card className="text-center">
+                    <Card className="text-center shadow-sm h-100">
                       <Card.Body>
-                        <Card.Title className="text-info">
+                        <Card.Title className="text-info display-6 fw-bold">
                           {reportData.gradeStats.averageGrade || 0}
                         </Card.Title>
-                        <Card.Text>Điểm trung bình</Card.Text>
+                        <Card.Text className="text-muted">Điểm trung bình</Card.Text>
                       </Card.Body>
                     </Card>
                   </Col>
                 </Row>
 
-                <Row className="mt-4">
+                <Row className="g-3">
                   <Col md={6}>
-                    <Card>
-                      <Card.Header>
-                        <h5 className="mb-0">Học sinh theo năm</h5>
-                      </Card.Header>
+                    <Card className="shadow-sm h-100">
+                      <Card.Header className="bg-white"><h5 className="mb-0">Sinh viên theo năm</h5></Card.Header>
                       <Card.Body>
-                        {Object.entries(
-                          reportData.studentStats.byYear || {}
-                        ).map(([year, count]) => (
-                          <div key={year} className="mb-2">
-                            <div className="d-flex justify-content-between">
-                              <span>Năm {year}</span>
-                              <span>{count} Học sinh</span>
+                        {Object.entries(reportData.studentStats.byYear || {}).map(([year, count]) => (
+                          <div key={year} className="mb-3">
+                            <div className="d-flex justify-content-between mb-1">
+                              <span>Năm thứ {year}</span>
+                              <span className="fw-bold">{count} SV</span>
                             </div>
-                            <ProgressBar
-                              now={
-                                (count / (reportData.studentStats.total || 1)) *
-                                100
-                              }
-                              variant="primary"
-                              style={{ height: "8px" }}
-                            />
+                            <ProgressBar now={(count / (reportData.studentStats.total || 1)) * 100} variant="primary" style={{ height: "8px" }} />
                           </div>
                         ))}
                       </Card.Body>
                     </Card>
                   </Col>
                   <Col md={6}>
-                    <Card>
-                      <Card.Header>
-                        <h5 className="mb-0">Học sinh theo chuyên ngành</h5>
-                      </Card.Header>
+                    <Card className="shadow-sm h-100">
+                      <Card.Header className="bg-white"><h5 className="mb-0">Sinh viên theo ngành</h5></Card.Header>
                       <Card.Body>
-                        {Object.entries(
-                          reportData.studentStats.byMajor || {}
-                        ).map(([major, count]) => (
-                          <div key={major} className="mb-2">
-                            <div className="d-flex justify-content-between">
+                        {Object.entries(reportData.studentStats.byMajor || {}).map(([major, count]) => (
+                          <div key={major} className="mb-3">
+                            <div className="d-flex justify-content-between mb-1">
                               <span>{major}</span>
-                              <span>{count} Học sinh</span>
+                              <span className="fw-bold">{count} SV</span>
                             </div>
-                            <ProgressBar
-                              now={
-                                (count / (reportData.studentStats.total || 1)) *
-                                100
-                              }
-                              variant="success"
-                              style={{ height: "8px" }}
-                            />
+                            <ProgressBar now={(count / (reportData.studentStats.total || 1)) * 100} variant="success" style={{ height: "8px" }} />
                           </div>
                         ))}
                       </Card.Body>
@@ -280,297 +194,87 @@ const Reports = () => {
                 </Row>
               </Tab>
 
-              <Tab eventKey="courses" title="Phân tích môn học">
-                <Row>
-                  <Col md={6}>
-                    <Card>
-                      <Card.Header>
-                        <h5 className="mb-0">Thống kê môn học</h5>
-                      </Card.Header>
-                      <Card.Body>
-                        <Table responsive>
-                          <tbody>
-                            <tr>
-                              <td>
-                                <strong>Tổng số môn học</strong>
-                              </td>
-                              <td>{reportData.courseStats.total || 0}</td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <strong>Môn học đang hoạt động</strong>
-                              </td>
-                              <td>
-                                <Badge bg="success">
-                                  {reportData.courseStats.active || 0}
-                                </Badge>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <strong>Môn học đã lưu</strong>
-                              </td>
-                              <td>
-                                <Badge bg="secondary">
-                                  {reportData.courseStats.archived || 0}
-                                </Badge>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </Table>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                  <Col md={6}>
-                    <Card>
-                      <Card.Header>
-                        <h5 className="mb-0">Môn học phổ biến</h5>
-                      </Card.Header>
-                      <Card.Body>
-                        {(reportData.courseStats.popularCourses || []).map(
-                          (course, index) => (
-                            <div
-                              key={index}
-                              className="mb-3 p-3 border rounded"
-                            >
-                              <div className="d-flex justify-content-between">
-                                <span>{course.name}</span>
-                                <Badge bg="primary">
-                                  {course.enrollments} đăng ký
-                                </Badge>
-                              </div>
-                            </div>
-                          )
-                        )}
-                      </Card.Body>
-                    </Card>
-                  </Col>
+              {/* TAB 2: PHÂN TÍCH MÔN HỌC */}
+              <Tab eventKey="courses" title="Môn học">
+                <Row className="g-3">
+                    <Col md={12}>
+                        <Card className="shadow-sm">
+                            <Card.Header className="bg-white"><h5 className="mb-0">Các lớp học phần đông nhất</h5></Card.Header>
+                            <Card.Body>
+                                {reportData.courseStats.popularCourses?.length > 0 ? (
+                                    reportData.courseStats.popularCourses.map((c, idx) => (
+                                        <div key={idx} className="d-flex justify-content-between align-items-center p-2 border-bottom">
+                                            <span>{c.name}</span>
+                                            <Badge bg="primary" pill>{c.enrollments} sinh viên</Badge>
+                                        </div>
+                                    ))
+                                ) : <div className="text-muted">Chưa có dữ liệu đăng ký</div>}
+                            </Card.Body>
+                        </Card>
+                    </Col>
                 </Row>
               </Tab>
 
-              <Tab eventKey="enrollments" title="Phân tích đăng ký">
-                <Row>
+              {/* TAB 3: PHÂN TÍCH ĐIỂM */}
+              <Tab eventKey="grades" title="Điểm số">
+                <Row className="g-3">
                   <Col md={6}>
-                    <Card>
-                      <Card.Header>
-                        <h5 className="mb-0">Trạng thái đăng ký</h5>
-                      </Card.Header>
+                    <Card className="shadow-sm h-100">
+                      <Card.Header className="bg-white"><h5 className="mb-0">Phân phối điểm</h5></Card.Header>
                       <Card.Body>
-                        <Table responsive>
-                          <tbody>
-                            <tr>
-                              <td>
-                                <strong>Tổng số đăng ký</strong>
-                              </td>
-                              <td>{reportData.enrollmentStats.total || 0}</td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <strong>Đang học</strong>
-                              </td>
-                              <td>
-                                <Badge bg="success">
-                                  {reportData.enrollmentStats.active || 0}
-                                </Badge>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <strong>Đã hoàn thành</strong>
-                              </td>
-                              <td>
-                                <Badge bg="info">
-                                  {reportData.enrollmentStats.completed || 0}
-                                </Badge>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td>
-                                <strong>Đã hủy</strong>
-                              </td>
-                              <td>
-                                <Badge bg="danger">
-                                  {reportData.enrollmentStats.canceled || 0}
-                                </Badge>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </Table>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                  <Col md={6}>
-                    <Card>
-                      <Card.Header>
-                        <h5 className="mb-0">Đăng ký theo học kỳ</h5>
-                      </Card.Header>
-                      <Card.Body>
-                        {Object.entries(
-                          reportData.enrollmentStats.bySemester || {}
-                        ).map(([semester, count]) => (
-                          <div key={semester} className="mb-2">
-                            <div className="d-flex justify-content-between">
-                              <span>Semester {semester}</span>
-                              <span>{count} đăng ký</span>
-                            </div>
-                            <ProgressBar
-                              now={
-                                (count /
-                                  (reportData.enrollmentStats.total || 1)) *
-                                100
-                              }
-                              variant="warning"
-                              style={{ height: "8px" }}
-                            />
-                          </div>
-                        ))}
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                </Row>
-              </Tab>
-
-              <Tab eventKey="grades" title="Phân tích điểm">
-                <Row>
-                  <Col md={6}>
-                    <Card>
-                      <Card.Header>
-                        <h5 className="mb-0">Phân phối điểm</h5>
-                      </Card.Header>
-                      <Card.Body>
-                        {Object.entries(
-                          reportData.gradeStats.gradeDistribution || {}
-                        ).map(([grade, count]) => (
-                          <div key={grade} className="mb-2">
-                            <div className="d-flex justify-content-between">
+                        {Object.entries(reportData.gradeStats.gradeDistribution || {}).map(([grade, count]) => (
+                          <div key={grade} className="mb-3">
+                            <div className="d-flex justify-content-between mb-1">
                               <span>{grade}</span>
-                              <span>{count} học sinh</span>
+                              <span className="fw-bold">{count} SV</span>
                             </div>
-                            <ProgressBar
-                              now={(count / 100) * 100}
-                              variant="info"
-                              style={{ height: "8px" }}
-                            />
+                            <ProgressBar now={(count / (reportData.enrollmentStats.total || 1)) * 100} variant="info" style={{ height: "10px" }} />
                           </div>
                         ))}
                       </Card.Body>
                     </Card>
                   </Col>
                   <Col md={6}>
-                    <Card>
-                      <Card.Header>
-                        <h5 className="mb-0">Top Điểm cao</h5>
-                      </Card.Header>
+                    <Card className="shadow-sm h-100">
+                      <Card.Header className="bg-white"><h5 className="mb-0">Top sinh viên điểm cao</h5></Card.Header>
                       <Card.Body>
-                        <Table responsive size="sm">
-                          <thead>
-                            <tr>
-                              <th>Học sinh</th>
-                              <th>Điểm trung bình</th>
-                              <th>Môn học</th>
-                            </tr>
-                          </thead>
+                        <Table hover size="sm">
+                          <thead><tr><th>Sinh viên</th><th>Điểm</th></tr></thead>
                           <tbody>
-                            {(reportData.gradeStats.topPerformers || []).map(
-                              (performer, index) => (
-                                <tr key={index}>
-                                  <td>{performer.student}</td>
-                                  <td>
-                                    <Badge
-                                      bg={getGradeColor(performer.average)}
-                                    >
-                                      {performer.average}
-                                    </Badge>
-                                  </td>
-                                  <td>{performer.courses}</td>
-                                </tr>
-                              )
-                            )}
+                            {reportData.gradeStats.topPerformers?.map((p, idx) => (
+                              <tr key={idx}>
+                                <td>{p.student}</td>
+                                <td><Badge bg={getGradeColor(p.average)}>{p.average}</Badge></td>
+                              </tr>
+                            ))}
+                            {reportData.gradeStats.topPerformers?.length === 0 && <tr><td colSpan="2">Chưa có dữ liệu điểm</td></tr>}
                           </tbody>
                         </Table>
                       </Card.Body>
                     </Card>
                   </Col>
                 </Row>
-
-                <Row className="mt-4">
-                  <Col>
-                    <Card>
-                      <Card.Header>
-                        <h5 className="mb-0">Tổng quan hiệu suất học tập</h5>
-                      </Card.Header>
-                      <Card.Body>
-                        <Row>
-                          <Col md={4}>
-                            <div className="text-center">
-                              <h3 className="text-primary">
-                                {reportData.gradeStats.averageGrade || 0}
-                              </h3>
-                              <p>Average Grade</p>
-                            </div>
-                          </Col>
-                          <Col md={4}>
-                            <div className="text-center">
-                              <h3 className="text-success">
-                                {reportData.gradeStats.passRate || 0}%
-                              </h3>
-                              <p>Tỷ lệ qua môn</p>
-                            </div>
-                          </Col>
-                          <Col md={4}>
-                            <div className="text-center">
-                              <h3 className="text-info">85%</h3>
-                              <p>Tỷ lệ giữ học sinh</p>
-                            </div>
-                          </Col>
-                        </Row>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                </Row>
               </Tab>
 
-              <Tab eventKey="activity" title="Hoạt động gần đây">
-                <Card>
-                  <Card.Header>
-                    <h5 className="mb-0">Hệ thống hoạt động</h5>
-                  </Card.Header>
-                  <Card.Body>
-                    {(reportData.recentActivity || []).length > 0 ? (
-                      <div>
-                        {(reportData.recentActivity || []).map((activity) => (
-                          <div
-                            key={activity.id}
-                            className="mb-3 p-3 border rounded"
-                          >
-                            <div className="d-flex align-items-center">
-                              <span
-                                className="me-3"
-                                style={{ fontSize: "1.5rem" }}
-                              >
-                                {getActivityIcon(activity.type)}
-                              </span>
-                              <div className="flex-grow-1">
-                                <h6 className="mb-1">{activity.description}</h6>
-                                <small className="text-muted">
-                                  {activity.student &&
-                                    `Học sinh: ${activity.student}`}
-                                  {activity.admin &&
-                                    `Quản trị viên: ${activity.admin}`}
-                                  {" • "}
-                                  {formatDateTime(activity.timestamp)}
-                                </small>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <Alert variant="info">Không có hoạt động gần đây</Alert>
-                    )}
-                  </Card.Body>
-                </Card>
+              {/* TAB 4: HOẠT ĐỘNG */}
+              <Tab eventKey="activity" title="Hoạt động">
+                 <Card className="shadow-sm">
+                    <Card.Body>
+                        {reportData.recentActivity?.length > 0 ? (
+                            reportData.recentActivity.map(act => (
+                                <div key={act.id} className="d-flex align-items-center mb-3 pb-3 border-bottom">
+                                    <div className="me-3 fs-2">{getActivityIcon(act.type)}</div>
+                                    <div>
+                                        <h6 className="mb-0">{act.description}</h6>
+                                        <small className="text-muted">Sinh viên: {act.student} • {formatDateTime(act.timestamp)}</small>
+                                    </div>
+                                </div>
+                            ))
+                        ) : <div className="text-muted">Chưa có hoạt động nào gần đây</div>}
+                    </Card.Body>
+                 </Card>
               </Tab>
+
             </Tabs>
           </Col>
         </Row>

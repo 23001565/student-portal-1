@@ -14,29 +14,6 @@ const LockIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="input-icon"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
 );
 
-// Hàm giả lập API đăng nhập (Giữ nguyên logic cũ của bạn)
-const simulateLogin = async (formData) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      if (formData.email.includes("admin")) {
-        resolve({
-          success: true,
-          token: "mock-admin-token-123",
-          userType: "admin",
-          user: { id: 999, name: "Quản trị viên Hệ thống", email: formData.email, avatarUrl: null },
-        });
-      } else {
-        resolve({
-          success: true,
-          token: "mock-student-token-456",
-          userType: "student",
-          user: { id: 1001, name: "Nguyễn Văn An", email: formData.email || "student@hus.edu.vn", avatarUrl: null, code: "SV2024001" },
-        });
-      }
-    }, 1000);
-  });
-};
-
 const LoginPage = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");

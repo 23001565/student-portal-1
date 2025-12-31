@@ -17,6 +17,7 @@ import UploadCurriculum from "./admin/pages/UploadCurriculum";
 import CourseRegistration from "./user/pages/CourseRegistration";
 import StudentDetail from "./admin/pages/StudentDetail";
 import EditStudent from "./admin/pages/EditStudent";
+import ProgressMonitor from "./admin/pages/ProgressMonitor";
 function App() {
   return (
     <div className="app-container">
@@ -36,6 +37,7 @@ function App() {
             <Route path="/admin/students/:id" element={<StudentDetail />} />
             <Route path="/admin/students/:id/edit" element={<EditStudent />} />
             <Route path="/admin/reports" element={<Reports />} />
+            <Route path="/admin/progress-monitor" element={<ProgressMonitor />} />
             <Route path="/admin/announcements" element={<Announcements />} />
             <Route
               path="/admin/post-announcement"

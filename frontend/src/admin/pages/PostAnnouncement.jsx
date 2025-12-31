@@ -3,14 +3,20 @@ import { Container, Row, Col, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import AnnouncementForm from "../../components/AnnouncementForm";
 import Layout from "../../components/Layout";
+import adminApi from "../../api/adminApi"; // Import API
 
 const PostAnnouncement = () => {
   const navigate = useNavigate();
 
-  const handleSubmit = (payload) => {
-    // TODO: Replace with API call
-    console.log("Announcement submitted:", payload);
-    navigate("/admin/announcements", { state: { newAnnouncement: payload } });
+  const handleSubmit = async (payload) => {
+    try {
+      // Gọi API thật
+      await adminApi.createAnnouncement(payload);
+      alert("Đăng thông báo thành công!");
+      navigate("/admin/announcements");
+    } catch (error) {
+      alert("Lỗi đăng thông báo: " + error.message);
+    }
   };
 
   return (
