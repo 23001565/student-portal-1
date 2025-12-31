@@ -4,12 +4,26 @@ import {
   Nav,
   Container,
   NavDropdown,
+  Button,
 } from "react-bootstrap";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { logout } from "../api/authApi"; // example
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+
   const isActive = (path) => location.pathname === path;
+
+  const handleLogout = async () => {
+    try {
+      await logout(); // POST /auth/logout
+    } catch (e) {
+      console.error("Logout failed", e);
+    } finally {
+      navigate("/login", { replace: true });
+    }
+  };
 
   return (
     <RBNavbar bg="light" expand="lg" className="mb-4 shadow-sm">
@@ -17,6 +31,7 @@ const Navbar = () => {
         <RBNavbar.Brand as={Link} to="/dashboard">
           Student Portal
         </RBNavbar.Brand>
+
         <RBNavbar.Toggle aria-controls="main-navbar" />
         <RBNavbar.Collapse id="main-navbar">
           <Nav className="me-auto">
@@ -32,12 +47,19 @@ const Navbar = () => {
             <Nav.Link as={Link} to="/profile" active={isActive("/profile")}>
               Profile
             </Nav.Link>
+
             <NavDropdown title="Admin" id="admin-dropdown">
               <NavDropdown.Item as={Link} to="/admin/dashboard">
                 Dashboard
               </NavDropdown.Item>
               <NavDropdown.Item as={Link} to="/admin/courses">
                 Manage Courses
+              </NavDropdown.Item>
+              <NavDropdown.Item as={Link} to="/admin/classes">
+                Manage Classes
+              </NavDropdown.Item>
+              <NavDropdown.Item as={Link} to="/admin/curricula">
+                Manage Curricula
               </NavDropdown.Item>
               <NavDropdown.Item as={Link} to="/admin/students">
                 Manage Students
@@ -46,6 +68,17 @@ const Navbar = () => {
                 Reports
               </NavDropdown.Item>
             </NavDropdown>
+          </Nav>
+
+          {/* RIGHT SIDE */}
+          <Nav>
+            <Button
+              variant="outline-danger"
+              size="sm"
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
           </Nav>
         </RBNavbar.Collapse>
       </Container>

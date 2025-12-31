@@ -19,6 +19,9 @@ import UploadCourses from "./pages/Admin/UploadCourses";
 import ProgressMonitor from "./pages/Admin/ProgressMonitor";
 import CourseRegistration from "./pages/CourseRegistration";
 import ManageClasses from "./pages/Admin/ManageClasses";
+import ClassCSVUpload from "./pages/Admin/ClassCSVUpload";
+import CourseCSVUpload from "./pages/Admin/CourseCSVUpload";
+import UploadCurriculum from "./pages/Admin/UploadCurriculum";
 function App() {
   return (
     <div className="app-container">
@@ -33,15 +36,16 @@ function App() {
             <Route path="/registration" element={<CourseRegistration />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/courses" element={<ManageCourses />} />
-            <Route path="/admin/upload-courses" element={<UploadCourses />} />
+            <Route path="/admin/upload-courses" element={<CourseCSVUpload />} />
             <Route path="/admin/students" element={<ManageStudents />} />
             <Route path="/admin/reports" element={<Reports />} />
             <Route path="/admin/announcements" element={<Announcements />} />
             <Route path="/admin/post-announcement" element={<PostAnnouncement />} />
             <Route path="/admin/upload-grades" element={<UploadGrades />} />
-            <Route path="/admin/upload-curriculum" element={<ManageCurricula />} />
-            <Route path="/admin/manage-curricula" element={<ManageCurricula />} />
-            <Route path="/admin/manage-classes" element={<ManageClasses />} />
+            <Route path="/admin/upload-curriculum" element={<UploadCurriculum />} />
+            <Route path="/admin/curricula" element={<ManageCurricula />} />
+            <Route path="/admin/classes" element={<ManageClasses />} />
+            <Route path="/admin/upload-classes" element={<ClassCSVUpload />} />
             <Route path="/admin/progress-monitor" element={<ProgressMonitor />} />
           </Routes>
         </BrowserRouter>
