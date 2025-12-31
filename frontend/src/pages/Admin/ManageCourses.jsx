@@ -118,40 +118,13 @@ const ManageCourses = () => {
     } catch (e) { alert(e.message || 'Lưu trữ thất bại'); }
   };
 
-  const handleArchiveClass = (classId) => {
-    setClasses(
-      classes.map((cls) =>
-        cls.id === classId
-          ? { ...cls, archivedAt: new Date().toISOString() }
-          : cls
-      )
-    );
-  };
-
   const filteredCourses = courses.filter(
     (course) =>
       course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
       course.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredClasses = classes.filter(
-    (cls) =>
-      cls.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cls.courseName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const getDayName = (dayOfWeek) => {
-    const days = [
-      "Chủ nhật",
-      "Thứ hai",
-      "Thứ ba",
-      "Thứ tư",
-      "Thứ tư",
-      "Thứ năm",
-      "Thứ sáu",
-    ];
-    return days[dayOfWeek] || "Không xác định";
-  };
+  
 
   return (
     <Container fluid className="py-4">
@@ -218,7 +191,7 @@ const ManageCourses = () => {
                       />
                     </InputGroup>
                     <Button variant="primary" onClick={loadCourses} disabled={loading}>
-                      {loading ? '��ang lọc...' : 'Lọc (API)'}
+                      {loading ? 'Loading...' : 'Lọc (API)'}
                     </Button>
                     <Button
                       variant="success"

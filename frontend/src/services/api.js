@@ -1,3 +1,4 @@
+/*
 // Small API helper using fetch and Vite env for base URL
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -36,3 +37,4 @@ export async function login(email, password, role) {
 }
 
 export default { request, login };
+*/

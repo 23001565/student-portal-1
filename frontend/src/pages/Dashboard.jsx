@@ -35,77 +35,11 @@ const Dashboard = () => {
     }
   };
 
-  const loadAnnouncements = async () => {
-    // Mock data dựa trên database
-    const mockAnnouncements = [
-      {
-        id: 1,
-        title: "Học kỳ 1 bắt đầu!",
-        content:
-          "Học kỳ 1 bắt đầu vào ngày 1 tháng 3 năm 2025. Vui lòng kiểm tra lịch học của bạn.",
-        postedAt: "2025-10-23 09:25:51",
-      },
-      {
-        id: 2,
-        title: "Lịch thi đã được công bố",
-        content: "Lịch thi đã được công bố trên hệ thống.",
-        postedAt: "2025-10-23 09:25:51",
-      },
-    ];
-    setAnnouncements(mockAnnouncements);
-  };
+  
 
-  const loadEnrollments = async () => {
-    // Mock data dựa trên database
-    const mockEnrollments = [
-      {
-        id: 1,
-        classCode: "CS101-1",
-        courseName: "Lập trình cơ bản",
-        credits: 3,
-        semester: 1,
-        year: 2025,
-        dayOfWeek: 2,
-        startPeriod: 1,
-        endPeriod: 3,
-        location: "A101",
-        status: "active",
-      },
-      {
-        id: 2,
-        classCode: "CS201-1",
-        courseName: "Cấu trúc dữ liệu",
-        credits: 3,
-        semester: 1,
-        year: 2025,
-        dayOfWeek: 3,
-        startPeriod: 2,
-        endPeriod: 4,
-        location: "A102",
-        status: "active",
-      },
-    ];
-    setEnrollments(mockEnrollments);
-  };
+  
 
-  const getDayName = (dayOfWeek) => {
-    const days = [
-      "Chủ nhật",
-      "Thứ 2",
-      "Thứ 3",
-      "Thứ 4",
-      "Thứ 5",
-      "Thứ 6",
-      "Thứ 7",
-    ];
-    return days[dayOfWeek] || "";
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
+  
 
   if (loading) {
     return (
@@ -123,7 +57,7 @@ const Dashboard = () => {
   return (
     <PageFrame
       title="Dashboard"
-      subtitle={`Chào mừng, ${user?.name || ""}`}
+      subtitle={`Chào mừng, ${user?.email || ""}`}
       headerActions={
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <span className="text-sm" style={{ color: "var(--text-secondary)" }}>

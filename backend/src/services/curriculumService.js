@@ -69,13 +69,18 @@ async function createGroupRecursive(tx, curriculumId, group, parentGroupId, code
 }
 
 async function createCurriculum(payload) {
-  const { code, majorId, startYear, endYear, groups } = payload || {};
+  const { code, majorName, startYear, endYear, groups } = payload || {};
   if (!code || !String(code).trim()) {
     const err = new Error('code is required'); err.status = 400; throw err;
   }
   if (!startYear || Number.isNaN(Number(startYear))) {
     const err = new Error('startYear is required'); err.status = 400; throw err;
   }
+  const major = await prisma.major.findUnique({ where: { name: majorName } });
+  if (!major) {
+    const err = new Error('Major not found'); err.status = 400; throw err;
+  }
+  const majorId = major.id;
   const normGroups = (groups || []).map(normalizeGroup);
   if (!normGroups.length) { const err = new Error('groups is required'); err.status = 400; throw err; }
 
@@ -92,7 +97,7 @@ async function createCurriculum(payload) {
     const curriculum = await tx.curriculum.create({
       data: {
         code: String(code).trim(),
-        majorId: majorId ?? null,
+        majorId: majorId ,
         startYear: Number(startYear),
         endYear: endYear != null && endYear !== '' ? Number(endYear) : null,
       },
@@ -102,15 +107,23 @@ async function createCurriculum(payload) {
       await createGroupRecursive(tx, curriculum.id, g, null, codeToId);
     }
 
-    return { curriculumId: curriculum.id };
+    return { curriculumCode: curriculum.code };
   });
 }
 
+// Delete-all-Rebuild-all type of update (not optimal)
 async function updateCurriculumByCode(code, payload) {
   const curriculum = await prisma.curriculum.findUnique({ where: { code } });
   if (!curriculum) { const err = new Error('Not found'); err.status = 404; throw err; }
 
-  const { startYear, endYear, majorId, groups } = payload || {};
+  const { startYear, endYear, majorName, groups } = payload || {};
+
+  const major = await prisma.major.findUnique({ where: { name: majorName } });
+  if (!major) {
+    const err = new Error('Major not found'); err.status = 400; throw err;
+  }
+  const majorId = major.id;
+
   const normGroups = (groups || []).map(normalizeGroup);
   if (!normGroups.length) { const err = new Error('groups is required'); err.status = 400; throw err; }
 
@@ -134,7 +147,7 @@ async function updateCurriculumByCode(code, payload) {
       await createGroupRecursive(tx, curriculum.id, g, null, codeToId);
     }
 
-    return { curriculumId: curriculum.id };
+    return { curriculumCode: curriculum.code };
   });
 }
 
@@ -146,6 +159,10 @@ async function archiveCurriculum(code) {
 }
 
 async function deleteCurriculumByCode(code) {
+  const students = await prisma.student.findMany({ where: { curriculumCode: code }, select: { id: true } });
+  if (students.length) {
+    const err = new Error('Cannot delete curriculum assigned to students'); err.status = 400; throw err;
+  }
   const curriculum = await prisma.curriculum.findUnique({ where: { code } });
   if (!curriculum) { const err = new Error('Not found'); err.status = 404; throw err; }
   await prisma.$transaction(async (tx) => {
@@ -155,10 +172,21 @@ async function deleteCurriculumByCode(code) {
   return { deleted: true };
 }
 
-async function cloneCurriculum({ fromCode, toCode, startYear, endYear, majorId }) {
+async function cloneCurriculum({ fromCode, toCode, startYear, endYear, majorName }) {
+  
+
   if (!fromCode || !toCode) { const err = new Error('fromCode and toCode are required'); err.status = 400; throw err; }
   const src = await prisma.curriculum.findUnique({ where: { code: fromCode } });
   if (!src) { const err = new Error('Source not found'); err.status = 404; throw err; }
+
+  const majorId = src.majorId;
+  if (String(majorName).trim()) {
+    const major =  await prisma.major.findUnique({ where: { name: majorName } });
+    if (major) {
+      majorId = major.id;
+    }
+  }
+  
   const exists = await prisma.curriculum.findUnique({ where: { code: toCode } });
   if (exists) { const err = new Error('Curriculum exists'); err.status = 400; throw err; }
 
@@ -196,7 +224,7 @@ async function cloneCurriculum({ fromCode, toCode, startYear, endYear, majorId }
     const created = await tx.curriculum.create({
       data: {
         code: toCode,
-        majorId: majorId != null ? majorId : src.majorId,
+        majorId: majorId,
         startYear: startYear != null ? Number(startYear) : src.startYear,
         endYear: endYear !== undefined ? (endYear != null ? Number(endYear) : null) : src.endYear,
       },
@@ -207,7 +235,7 @@ async function cloneCurriculum({ fromCode, toCode, startYear, endYear, majorId }
       await createGroupRecursive(tx, created.id, g, null, codeMap);
     }
 
-    return { curriculumId: created.id };
+    return { curriculumCode: created.code };
   });
 }
 
@@ -242,9 +270,11 @@ async function getCurriculumByCode(code) {
     }));
   }
 
+  const major = await prisma.major.findUnique({ where: { id: cur.majorId } });
+
   return {
     code: cur.code,
-    majorId: cur.majorId,
+    majorName: major?.name || "",
     startYear: cur.startYear,
     endYear: cur.endYear,
     archivedAt: cur.archivedAt,
@@ -252,17 +282,26 @@ async function getCurriculumByCode(code) {
   };
 }
 
-async function listCurricula({ majorId, startYear, endYear } = {}) {
+async function listCurricula({ majorName, startYear, endYear } = {}) {
+  const majorId = null;
+  if (majorName) {
+    
+    const major = await prisma.major.findUnique({ where: { name: majorName } });
+    if (!major) {
+      const err = new Error('Major not found'); err.status = 400; throw err;
+    }
+    majorId = major.id;
+  }
   const where = {};
-  if (majorId !== undefined) where.majorId = majorId;
+  if (majorId !== null) where.majorId = majorId;
   if (startYear !== undefined) where.startYear = startYear;
   if (endYear !== undefined) where.endYear = endYear;
   const items = await prisma.curriculum.findMany({
     where,
-    select: { code: true, majorId: true, startYear: true, endYear: true, archivedAt: true },
-    orderBy: [{ majorId: 'asc' }, { startYear: 'asc' }, { code: 'asc' }],
+    select: { code: true, startYear: true, endYear: true, archivedAt: true },
+    orderBy: [ { startYear: 'asc' }, { code: 'asc' }],
   });
-  return { items };
+  return { items};
 }
 
 module.exports = {

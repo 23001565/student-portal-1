@@ -18,6 +18,7 @@ import ManageCurricula from "./pages/Admin/ManageCurricula";
 import UploadCourses from "./pages/Admin/UploadCourses";
 import ProgressMonitor from "./pages/Admin/ProgressMonitor";
 import CourseRegistration from "./pages/CourseRegistration";
+import ManageClasses from "./pages/Admin/ManageClasses";
 function App() {
   return (
     <div className="app-container">
@@ -40,6 +41,7 @@ function App() {
             <Route path="/admin/upload-grades" element={<UploadGrades />} />
             <Route path="/admin/upload-curriculum" element={<ManageCurricula />} />
             <Route path="/admin/manage-curricula" element={<ManageCurricula />} />
+            <Route path="/admin/manage-classes" element={<ManageClasses />} />
             <Route path="/admin/progress-monitor" element={<ProgressMonitor />} />
           </Routes>
         </BrowserRouter>

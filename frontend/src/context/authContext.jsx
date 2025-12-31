@@ -9,12 +9,37 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  //  Initial auth check
   useEffect(() => {
+    let alive = true;
+
     authApi
       .me()
-      .then((res) => setUser(res.user))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
+      .then((res) => {
+        if (alive) setUser(res.user);
+      })
+      .catch(() => {
+        if (alive) setUser(null);
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  //  Global logout on 401
+  useEffect(() => {
+    const handler = () => {
+      setUser(null);
+    };
+
+    window.addEventListener('auth:logout', handler);
+    return () => {
+      window.removeEventListener('auth:logout', handler);
+    };
   }, []);
 
   const login = async (credentials) => {
@@ -40,8 +65,4 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  return useContext(AuthContext);
 }

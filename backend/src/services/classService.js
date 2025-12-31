@@ -87,7 +87,7 @@ async function updateClass(code, semester, year, data = {}) {
   const cls = await prisma.class.findUnique({
     where: { code_semester_year: { code, semester: sem, year: y } },
   });
-  if (!cls) { const e = new Error('Not found'); e.status = 404; throw e; }
+  if (!cls) { const e = new Error('Class not found'); e.status = 404; throw e; }
 
   const updateData = {};
 
@@ -128,7 +128,7 @@ async function archiveClass(code, semester, year) {
   const cls = await prisma.class.findUnique({
     where: { code_semester_year: { code, semester: sem, year: y } },
   });
-  if (!cls) { const e = new Error('Not found'); e.status = 404; throw e; }
+  if (!cls) { const e = new Error('Class not found'); e.status = 404; throw e; }
 
   return prisma.class.update({
     where: { id: cls.id },

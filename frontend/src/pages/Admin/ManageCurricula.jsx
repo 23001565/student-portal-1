@@ -146,7 +146,7 @@ export default function ManageCurricula() {
   const [mode, setMode] = useState('create'); // 'create' | 'update' | 'clone'
 
   // Filter/list state
-  const [filters, setFilters] = useState({ majorId: '', startYear: '', endYear: '' });
+  const [filters, setFilters] = useState({ majorName: '', startYear: '', endYear: '' });
   const [curricula, setCurricula] = useState([]);
   const [listLoading, setListLoading] = useState(false);
 
@@ -156,7 +156,7 @@ export default function ManageCurricula() {
 
   // Metadata and tree editor state
   const [code, setCode] = useState('');
-  const [majorId, setMajorId] = useState('');
+  const [majorName, setMajorName] = useState('');
   const [startYear, setStartYear] = useState('');
   const [endYear, setEndYear] = useState('');
   const [groups, setGroups] = useState([]);
@@ -173,7 +173,7 @@ export default function ManageCurricula() {
     setMessage('');
     try {
       const data = await listCurricula({
-        majorId: filters.majorId ? Number(filters.majorId) : undefined,
+        majorName: filters.majorName ? filters.majorName : undefined,
         startYear: filters.startYear ? Number(filters.startYear) : undefined,
         endYear: filters.endYear ? Number(filters.endYear) : undefined,
       });
@@ -188,7 +188,7 @@ export default function ManageCurricula() {
   useEffect(() => { loadList(); /* initial */ }, []);
 
   const resetEditor = () => {
-    setCode(''); setMajorId(''); setStartYear(''); setEndYear(''); setGroups([]);
+    setCode(''); setMajorName(''); setStartYear(''); setEndYear(''); setGroups([]);
   };
 
   const addTopLevelGroup = () => {
@@ -231,7 +231,7 @@ export default function ManageCurricula() {
       const d = await getCurriculumByCode(codeValue);
       setSelectedCode(d.code);
       setCode(d.code);
-      setMajorId(d.majorId ?? '');
+      setMajorName(d.majorName ?? '');
       setStartYear(d.startYear ?? '');
       setEndYear(d.endYear ?? '');
       const eg = (d.groups || []).map(normalizeGroupForEditor);
@@ -249,7 +249,7 @@ export default function ManageCurricula() {
     try {
       const payload = {
         code: code.trim(),
-        majorId: majorId ? Number(majorId) : null,
+        majorName: majorName ? majorName : null,
         startYear: Number(startYear),
         endYear: endYear ? Number(endYear) : null,
         groups: groups.map(stripGroupForSubmit),
@@ -307,7 +307,7 @@ export default function ManageCurricula() {
       const body = new URLSearchParams();
       body.set('fromCode', cloneFromCode.trim());
       body.set('toCode', cloneToCode.trim());
-      if (majorId) body.set('majorId', String(Number(majorId)));
+      if (majorName) body.set('majorName', majorName);
       if (startYear) body.set('startYear', String(Number(startYear)));
       if (endYear) body.set('endYear', String(Number(endYear)));
       const res = await cloneCurriculum(body);
@@ -326,8 +326,8 @@ export default function ManageCurricula() {
       {/* Filter panel */}
       <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: 10 }}>
         <div>
-          <label className="form-label">Major ID</label>
-          <input type="number" className="form-control" value={filters.majorId} onChange={(e) => setFilters({ ...filters, majorId: e.target.value })} />
+          <label className="form-label">Major Name</label>
+          <input type="text" className="form-control" value={filters.majorName} onChange={(e) => setFilters({ ...filters, majorName: e.target.value })} />
         </div>
         <div>
           <label className="form-label">Start Year</label>
@@ -348,7 +348,7 @@ export default function ManageCurricula() {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {curricula.map((c) => (
             <button key={c.code} className={`btn btn-sm ${selectedCode === c.code ? 'btn-success' : 'btn-outline-secondary'}`} onClick={() => loadDetail(c.code)}>
-              {c.code} (Major {c.majorId ?? '-'}, {c.startYear}{c.endYear ? `-${c.endYear}` : ''}){c.archivedAt ? ' [archived]' : ''}
+              {c.code} (Major {c.majorName ?? '-'}, {c.startYear}{c.endYear ? `-${c.endYear}` : ''}){c.archivedAt ? ' [archived]' : ''}
             </button>
           ))}
         </div>

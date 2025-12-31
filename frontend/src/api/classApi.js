@@ -1,3 +1,5 @@
+import { http } from './http.js';
+
 /* =========================
    LIST / FILTER CLASSES
 ========================= */
@@ -14,31 +16,18 @@ export async function listClasses({
   if (year !== undefined && year !== '') params.set('year', String(year));
   if (includeArchived) params.set('includeArchived', '1');
 
-  const url = `/api/admin/classes${params.toString() ? `?${params.toString()}` : ''}`;
-  const res = await fetch(url);
-  const data = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    throw new Error(data.message || 'Không tải được danh sách lớp học phần');
-  }
-  return data;
+  const url = `/admin/classes${params.toString() ? `?${params.toString()}` : ''}`;
+  return http(url);
 }
 
 /* =========================
    CREATE CLASS
 ========================= */
 export async function createClass(body) {
-  const res = await fetch('/api/admin/classes', {
+  return http('/admin/classes', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.message || 'Tạo lớp học phần thất bại');
-  }
-  return data;
 }
 
 /* =========================
@@ -46,66 +35,41 @@ export async function createClass(body) {
    (code + semester + year)
 ========================= */
 export async function updateClass(code, semester, year, body) {
-  const res = await fetch(
-    `/api/admin/classes/${encodeURIComponent(code)}/${semester}/${year}`,
+  return http(
+    `/admin/classes/${encodeURIComponent(code)}/${semester}/${year}`,
     {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     },
   );
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.message || 'Cập nhật lớp học phần thất bại');
-  }
-  return data;
 }
 
 /* =========================
    ARCHIVE CLASS
 ========================= */
 export async function archiveClass(code, semester, year) {
-  const res = await fetch(
-    `/api/admin/classes/${encodeURIComponent(code)}/${semester}/${year}/archive`,
+  return http(
+    `/admin/classes/${encodeURIComponent(code)}/${semester}/${year}/archive`,
     { method: 'POST' },
   );
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.message || 'Lưu trữ lớp học phần thất bại');
-  }
-  return data;
 }
 
 /* =========================
    DELETE CLASS
 ========================= */
 export async function deleteClass(code, semester, year) {
-  const res = await fetch(
-    `/api/admin/classes/${encodeURIComponent(code)}/${semester}/${year}`,
+  return http(
+    `/admin/classes/${encodeURIComponent(code)}/${semester}/${year}`,
     { method: 'DELETE' },
   );
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.message || 'Xóa lớp học phần thất bại');
-  }
-  return data;
 }
 
 /* =========================
    UPLOAD CLASSES FROM CSV
 ========================= */
 export async function uploadClasses(formData) {
-  const res = await fetch('/api/admin/classes/upload', {
+  return http('/admin/classes/upload', {
     method: 'POST',
     body: formData,
   });
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.message || 'Tải lên CSV lớp học phần thất bại');
-  }
-  return data;
 }
