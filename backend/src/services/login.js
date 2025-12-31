@@ -104,7 +104,7 @@ async function enforceStudentCooldown(studentId) {
 
   if (new Date() < allowedAt) {
     throw new Error(
-      `Login allowed after ${allowedAt.toISOString()}`
+      `Re-login not allowed yet.`
     );
   }
 }
@@ -221,4 +221,5 @@ function verifyToken(token) {
 module.exports = {
   login,
   verifyToken,
+
 };

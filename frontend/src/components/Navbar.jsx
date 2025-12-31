@@ -7,9 +7,11 @@ import {
   Button,
 } from "react-bootstrap";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { logout } from "../api/authApi"; // example
+import { logout } from "../api/auth.js"; 
+import { useAuth } from "../context/authContext";
 
 const Navbar = () => {
+  const { user } = useAuth(); //  role
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -17,9 +19,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      await logout(); // POST /auth/logout
-    } catch (e) {
-      console.error("Logout failed", e);
+      await logout();
     } finally {
       navigate("/login", { replace: true });
     }
@@ -32,54 +32,52 @@ const Navbar = () => {
           Student Portal
         </RBNavbar.Brand>
 
-        <RBNavbar.Toggle aria-controls="main-navbar" />
-        <RBNavbar.Collapse id="main-navbar">
+        <RBNavbar.Toggle />
+        <RBNavbar.Collapse>
           <Nav className="me-auto">
+
+            {/* STUDENT LINKS */}
             <Nav.Link as={Link} to="/dashboard" active={isActive("/dashboard")}>
               Dashboard
             </Nav.Link>
-            <Nav.Link as={Link} to="/courses" active={isActive("/courses")}>
-              Courses
-            </Nav.Link>
-            <Nav.Link as={Link} to="/grades" active={isActive("/grades")}>
-              Grades
-            </Nav.Link>
-            <Nav.Link as={Link} to="/profile" active={isActive("/profile")}>
-              Profile
-            </Nav.Link>
 
-            <NavDropdown title="Admin" id="admin-dropdown">
-              <NavDropdown.Item as={Link} to="/admin/dashboard">
-                Dashboard
-              </NavDropdown.Item>
-              <NavDropdown.Item as={Link} to="/admin/courses">
-                Manage Courses
-              </NavDropdown.Item>
-              <NavDropdown.Item as={Link} to="/admin/classes">
-                Manage Classes
-              </NavDropdown.Item>
-              <NavDropdown.Item as={Link} to="/admin/curricula">
-                Manage Curricula
-              </NavDropdown.Item>
-              <NavDropdown.Item as={Link} to="/admin/students">
-                Manage Students
-              </NavDropdown.Item>
-              <NavDropdown.Item as={Link} to="/admin/reports">
-                Reports
-              </NavDropdown.Item>
-            </NavDropdown>
+            {user?.role === "student" && (
+              <>
+                <Nav.Link as={Link} to="/courses">Courses</Nav.Link>
+                <Nav.Link as={Link} to="/grades">Grades</Nav.Link>
+                <Nav.Link as={Link} to="/profile">Profile</Nav.Link>
+              </>
+            )}
+
+            {/* ADMIN LINKS */}
+            {user?.role === "admin" && (
+              <NavDropdown title="Admin">
+                <NavDropdown.Item as={Link} to="/admin/dashboard">
+                  Dashboard
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/admin/courses">
+                  Manage Courses
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/admin/classes">
+                  Manage Classes
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/admin/curricula">
+                  Manage Curricula
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/admin/students">
+                  Manage Students
+                </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/admin/reports">
+                  Reports
+                </NavDropdown.Item>
+              </NavDropdown>
+            )}
+
           </Nav>
 
-          {/* RIGHT SIDE */}
-          <Nav>
-            <Button
-              variant="outline-danger"
-              size="sm"
-              onClick={handleLogout}
-            >
-              Logout
-            </Button>
-          </Nav>
+          <Button variant="outline-danger" size="sm" onClick={handleLogout}>
+            Logout
+          </Button>
         </RBNavbar.Collapse>
       </Container>
     </RBNavbar>

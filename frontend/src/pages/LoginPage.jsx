@@ -1,20 +1,38 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../components/Button";
 import { useAuth } from "../context/authContext";
 
 const LoginPage = () => {
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user, loading } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    role: "student",
+    role: "",
   });
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  /* -------------------------
+     Redirect AFTER render
+  -------------------------- */
+  useEffect(() => {
+    if (!loading && isAuthenticated && user?.role) {
+      navigate(
+        user.role === "admin"
+          ? "/admin/dashboard"
+          : "/dashboard",
+        { replace: true }
+      );
+    }
+  }, [loading, isAuthenticated, user, navigate]);
+
+  /* -------------------------
+     Handlers
+  -------------------------- */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -22,28 +40,35 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
     setError("");
 
-    try {
-      await login(formData); // AuthContext handles everything
+    if (!formData.role) {
+      setError("Vui lòng chọn loại tài khoản");
+      setSubmitting(false);
+      return;
+    }
 
+    try {
+      const loggedInUser = await login(formData);
+
+      // Optional: immediate redirect (safe because return value exists)
       navigate(
-        formData.role === "admin"
+        loggedInUser.role === "admin"
           ? "/admin/dashboard"
-          : "/dashboard"
+          : "/dashboard",
+        { replace: true }
       );
     } catch (err) {
-      setError(err.message || "Đã xảy ra lỗi khi đăng nhập");
+      setError(err.message || "Đăng nhập thất bại");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  if (isAuthenticated) {
-    return <p>You are already logged in</p>;
-  }
-
+  /* -------------------------
+     Render
+  -------------------------- */
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">

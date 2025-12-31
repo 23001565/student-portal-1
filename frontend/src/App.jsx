@@ -22,13 +22,18 @@ import ManageClasses from "./pages/Admin/ManageClasses";
 import ClassCSVUpload from "./pages/Admin/ClassCSVUpload";
 import CourseCSVUpload from "./pages/Admin/CourseCSVUpload";
 import UploadCurriculum from "./pages/Admin/UploadCurriculum";
+import Navbar from "./components/Navbar";
+import { useAuth } from "./context/authContext";
 function App() {
+  const { isAuthenticated } = useAuth();
   return (
     <div className="app-container">
       <div className="app-content">
         <BrowserRouter>
+          {isAuthenticated && <Navbar />}
           <Routes>
-            <Route path="/" element={<Login />} />
+            <Route path="/login" element={<Login />} />
+             <Route path="/" element={<Login />} /> 
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/grades" element={<GradesPage />} />

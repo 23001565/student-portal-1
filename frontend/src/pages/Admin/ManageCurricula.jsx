@@ -375,8 +375,8 @@ export default function ManageCurricula() {
               <input type="text" className="form-control" value={code} onChange={(e) => setCode(e.target.value)} disabled={mode==='update'} />
             </div>
             <div className="col-md-3">
-              <label className="form-label">Major ID</label>
-              <input type="number" className="form-control" value={majorId} onChange={(e) => setMajorId(e.target.value)} />
+              <label className="form-label">Major Name</label>
+              <input type="number" className="form-control" value={majorName} onChange={(e) => setMajorName(e.target.value)} />
             </div>
             <div className="col-md-3">
               <label className="form-label">Start Year</label>
@@ -421,8 +421,8 @@ export default function ManageCurricula() {
               <input type="text" className="form-control" value={cloneToCode} onChange={(e) => setCloneToCode(e.target.value)} placeholder="New unique code" />
             </div>
             <div className="col-md-4">
-              <label className="form-label">Major ID (optional)</label>
-              <input type="number" className="form-control" value={majorId} onChange={(e) => setMajorId(e.target.value)} />
+              <label className="form-label">Major Name (optional)</label>
+              <input type="text" className="form-control" value={majorName} onChange={(e) => setMajorName(e.target.value)} />
             </div>
             <div className="col-md-4">
               <label className="form-label">Start Year (optional)</label>
