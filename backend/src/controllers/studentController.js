@@ -1,76 +1,85 @@
-import {
-  getStudentProfile,
-  // createStudent,
-  updateStudentProfile,
-  // deleteStudent, 
-  // getAllStudents,
-  // findStudentsByName,
-  getStudentEnrollments,
-  getStudentSchedule
-} from '../services/studentService.js';
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
-//  getStudentProfile
-export async function profile(req, res) {
+// Lấy Profile
+exports.getProfile = async (req, res) => {
+  const student = await prisma.student.findUnique({
+    where: { id: req.user.id },
+    include: { major: true, curriculum: true }
+  });
+  res.json(student);
+};
+
+// Lấy danh sách lớp mở đăng ký (registrationApi.getOpenCourses)
+exports.getOpenCourses = async (req, res) => {
+  const classes = await prisma.class.findMany({
+    include: { course: true }
+  });
+
+  // Map dữ liệu để khớp với Frontend
+  const formatted = classes.map(c => ({
+    id: c.id,
+    code: c.course.code,      // Mã môn (INT3306)
+    name: c.course.name,      // Tên môn
+    classCode: c.code,        // Mã lớp (INT3306 1)
+    credits: c.course.credits,
+    schedule: c.schedule,     // JSON từ DB
+    enrolled: c.enrolledCount,
+    capacity: c.capacity
+  }));
+  res.json(formatted);
+};
+
+// Xử lý gửi đăng ký (registrationApi.submitRegistration)
+exports.submitRegistration = async (req, res) => {
+  const { courses } = req.body; // Mảng class IDs
+  const studentId = req.user.id;
+
   try {
-    const studentId = req.user.id;
+    // Transaction: Đảm bảo tính toàn vẹn (ACID)
+    await prisma.$transaction(async (tx) => {
+      for (const classId of courses) {
+        // Check lại sĩ số lần cuối
+        const cls = await tx.class.findUnique({ where: { id: classId } });
+        if (cls.enrolledCount >= cls.capacity) {
+          throw new Error(`Lớp ${cls.code} đã đầy`);
+        }
 
-    const student = await getStudentProfile(studentId);
+        // Tạo enrollment
+        await tx.enrollment.create({
+          data: { studentId, classId }
+        });
 
-    if (!student) {
-      return res.status(404).json({ error: 'Student not found' });
-    }
+        // Tăng sĩ số
+        await tx.class.update({
+          where: { id: classId },
+          data: { enrolledCount: { increment: 1 } }
+        });
+      }
+    });
 
-    res.json(student);
+    res.json({ message: 'Đăng ký thành công!' });
   } catch (err) {
-    console.error('Student profile error:', err);
-    res.status(500).json({ error: 'Failed to fetch profile' });
+    res.status(400).json({ message: err.message });
   }
-}
+};
 
-//updateStudentProfile
-export async function updateProfile(req, res) {
-  try {
-    const studentId = req.user.id;
-    const data = req.body;
-
-    const updated = await updateStudentProfile(studentId, data);
-
-    res.json(updated);
-  } catch (err) {
-    console.error('Update student profile error:', err);
-    res.status(500).json({ error: 'Failed to update profile' });
-  }
-}
-
-// getStudentEnrollments
-export async function myEnrollments(req, res) {
-  try {
-    const studentId = req.user.id;
-
-    const enrollments = await getStudentEnrollments(studentId);
-
-    res.json(enrollments);
-  } catch (err) {
-    console.error('Get enrollments error:', err);
-    res.status(500).json({ error: 'Failed to fetch enrollments' });
-  }
-}
-
-//getStudentSchedule
-export async function mySchedule(req, res) {
-  try {
-    const studentId = req.user.id;
-    const { semester, year } = req.query;
-
-    const schedule = await getStudentSchedule(
-      studentId,
-      Number(semester),
-      Number(year)
-    );
-
-    res.json(schedule);
-  } catch (err) {
-    console.error('Get schedule error:', err);
-    res.status(500).json({ error: 'Failed to fetch schedule' });
-  }
-}
+// Lấy bảng điểm
+exports.getGrades = async (req, res) => {
+  const grades = await prisma.enrollment.findMany({
+    where: { studentId: req.user.id },
+    include: { class: { include: { course: true } } }
+  });
+  
+  // Format cho GradesPage.jsx
+  const formatted = grades.map(g => ({
+    courseCode: g.class.course.code,
+    courseName: g.class.course.name,
+    credits: g.class.course.credits,
+    midTerm: g.midTerm,
+    finalExam: g.finalExam,
+    total10Scale: g.total10,
+    letterGrade: g.letterGrade
+  }));
+  res.json(formatted);
+};

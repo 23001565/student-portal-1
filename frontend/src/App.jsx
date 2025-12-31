@@ -14,7 +14,6 @@ import Announcements from "./admin/pages/Announcements";
 import PostAnnouncement from "./admin/pages/PostAnnouncement";
 import UploadGrades from "./admin/pages/UploadGrades";
 import UploadCurriculum from "./admin/pages/UploadCurriculum";
-import ProgressMonitor from "./admin/pages/ProgressMonitor";
 import CourseRegistration from "./user/pages/CourseRegistration";
 import StudentDetail from "./admin/pages/StudentDetail";
 import EditStudent from "./admin/pages/EditStudent";
@@ -46,10 +45,6 @@ function App() {
             <Route
               path="/admin/upload-curriculum"
               element={<UploadCurriculum />}
-            />
-            <Route
-              path="/admin/progress-monitor"
-              element={<ProgressMonitor />}
             />
           </Routes>
         </BrowserRouter>

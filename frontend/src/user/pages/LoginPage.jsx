@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import logoImage from "../../assets/logo.png"; // Import logo
 import "./LoginPage.css"; // Import file CSS mới
+import authApi from "../../api/authApi";
 
 // --- Các icon SVG đơn giản ---
 const EmailIcon = () => (
@@ -47,26 +48,24 @@ const LoginPage = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    try {
-      const response = await simulateLogin(formData);
-      if (response.success) {
-        const userToSave = { ...response.user, role: response.userType };
-        localStorage.setItem("user", JSON.stringify(userToSave));
-        localStorage.setItem("token", response.token);
-        navigate(response.userType === "admin" ? "/admin/dashboard" : "/dashboard");
-      } else {
-        setError(response.message || "Đăng nhập thất bại");
-      }
-    } catch (err) {
-      setError("Đã xảy ra lỗi khi đăng nhập");
-    } finally {
-      setLoading(false);
-    }
-  };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  try {
+    const res = await authApi.login(formData); // Gọi API thật
+    // Lưu token và user vào localStorage
+    localStorage.setItem('token', res.token);
+    localStorage.setItem('user', JSON.stringify(res.user));
+    
+    // Điều hướng dựa trên role
+    if (res.user.role === 'admin') navigate('/admin/dashboard');
+    else navigate('/dashboard');
+  } catch (err) {
+    setError('Sai email hoặc mật khẩu!');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="login-container">

@@ -1,81 +1,28 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const fs = require('fs');
 const csv = require('csv-parser');
-const { createClassesFromCSV } = require('../services/csvService.js');
-const streamifier = require('streamifier'); 
-//fs reads files from the filesystem(disk), when admin uploads files, it's usually in memory (RAM). streamifier helps convert buffer data (in memory) to a stream, so csv-parser can read it.
 
-const uploadClasses = async (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+// Upload Điểm (gradesApi.uploadGrades)
+exports.uploadGrades = (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'Thiếu file' });
 
-    const rows = [];
-    streamifier.createReadStream(req.file.buffer)
-      .pipe(csv())
-      .on('data', row => rows.push(row))
-      .on('end', async () => {
-        // Call service to insert rows efficiently
-        const {insertedCount, invalidRows} = await uploadClassesFromCSV(rows);
-        res.json({ 
-          message: 'Classes uploaded successfully', 
-          inserted: insertedCount,
-          invalidRows: invalidRows.length,
-          invalidData: invalidRows
-         });
-      });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
-  }
+  const results = [];
+  fs.createReadStream(req.file.path)
+    .pipe(csv())
+    .on('data', (data) => results.push(data))
+    .on('end', async () => {
+      // Logic xử lý DB ở đây (bạn tự implement thêm phần map dữ liệu nhé)
+      console.log('Data from CSV:', results);
+      fs.unlinkSync(req.file.path); // Xóa file tạm
+      res.json({ message: 'Upload thành công' });
+    });
 };
 
-module.exports = { uploadClasses };
-
-
-//fetch enrollments for all students in a specific semester
-const enrollments = await prisma.enrollment.findMany({
-  where: {
-    studentId: studentId,
-    registrationWindow: {
-      semester: 1,
-      year: 2025
-    }
-  },
-  include: {
-    class: true
-  }
-});
-
-//when student enrolls in a class
-const cls = await prisma.class.findUnique({
-  where: { id: classId }
-});
-
-await prisma.enrollment.create({
-  data: {
-    studentId: studentId,
-    classId: classId,
-    registrationWindowId: cls.registrationWindowId, // assuming this field exists
-  }
-});
-
-import redis from '../data/redis.js';
-import { cacheRegistrationData } from '../services/registrationService.js';
-
-
-export const startRegistrationRound = async (req, res) => {
-  const { year, semester, startTime, endTime } = req.body;
-
-  // Save active round info to Redis
-  await redis.set('registration_round:active', JSON.stringify({
-    year, semester, startTime, endTime
-  }));
-
-  // Cache all relevant data
-  await cacheRegistrationData(year, semester);
-
-  return res.status(200).json({ message: 'Registration round started and cache preloaded.' });
+// Lấy thông báo
+exports.getAnnouncements = async (req, res) => {
+  const data = await prisma.announcement.findMany({
+    orderBy: { postedAt: 'desc' }
+  });
+  res.json(data);
 };
-
-
-

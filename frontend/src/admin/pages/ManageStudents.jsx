@@ -17,6 +17,7 @@ import {
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout";
+import adminApi from "../../api/adminApi";
 
 const ManageStudents = () => {
   const navigate = useNavigate();
@@ -51,126 +52,16 @@ const ManageStudents = () => {
   });
 
   useEffect(() => {
-    const mockStudents = [
-      {
-        id: 1,
-        code: 1001,
-        email: "22001497@hus.edu",
-        name: "Alice Nguyen",
-        password: "123456",
-        year: 1,
-        majorId: 1,
-        curriculumId: 1,
-        majorName: "Khoa học máy tính",
-        createdAt: "2025-10-23 09:22:23",
-        archivedAt: null,
-        isActive: true,
-      },
-      {
-        id: 2,
-        code: 1002,
-        email: "22001496@hus.edu",
-        name: "Bob Tran",
-        password: "123456",
-        year: 2,
-        majorId: 1,
-        curriculumId: 1,
-        majorName: "Khoa học máy tính",
-        createdAt: "2025-10-23 09:22:23",
-        archivedAt: null,
-        isActive: true,
-      },
-      {
-        id: 3,
-        code: 1003,
-        email: "22001495@student.edu",
-        name: "Carol Le",
-        password: "123456",
-        year: 1,
-        majorId: 2,
-        curriculumId: 2,
-        majorName: "Quản trị kinh doanh",
-        createdAt: "2025-10-23 09:22:23",
-        archivedAt: null,
-        isActive: true,
-      },
-    ];
-
-    const mockEnrollments = [
-      {
-        id: 1,
-        classId: 1,
-        studentId: 1,
-        semester: 1,
-        year: 2025,
-        status: "đang hoạt động",
-        createdAt: "2025-10-23 09:24:54",
-        canceledAt: null,
-        archivedAt: null,
-        registrationWindowId: 1,
-        studentName: "Alice Nguyen",
-        className: "CS101-1",
-        courseName: "Lập trình cơ bản",
-      },
-      {
-        id: 2,
-        classId: 2,
-        studentId: 2,
-        semester: 1,
-        year: 2025,
-        status: "đang hoạt động",
-        createdAt: "2025-10-23 09:24:54",
-        canceledAt: null,
-        archivedAt: null,
-        registrationWindowId: 1,
-        studentName: "Bob Tran",
-        className: "CS201-1",
-        courseName: "Cấu trúc dữ liệu",
-      },
-      {
-        id: 3,
-        classId: 3,
-        studentId: 3,
-        semester: 1,
-        year: 2025,
-        status: "đang hoạt động",
-        createdAt: "2025-10-23 09:24:54",
-        canceledAt: null,
-        archivedAt: null,
-        registrationWindowId: 1,
-        studentName: "Carol Le",
-        className: "BA101-1",
-        courseName: "Nguyên lý quản trị",
-      },
-    ];
-
-    const mockClasses = [
-      {
-        id: 1,
-        code: "CS101-1",
-        courseId: 1,
-        courseName: "Lập trình cơ bản",
-      },
-      { id: 2, code: "CS201-1", courseId: 2, courseName: "Cấu trúc dữ liệu" },
-      {
-        id: 3,
-        code: "BA101-1",
-        courseId: 3,
-        courseName: "Nguyên lý quản trị",
-      },
-      { id: 4, code: "BA202-1", courseId: 4, courseName: "Marketing căn bản" },
-    ];
-
-    const mockMajors = [
-      { id: 1, name: "Khoa học máy tính" },
-      { id: 2, name: "Quản trị kinh doanh" },
-    ];
-
-    setStudents(mockStudents);
-    setEnrollments(mockEnrollments);
-    setClasses(mockClasses);
-    setMajors(mockMajors);
-  }, []);
+  const loadData = async () => {
+    try {
+      const studentsData = await adminApi.getAllStudents();
+      setStudents(studentsData);
+    } catch (error) {
+      console.error("Lỗi tải sinh viên", error);
+    }
+  };
+  loadData();
+}, []);
   const handleStudentSubmit = (e) => {
     e.preventDefault();
     if (editingStudent) {

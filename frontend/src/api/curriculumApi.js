@@ -1,14 +1,11 @@
-export async function uploadCurriculum(formData) {
-  const res = await fetch('/api/admin/curriculum/upload', {
-    method: 'POST',
-    body: formData,
+import axiosClient from './axiosClient';
+
+export function uploadCurriculum(formData) {
+  return axiosClient.post('/admin/curriculum/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
   });
-  if (!res.ok) throw new Error('Upload chương trình học thất bại');
-  return res.json();
 }
 
-export async function getCurricula() {
-  const res = await fetch('/api/admin/curriculum');
-  if (!res.ok) throw new Error('Không tải được danh sách CTĐT');
-  return res.json();
+export function getCurricula() {
+  return axiosClient.get('/admin/curriculum');
 }

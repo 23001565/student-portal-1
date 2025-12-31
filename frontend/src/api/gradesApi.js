@@ -1,20 +1,7 @@
-export async function uploadGrades(formData) {
-  // Stub endpoint - replace with real API
-  const res = await fetch('/api/admin/grades/upload', {
-    method: 'POST',
-    body: formData,
-  });
-  if (!res.ok) throw new Error('Upload điểm thất bại');
-  return res.json();
-}
+import axiosClient from './axiosClient';
 
-export async function validateGradesMapping(mapping) {
-  // Optional validation step for mapping columns
-  const res = await fetch('/api/admin/grades/validate-mapping', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(mapping),
+export function uploadGrades(formData) {
+  return axiosClient.post('/admin/grades/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
   });
-  if (!res.ok) throw new Error('Xác thực mapping thất bại');
-  return res.json();
 }

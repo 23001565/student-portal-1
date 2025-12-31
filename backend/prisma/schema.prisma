@@ -7,261 +7,123 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Enum cho Thông báo
+enum Priority {
+  low
+  normal
+  high
+}
+
+enum Audience {
+  all
+  students
+  lecturers
+}
+
 enum EnrollmentStatus {
-  ENROLLED 
-  WITHDRAWN   
-  DROPPED      // class cancelled
+  ENROLLED
+  WITHDRAWN
+  DROPPED
 }
 
-enum CurriculumGroupType {
-	GENERAL
-	FIELD
-	BRANCH
-	GROUP
-	MAJOR
-}
-
-
-/// A user who can login to the system: student or admin.
-/// We separate Admin and Student models but can extend User if needed.
-model Student {
-  id             Int         @id @default(autoincrement())
-
-  code		 Int	     @unique
-  email          String      @unique
-  name           String
-  password       String
-  year           Int
-
-  majorId        Int
-  major          Major       @relation(fields: [majorId], references: [id])
-  curriculumId	Int
-  curriculum	Curriculum   @relation(fields: [curriculumId], references: [id])
-
-  enrollments    Enrollment[]
-  sessions       Session[]
-
-  createdAt   DateTime	@default(now())
-  archivedAt DateTime?
-
-  isActive   Boolean @default(true) // optional
-}
+// --- MODELS ---
 
 model Admin {
-  id          Int       @id @default(autoincrement())
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  password      String
+  name          String
+  announcements Announcement[]
+}
 
-  email       String   @unique
-  username    String    
-  password    String
+model Student {
+  id           Int          @id @default(autoincrement())
+  code         String       @unique // SỬA: Int -> String để nhập "HS123"
+  email        String       @unique
+  name         String
+  password     String
+  
+  // Thông tin cá nhân (Khớp ProfilePage)
+  dob          DateTime?
+  gender       String?
+  address      String?
+  phone        String?
+  year         Int
+  className    String?      // Lớp hành chính (12A1)
 
-  createdAt   DateTime	@default(now())
+  majorId      Int
+  major        Major        @relation(fields: [majorId], references: [id])
+  curriculumId Int
+  curriculum   Curriculum   @relation(fields: [curriculumId], references: [id])
 
-  announcements   Announcement[]
+  enrollments  Enrollment[]
+  isActive     Boolean      @default(true)
 }
 
 model Major {
-  id          Int        @id @default(autoincrement())
-
-  name        String     @unique
-
-  students    Student[]
-  curricula	Curriculum[]
-
-  createdAt   DateTime	@default(now())
-  archivedAt DateTime?
-
+  id       Int       @id @default(autoincrement())
+  name     String
+  students Student[]
 }
 
 model Curriculum {
-	id	Int	@id @default(autoincrement())
-
-	majorId	Int
-	major	Major	@relation(fields: [majorId], references: [id])
-
-  code      String  @unique
-	startYear	Int
-	endYear		Int?
-
-	courses		CurriculumGroup[]  
-	students    Student[]
-
-	archivedAt  DateTime?
+  id        Int       @id @default(autoincrement())
+  name      String    // VD: K65 - CNTT
+  startYear Int
+  endYear   Int
+  students  Student[]
 }
 
-model CurriculumGroup {
-  id              Int       @id @default(autoincrement())
-
-  name            String?
-  type            CurriculumGroupType? // used for top-level classification
-
-  required        Boolean            @default(true)
-  totalCredits    Int
-
-  parentGroupId   Int?            // if it's a subgroup
-  parentGroup     CurriculumGroup?   @relation("GroupHierarchy", fields: [parentGroupId], references: [id])
-  subgroups       CurriculumGroup[]  @relation("GroupHierarchy")
-
-  courses         GroupCourse[]      // many-to-many through join model
-
-  curriculumId    Int
-  curriculum      Curriculum         @relation(fields: [curriculumId], references: [id])
-}
-
-
-model GroupCourse {
-  id           Int       @id @default(autoincrement())
-
-  groupId      Int
-  courseId     Int
-
-  curriculumGroup   CurriculumGroup     @relation(fields: [groupId], references: [id])
-  course       Course    @relation(fields: [courseId], references: [id])
-  
-  @@unique([groupId, courseId])     // Prevent duplicate assignments
- }
-
-
-
-/// Represents a Course, e.g., "Calculus I"
 model Course {
-  id          Int          @id @default(autoincrement())
-
-  code        String       @unique       // e.g., "MATH101"
-  name        String
-  credits     Int
-
-  groups     GroupCourse[]
-  classes     Class[]
-
-  createdAt   DateTime	@default(now())
-  archivedAt DateTime?
-  
+  id      Int     @id @default(autoincrement())
+  code    String  @unique // VD: INT3306
+  name    String
+  credits Int
+  classes Class[]
 }
 
-/// A specific class section of a course with schedule info
 model Class {
-  id            Int        @id @default(autoincrement())
-
-  code          String    
+  id            Int          @id @default(autoincrement())
+  code          String       @unique // VD: INT3306 1
+  courseId      Int
+  course        Course       @relation(fields: [courseId], references: [id])
   semester      Int
   year          Int
-  capacity      Int
-  dayOfWeek     Int
-  startPeriod   Int      // e.g. 1
-  endPeriod     Int      // e.g. 2
-  location      String
-
-  courseId      Int
-  course        Course     @relation(fields: [courseId], references: [id])
+  capacity      Int          @default(50)
+  enrolledCount Int          @default(0)
   
-  createdAt   DateTime	@default(now())
-  canceledAt  DateTime? // optional
-  archivedAt  DateTime?
-
+  // Quan trọng: Lưu lịch học dạng JSON để khớp Frontend
+  // VD: [{"day": "T2", "slots": [1,2,3], "room": "301"}]
+  schedule      Json?        
+  
   enrollments   Enrollment[]
-  examSchedules ExamSchedule[]
-  
-  @@unique([code, semester, year])
-
 }
 
-/// Student enrollment in a specific class
 model Enrollment {
-  id         Int      @id @default(autoincrement())
-
-  class      Class    @relation(fields: [classId], references: [id])
-  classId    Int
-  student    Student  @relation(fields: [studentId], references: [id])
-  studentId  Int
-
-  grade      Grade?
-
-  semester   Int
-  year       Int
-
-  status     EnrollmentStatus @default(ENROLLED)
-
-  createdAt       DateTime @default(now())
-  updatedAt  DateTime?
-  archivedAt  DateTime?
-
-  @@unique([studentId, classId, semester, year])  // Prevent duplicate enrollment
-  @@index([studentId, year, semester, status])
-}
-
-model Grade {
-  id              Int @id @default(autoincrement())
-
-  enrollmentId    Int @unique
-  enrollment      Enrollment @relation(fields: [enrollmentId], references: [id])
+  id          Int              @id @default(autoincrement())
+  studentId   Int
+  student     Student          @relation(fields: [studentId], references: [id])
+  classId     Int
+  class       Class            @relation(fields: [classId], references: [id])
+  status      EnrollmentStatus @default(ENROLLED)
   
-  midTerm         Float
-  finalExam       Float
+  // Điểm số
+  midTerm     Float?
+  finalExam   Float?
+  total10     Float?
+  total4      Float?
+  letterGrade String?
 
-  total10Scale    Float      // Provided by teacher (or calculated before submission)
-  total4Scale     Float?     // System calculated
-  letterGrade     String?    // System calculated
-  
+  @@unique([studentId, classId])
 }
 
-
-/// Final exam schedule for a course/class
-model ExamSchedule {
-  id          Int       @id @default(autoincrement())
-
-  examDate    DateTime
-  location    String?
-
-  classId     Int     @unique
-  class       Class    @relation(fields: [classId], references: [id])
-}
-
-/// User session for students — to manage login duration & re-login timing
-model Session {
-  id             Int       @id @default(autoincrement())
-
-  token          String    @unique
-
-  startedAt      DateTime  @default(now())
-  terminatedAt   DateTime? // when user manually logs out
-
-  isActive       Boolean   @default(true)
-
-  userAgent      String?
-  ipAddress      String?
-
-  studentId      Int
-  student        Student   @relation(fields: [studentId], references: [id])
-}
-
-/// Announcements that can be global or targeted
 model Announcement {
-  id          Int       @id @default(autoincrement())
-  title       String
-  content     String
-  postedById  Int?
-  postedBy    Admin?    @relation(fields: [postedById], references: [id])
-  postedAt    DateTime  @default(now())
-  
-}
-
-model CourseRegistrationWindow {
   id         Int      @id @default(autoincrement())
-
-  startTime  DateTime
-  endTime    DateTime
-
-  semester   Int
-  year       Int
-  round       Int
-
-  isActive   Boolean   @default(true)
-  
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  title      String
+  content    String
+  priority   Priority @default(normal)
+  audience   Audience @default(all)
+  postedById Int?
+  postedBy   Admin?   @relation(fields: [postedById], references: [id])
+  postedAt   DateTime @default(now())
 }
-
-
-
-
-
