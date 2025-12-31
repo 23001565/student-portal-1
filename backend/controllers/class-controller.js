@@ -197,3 +197,21 @@ const deleteSclass = async (req, res) => {
         res.status(500).json(error);
     }
 }
+
+const deleteSclasses = async (req, res) => {
+    try {
+        const deletedClasses = await Sclass.deleteMany({ school: req.params.id });
+        if (deletedClasses.deletedCount === 0) {
+            return res.send({ message: "No classes found to delete" });
+        }
+        const deletedStudents = await Student.deleteMany({ school: req.params.id });
+        const deletedSubjects = await Subject.deleteMany({ school: req.params.id });
+        const deletedTeachers = await Teacher.deleteMany({ school: req.params.id });
+        res.send(deletedClasses);
+    } catch (error) {
+        res.status(500).json(error);
+    }
+}
+
+
+module.exports = { sclassCreate, sclassList, deleteSclass, deleteSclasses, getSclassDetail, getSclassStudents };
