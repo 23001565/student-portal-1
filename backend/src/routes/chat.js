@@ -1,45 +1,35 @@
 const express = require('express');
 const router = express.Router();
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// const fetch = require('node-fetch');
 
 router.post('/ask-gemini', async (req, res) => {
   try {
     const { prompt } = req.body;
-    if (!prompt) {
-      return res.json({ reply: ' Bạn chưa nhập câu hỏi' });
-    }
+    if (!prompt) return res.json({ reply: 'Bạn chưa nhập câu hỏi' });
 
-    const model = genAI.getGenerativeModel({
-      model: 'models/gemini-1.5-flash'
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        messages: [
+          { role: 'user', content: prompt }
+        ]
+      })
     });
 
-    const result = await model.generateContent(prompt);
+    const data = await response.json();
+    console.log('GROQ RESPONSE:', data);
 
-    let reply = ' Gemini chưa trả lời được';
+    const reply = data?.choices?.[0]?.message?.content;
+    res.json({ reply: reply || 'AI không trả lời được' });
 
-    if (
-      result &&
-      result.response &&
-      result.response.candidates &&
-      result.response.candidates.length > 0 &&
-      result.response.candidates[0].content &&
-      result.response.candidates[0].content.parts &&
-      result.response.candidates[0].content.parts.length > 0
-    ) {
-      reply = result.response.candidates[0].content.parts
-        .map(p => p.text)
-        .join('');
-    }
-
-    res.json({ reply });
-
-  } catch (error) {
-    console.error('🔥 Gemini backend error:', error.message);
-    res.json({
-      reply: ' Gemini bị lỗi tạm thời, thử lại sau'
-    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ reply: 'AI bị lỗi' });
   }
 });
 
