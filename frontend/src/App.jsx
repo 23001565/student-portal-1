@@ -20,6 +20,9 @@ import EditStudent from "./admin/pages/EditStudent";
 import ProgressMonitor from "./admin/pages/ProgressMonitor";
 import RegistrationManager from "./admin/pages/RegistrationManager";
 import CreateStudent from "./admin/pages/CreateStudent";
+
+import GeminiChat from './components/GeminiChat';
+
 function App() {
   return (
     <div className="app-container">
@@ -53,6 +56,8 @@ function App() {
               element={<UploadCurriculum />}
             />
           </Routes>
+            {/* Chatbot nằm ở đây để trang nào cũng thấy */}
+          <GeminiChat /> 
         </BrowserRouter>
       </div>
     </div>
