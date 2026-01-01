@@ -10,11 +10,15 @@ const {
   deleteCurriculumController,
   cloneCurriculumController,
   getCurriculumByCodeController,
+  getStudentCurriculumController,
   listCurriculaController,
 } = require('../controllers/curriculumController');
 
 // Protect all with admin role
 const requireAdmin = requireRole('admin');
+
+// Student: get own curriculum
+router.get('/curriculum', auth, requireRole('student'), getStudentCurriculumController);
 
 // List/filter curricula
 router.get('/', auth, requireAdmin, listCurriculaController);

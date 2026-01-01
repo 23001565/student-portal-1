@@ -37,13 +37,15 @@ const Navbar = () => {
           <Nav className="me-auto">
 
             {/* STUDENT LINKS */}
-            <Nav.Link as={Link} to="/dashboard" active={isActive("/dashboard")}>
-              Dashboard
-            </Nav.Link>
+            
 
             {user?.role === "student" && (
               <>
+                <Nav.Link as={Link} to="/dashboard" >
+                  Dashboard
+                </Nav.Link>
                 <Nav.Link as={Link} to="/courses">Courses</Nav.Link>
+                <Nav.Link as={Link} to="/curriculum">Curriculum</Nav.Link>
                 <Nav.Link as={Link} to="/grades">Grades</Nav.Link>
                 <Nav.Link as={Link} to="/profile">Profile</Nav.Link>
               </>
@@ -51,29 +53,29 @@ const Navbar = () => {
 
             {/* ADMIN LINKS */}
             {user?.role === "admin" && (
-              <NavDropdown title="Admin">
-                <NavDropdown.Item as={Link} to="/admin/dashboard">
+              <>
+                <Nav.Link as={Link} to="/admin/dashboard">
                   Dashboard
-                </NavDropdown.Item>
-                <NavDropdown.Item as={Link} to="/admin/courses">
+                </Nav.Link>
+                <Nav.Link as={Link} to="/admin/courses">
                   Manage Courses
-                </NavDropdown.Item>
-                <NavDropdown.Item as={Link} to="/admin/classes">
+                </Nav.Link>
+                <Nav.Link as={Link} to="/admin/classes">
                   Manage Classes
-                </NavDropdown.Item>
-                <NavDropdown.Item as={Link} to="/admin/curricula">
+                </Nav.Link>
+                <Nav.Link as={Link} to="/admin/curricula">
                   Manage Curricula
-                </NavDropdown.Item>
-                <NavDropdown.Item as={Link} to="/admin/announcements">
+                </Nav.Link>
+                <Nav.Link as={Link} to="/admin/announcements">
                   Manage Announcement
-                </NavDropdown.Item>
-                <NavDropdown.Item as={Link} to="/admin/students">
+                </Nav.Link>
+                <Nav.Link as={Link} to="/admin/students">
                   Manage Students
-                </NavDropdown.Item>
-                <NavDropdown.Item as={Link} to="/admin/reports">
+                </Nav.Link>
+                <Nav.Link as={Link} to="/admin/reports">
                   Reports
-                </NavDropdown.Item>
-              </NavDropdown>
+                </Nav.Link>
+              </>
             )}
 
           </Nav>

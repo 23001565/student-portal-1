@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import CoursesPage from "./pages/CoursesPage";
 import GradesPage from "./pages/GradesPage";
 import ProfilePage from "./pages/ProfilePage";
+import CurriculumPage from "./pages/CurriculumPage";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import ManageCourses from "./pages/Admin/ManageCourses";
 import ManageStudents from "./pages/Admin/ManageStudents";
@@ -38,6 +39,7 @@ function App() {
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/grades" element={<GradesPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/curriculum" element={<CurriculumPage />} />
             <Route path="/registration" element={<CourseRegistration />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/courses" element={<ManageCourses />} />

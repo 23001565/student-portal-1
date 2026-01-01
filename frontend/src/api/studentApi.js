@@ -7,6 +7,11 @@ export function getMyProfile() {
   return http('/api/students/me');
 }
 
+// GET /students/curriculum
+export function getMyCurriculum() {
+  return http('/api/students/curriculum');
+}
+
 /*
 // PUT /students/me
 export function updateMyProfile(payload) {

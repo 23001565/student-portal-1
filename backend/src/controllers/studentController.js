@@ -17,9 +17,13 @@ async function getProfile(req, res) {
 async function updateProfile(req, res) {
   const { role, id } = req.user;
   const studentCode = role === 'student' ? id : Number(req.params.code);
-
-  const student = await studentService.updateByCode(studentCode, req.body);
-  res.json(student);
+  try {
+    const student = await studentService.updateByCode(studentCode, req.body);
+    res.json(student);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+  
 }
 
 async function archive(req, res) {
@@ -28,8 +32,13 @@ async function archive(req, res) {
 }
 
 async function create(req, res) {
-  const student = await studentService.create(req.body);
-  res.status(201).json(student);
+  try {
+    const student = await studentService.create(req.body);
+    res.status(201).json(student);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+  
 }
 
 async function remove(req, res) {
@@ -37,9 +46,15 @@ async function remove(req, res) {
   res.status(204).end();
 }
 
+
 async function list(req, res) {
-  const students = await studentService.filter(req.query);
-  res.json(students);
+  try {
+    const students = await studentService.filter(req.query);
+    res.json(students);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+  
 }
 
 module.exports = {

@@ -203,8 +203,8 @@ async function cloneCurriculum({ fromCode, toCode, startYear, endYear, majorName
   }
   const groupCourses = await prisma.groupCourse.findMany({ where: { groupId: { in: groups.map(g => g.id) } }, select: { groupId: true, courseId: true } });
   const courseIds = Array.from(new Set(groupCourses.map(gc => gc.courseId)));
-  const courses = courseIds.length ? await prisma.course.findMany({ where: { id: { in: courseIds } }, select: { id: true, code: true } }) : [];
-  const idToCode = new Map(courses.map(c => [c.id, c.code]));
+  const courses = courseIds.length ? await prisma.course.findMany({ where: { id: { in: courseIds } }, select: { id: true, code: true, name: true, credits: true } }) : [];
+  const idToCourse = new Map(courses.map(c => [c.id, { code: c.code, name: c.name, credits: c.credits }]));
 
   function buildTree(pid = 0) {
     const arr = children.get(pid) || [];
@@ -213,7 +213,7 @@ async function cloneCurriculum({ fromCode, toCode, startYear, endYear, majorName
       type: g.type,
       required: g.required,
       totalCredits: g.totalCredits,
-      courses: groupCourses.filter(gc => gc.groupId === g.id).map(gc => idToCode.get(gc.courseId)).filter(Boolean),
+      courses: groupCourses.filter(gc => gc.groupId === g.id).map(gc => idToCourse.get(gc.courseId)).filter(Boolean),
       subgroups: buildTree(g.id),
     }));
   }
@@ -237,6 +237,14 @@ async function cloneCurriculum({ fromCode, toCode, startYear, endYear, majorName
 
     return { curriculumCode: created.code };
   });
+}
+
+async function getStudentCurriculum(id) {
+  const student = await prisma.student.findUnique({ where: { code: id } });
+  if (!student) { const err = new Error('Student not found'); err.status = 404; throw err; }
+
+  const curriculum = await getCurriculumByCode(student.curriculumCode);
+  return curriculum;
 }
 
 async function getCurriculumByCode(code) {
@@ -298,11 +306,12 @@ async function listCurricula({ majorName, startYear, endYear } = {}) {
   if (endYear !== undefined) where.endYear = endYear;
   const items = await prisma.curriculum.findMany({
     where,
-    select: { code: true, startYear: true, endYear: true, archivedAt: true },
-    orderBy: [ { startYear: 'asc' }, { code: 'asc' }],
+    select: { code: true, startYear: true, endYear: true, archivedAt: true, major: { select: { name: true } } },
+    orderBy: [ {major: { name: 'asc' }}, { startYear: 'asc' }, { code: 'asc' }],
   });
   return { items};
 }
+
 
 module.exports = {
   createCurriculum,
@@ -311,5 +320,6 @@ module.exports = {
   deleteCurriculumByCode,
   cloneCurriculum,
   getCurriculumByCode,
+  getStudentCurriculum,
   listCurricula,
 };

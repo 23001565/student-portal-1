@@ -11,6 +11,8 @@ import {
   FormControl,
   Alert,
   Spinner,
+  Row,
+  Col,
 } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import {
@@ -28,7 +30,12 @@ const ManageStudents = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({
+    studentCode: "",
+    year: "",
+    majorName: "",
+    curriculumCode: "",
+  });
   const [showModal, setShowModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
 
@@ -38,8 +45,7 @@ const ManageStudents = () => {
     name: "",
     password: "",
     year: "",
-    majorId: "",
-    curriculumId: "",
+    curriculumCode: "",
   });
 
   /* ---------------- FETCH ---------------- */
@@ -47,9 +53,10 @@ const ManageStudents = () => {
   const fetchStudents = async () => {
     setLoading(true);
     try {
-      const data = await listStudents(
-        searchTerm ? { q: searchTerm } : {}
+      const activeFilters = Object.fromEntries(
+        Object.entries(filters).filter(([key, value]) => value !== "")
       );
+      const data = await listStudents(activeFilters);
       setStudents(data);
     } catch (err) {
       setError("Không thể tải danh sách sinh viên");
@@ -60,7 +67,7 @@ const ManageStudents = () => {
 
   useEffect(() => {
     fetchStudents();
-  }, [searchTerm]);
+  }, [filters]);
 
   /* ---------------- SUBMIT ---------------- */
 
@@ -72,8 +79,7 @@ const ManageStudents = () => {
           email: form.email,
           name: form.name,
           year: Number(form.year),
-          majorId: Number(form.majorId),
-          curriculumId: Number(form.curriculumId),
+          curriculumCode: form.curriculumCode,
           ...(form.password && { password: form.password }),
         });
       } else {
@@ -83,8 +89,7 @@ const ManageStudents = () => {
           name: form.name,
           password: form.password,
           year: Number(form.year),
-          majorId: Number(form.majorId),
-          curriculumId: Number(form.curriculumId),
+          curriculumCode: form.curriculumCode,
         });
       }
 
@@ -106,8 +111,7 @@ const ManageStudents = () => {
       name: student.name,
       password: "",
       year: student.year,
-      majorId: student.majorId,
-      curriculumId: student.curriculumId,
+      curriculumCode: student.curriculumCode,
     });
     setShowModal(true);
   };
@@ -136,32 +140,58 @@ const ManageStudents = () => {
       </div>
 
       <Card>
-        <Card.Header className="d-flex justify-content-between">
-          <InputGroup style={{ width: 300 }}>
-            <FormControl
-              placeholder="Tìm kiếm..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </InputGroup>
+        <Card.Header>
+          <div className="d-flex justify-content-between mb-3">
+            <Form className="d-flex" style={{ flex: 1, marginRight: 10 }}>
+              <Row className="g-2">
+                <Col md={3}>
+                  <FormControl
+                    placeholder="Mã sinh viên"
+                    value={filters.studentCode}
+                    onChange={(e) => setFilters({ ...filters, studentCode: e.target.value })}
+                  />
+                </Col>
+                <Col md={3}>
+                  <FormControl
+                    placeholder="Năm"
+                    value={filters.year}
+                    onChange={(e) => setFilters({ ...filters, year: e.target.value })}
+                  />
+                </Col>
+                <Col md={3}>
+                  <FormControl
+                    placeholder="Tên ngành"
+                    value={filters.majorName}
+                    onChange={(e) => setFilters({ ...filters, majorName: e.target.value })}
+                  />
+                </Col>
+                <Col md={3}>
+                  <FormControl
+                    placeholder="Mã chương trình"
+                    value={filters.curriculumCode}
+                    onChange={(e) => setFilters({ ...filters, curriculumCode: e.target.value })}
+                  />
+                </Col>
+              </Row>
+            </Form>
 
-          <Button
-            onClick={() => {
-              setEditingStudent(null);
-              setForm({
-                code: "",
-                email: "",
-                name: "",
-                password: "",
-                year: "",
-                majorId: "",
-                curriculumId: "",
-              });
-              setShowModal(true);
-            }}
-          >
-            Thêm sinh viên
-          </Button>
+            <Button
+              onClick={() => {
+                setEditingStudent(null);
+                setForm({
+                  code: "",
+                  email: "",
+                  name: "",
+                  password: "",
+                  year: "",
+                  curriculumCode: "",
+                });
+                setShowModal(true);
+              }}
+            >
+              Thêm sinh viên
+            </Button>
+          </div>
         </Card.Header>
 
         <Card.Body>
@@ -175,8 +205,10 @@ const ManageStudents = () => {
                 <th>Tên</th>
                 <th>Email</th>
                 <th>Năm</th>
+                <th>Ngành</th>
+                <th>Chương trình</th>
                 <th>Trạng thái</th>
-                <th />
+                <th>Hành động</th>
               </tr>
             </thead>
             <tbody>
@@ -186,6 +218,8 @@ const ManageStudents = () => {
                   <td>{s.name}</td>
                   <td>{s.email}</td>
                   <td>{s.year}</td>
+                  <td>{s.majorName}</td>
+                  <td>{s.curriculumCode}</td>
                   <td>
                     {s.archivedAt ? (
                       <Badge bg="secondary">Đã lưu trữ</Badge>
@@ -273,6 +307,23 @@ const ManageStudents = () => {
               value={form.password}
               onChange={(e) =>
                 setForm({ ...form, password: e.target.value })
+              }
+            />
+            <Form.Control
+              className="mb-2"
+              type="number"
+              placeholder="Năm nhập học"
+              value={form.year}
+              onChange={(e) =>
+                setForm({ ...form, year: e.target.value })
+              }
+            />
+            <Form.Control
+              className="mb-2"
+              placeholder="Chương trình học"
+              value={form.curriculumCode}
+              onChange={(e) =>
+                setForm({ ...form, curriculumCode: e.target.value })
               }
             />
           </Modal.Body>

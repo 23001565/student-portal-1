@@ -17,7 +17,7 @@ function transform(student) {
 async function getByCode(code) {
   const student = await prisma.student.findUnique({
     where: { code },
-    include: {
+    select: {
       code: true,
       email: true,
       name: true,
@@ -28,51 +28,57 @@ async function getByCode(code) {
       archivedAt: true,
     },
   });
-  if (!student || student.archivedAt) {
+  if (!student ) {
     return null;
+  }
+  if (student.archivedAt) {
+    throw new Error('Student is archived');
   }
   return transform(student);
 }
 
 async function updateByCode(code, payload) {
-  const {
-    majorName,
-    curriculumCode,
-    ...rest
-  } = payload;
-
+  const { curriculumCode, ...rest } = payload;
   const data = { ...rest };
 
-  if (majorName) {
-    const major = await prisma.major.findUnique({
-      where: { name: majorName },
-      select: { id: true },
-    });
+  if (!code) {
+    throw new Error('Missing student code');
+  }
 
-    if (!major) {
-      throw new Error('Invalid majorName');
-    }
+  const existing = await prisma.student.findUnique({
+    where: { code },
+  });
 
-    data.majorId = major.id;
+  if (!existing) {
+    throw new Error('Student not found');
   }
 
   if (curriculumCode) {
     const curriculum = await prisma.curriculum.findUnique({
       where: { code: curriculumCode },
-      select: { id: true },
+      select: {
+        id: true,
+        majorId: true,
+      },
     });
 
     if (!curriculum) {
       throw new Error('Invalid curriculumCode');
     }
 
-    data.curriculumId = curriculum.id;
+    data.curriculum = {
+      connect: { id: curriculum.id },
+    };
+
+    data.major = {
+      connect: { id: curriculum.majorId },
+    };
   }
 
   const student = await prisma.student.update({
     where: { code },
     data,
-    include: {
+    select: {
       code: true,
       email: true,
       name: true,
@@ -85,6 +91,7 @@ async function updateByCode(code, payload) {
 
   return transform(student);
 }
+
 
 
 async function archiveByCode(code) {
@@ -105,7 +112,6 @@ async function removeByCode(code) {
 
 async function create(payload) {
   const {
-    majorName,
     curriculumCode,
     password,
     ...rest
@@ -119,30 +125,15 @@ async function create(payload) {
     }
   }
 
-  // 2. Resolve major
-  const major = await prisma.major.findUnique({
-    where: { name: majorName },
-    select: { id: true },
-  });
-
-  if (!major) {
-    throw new Error('Invalid majorCode');
-  }
-
   // 3. Resolve curriculum
   const curriculum = await prisma.curriculum.findUnique({
     where: { code: curriculumCode },
-    select: { id: true },
+    select: { id: true, majorId: true },
   });
 
   if (!curriculum) {
     throw new Error('Invalid curriculumCode');
-  }
-
-  // Optional consistency check
-  if (curriculum.majorId !== major.id) {
-    throw new Error('Curriculum does not belong to major');
-  }
+  }  
 
   // 4. Hash password
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
@@ -152,10 +143,10 @@ async function create(payload) {
     data: {
       ...rest,
       password: hashedPassword,
-      majorId: major.id,
-      curriculumId: curriculum.id,
+      major: { connect: { id: curriculum.majorId } },
+      curriculum: { connect: { id: curriculum.id } },
     },
-    include: {
+    select: {
       code: true,
       email: true,
       name: true,
@@ -173,6 +164,30 @@ async function filter({
   majorName,
   curriculumCode,
 }) {
+  if (majorName && curriculumCode) {
+    const curriculum = await prisma.curriculum.findFirst({
+      where: { code: curriculumCode },
+      select: { majorId: true },
+    });
+
+    if (!curriculum) {
+      throw new Error('Invalid curriculumCode');
+    }
+
+    const major = await prisma.major.findUnique({
+      where: { name: majorName },
+      select: { id: true },
+    });
+
+    if (!major) {
+      throw new Error('Invalid majorName');
+    }
+
+    if (curriculum.majorId !== major.id) {
+      throw new Error('curriculumCode does not match majorName');
+    }
+  }
+
   const students = await prisma.student.findMany({
     where: {
       archivedAt: null,
@@ -192,7 +207,7 @@ async function filter({
         },
       }),
     },
-    include: {
+    select: {
       id: true,
       code: true,
       email: true,

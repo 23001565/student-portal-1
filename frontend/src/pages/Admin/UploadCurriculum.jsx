@@ -54,14 +54,14 @@ function GroupEditor({ group, onChange, onDelete }) {
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           type="text"
-          placeholder="Group name"
+          placeholder="Nhóm"
           value={group.name}
           onChange={(e) => updateField('name', e.target.value)}
           style={{ padding: 8, border: '1px solid #cbd5e1', borderRadius: 6, minWidth: 180 }}
         />
         <input
           type="text"
-          placeholder="Type (e.g., CORE/ELECTIVE)"
+          placeholder="Loại (CHUNG/KHOINGANH/NHOMNGANH/LINHVUC/NGANH)"
           value={group.type || ''}
           onChange={(e) => updateField('type', e.target.value)}
           style={{ padding: 8, border: '1px solid #cbd5e1', borderRadius: 6, minWidth: 180 }}
@@ -77,7 +77,7 @@ function GroupEditor({ group, onChange, onDelete }) {
         <input
           type="number"
           min={0}
-          placeholder="Total Credits"
+          placeholder="Tổng số tín chỉ"
           value={group.totalCredits}
           onChange={(e) => updateField('totalCredits', Number(e.target.value) || 0)}
           style={{ padding: 8, border: '1px solid #cbd5e1', borderRadius: 6, width: 140 }}
@@ -94,7 +94,7 @@ function GroupEditor({ group, onChange, onDelete }) {
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           <input
             type="text"
-            placeholder="Course code (e.g., CS101)"
+            placeholder="Mã môn học (e.g., CHE3200)"
             value={courseInput}
             onChange={(e) => setCourseInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCourse(); } }}
@@ -103,7 +103,7 @@ function GroupEditor({ group, onChange, onDelete }) {
           <button
             onClick={addCourse}
             style={{ background: '#2563eb', color: 'white', border: 'none', borderRadius: 6, padding: '8px 12px' }}
-          >Add course</button>
+          >Thêm môn học</button>
         </div>
         {group.courses.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
@@ -124,7 +124,7 @@ function GroupEditor({ group, onChange, onDelete }) {
           <button
             onClick={addSubgroup}
             style={{ background: '#10b981', color: 'white', border: 'none', borderRadius: 6, padding: '6px 10px' }}
-          >Add subgroup</button>
+          >Thêm nhóm con</button>
         </div>
         {group.subgroups.length > 0 && (
           <div style={{ marginTop: 8 }}>
@@ -149,7 +149,7 @@ export default function UploadCurriculum() {
 
   // Curriculum metadata
   const [code, setCode] = useState('');
-  const [majorId, setMajorId] = useState('');
+  const [majorName, setMajorId] = useState('');
   const [startYear, setStartYear] = useState('');
   const [endYear, setEndYear] = useState('');
 
@@ -217,7 +217,7 @@ export default function UploadCurriculum() {
     try {
       const payload = {
         code: code.trim(),
-        majorId: majorId ? Number(majorId) : null,
+        majorName: majorName ? majorName.trim() : null,
         startYear: Number(startYear),
         endYear: endYear ? Number(endYear) : null,
         groups: groups.map(stripForSubmit),
@@ -254,17 +254,17 @@ export default function UploadCurriculum() {
             type="text"
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            placeholder="e.g., IT2024-01"
+            placeholder="e.g., KHDL2024"
             style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 6, width: '100%' }}
           />
         </div>
         <div>
-          <label style={{ display: 'block', fontWeight: 500, marginBottom: 6 }}>Major ID</label>
+          <label style={{ display: 'block', fontWeight: 500, marginBottom: 6 }}>Mã ngành học</label>
           <input
-            type="number"
-            value={majorId}
-            onChange={(e) => setMajorId(e.target.value)}
-            placeholder="e.g., 1"
+            type="text"
+            value={majorName}
+            onChange={(e) => setMajorName(e.target.value)}
+            placeholder="e.g., KHDL"
             style={{ padding: 10, border: '1px solid #cbd5e1', borderRadius: 6, width: '100%' }}
           />
         </div>

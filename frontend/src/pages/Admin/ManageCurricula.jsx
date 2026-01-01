@@ -20,7 +20,7 @@ function normalizeGroupForEditor(g) {
     type: g.type || '',
     required: !!g.required,
     totalCredits: Number(g.totalCredits) || 0,
-    courses: Array.isArray(g.courses) ? g.courses.slice() : [],
+    courses: Array.isArray(g.courses) ? g.courses.map(c => typeof c === 'string' ? c : c.code).filter(Boolean) : [],
     subgroups: Array.isArray(g.subgroups) ? g.subgroups.map(normalizeGroupForEditor) : [],
   };
 }

@@ -1,11 +1,15 @@
 const multer = require('multer');
 const {
+  getCurriculumByCode,
+  listCurricula,
+  getStudentCurriculum,
   createCurriculum,
   updateCurriculumByCode,
   archiveCurriculum,
   deleteCurriculumByCode,
   cloneCurriculum,
 } = require('../services/curriculumService');
+const { list } = require('./studentController');
 
 const uploadFieldsParser = multer().none();
 
@@ -14,6 +18,31 @@ function sendError(res, err) {
   const body = { message: err.message || 'Internal Server Error' };
   if (err.details) body.details = err.details;
   return res.status(status).json(body);
+}
+
+async function listCurriculaController(req, res) {
+  try {
+    console.log('listCurriculaController called with query:', req.query);
+    const { majorName, startYear, endYear } = req.query;
+    const curricula = await listCurricula({ majorName, startYear, endYear });
+    console.log('Data returned from service:', curricula);
+    res.json(curricula);
+  } catch (err) {
+    console.error('Error in listCurriculaController:', err);
+    sendError(res, err);
+  }
+}
+
+async function getStudentCurriculumController(req, res) {
+  const { role, id } = req.user;
+
+  if (role !== 'student') {
+    return res.status(403).json({ message: 'Student access required' });
+  }
+  try {
+    const curriculum = await getStudentCurriculum(id);
+    res.json(curriculum);
+  } catch (err) { sendError(res, err); }
 }
 
 async function uploadCurriculumController(req, res) {
@@ -74,17 +103,7 @@ async function getCurriculumByCodeController(req, res) {
   } catch (err) { sendError(res, err); }
 }
 
-async function listCurriculaController(req, res) {
-  try {
-    const { majorId, startYear, endYear } = req.query;
-    const q = {};
-    if (majorId !== undefined) q.majorId = Number(majorId);
-    if (startYear !== undefined) q.startYear = Number(startYear);
-    if (endYear !== undefined) q.endYear = Number(endYear);
-    const data = await require('../services/curriculumService').listCurricula(q);
-    res.json(data);
-  } catch (err) { sendError(res, err); }
-}
+
 
 module.exports = {
   uploadFieldsParser,
@@ -95,4 +114,5 @@ module.exports = {
   cloneCurriculumController,
   getCurriculumByCodeController,
   listCurriculaController,
+  getStudentCurriculumController,
 };
