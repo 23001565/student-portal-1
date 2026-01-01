@@ -16,5 +16,9 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/registration', studentRoutes); // Khớp registrationApi.js
 app.use('/api/student', studentRoutes);      // Khớp studentApi.js (profile, grades)
 
+const chatRoute = require('./chat');
+app.use('/api', chatRoute);
+
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server chạy tại http://localhost:${PORT}`));
