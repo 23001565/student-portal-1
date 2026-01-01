@@ -72,9 +72,6 @@ const CoursesPage = () => {
                     </div>
                   </div>
                   <div className="card-footer bg-white border-top-0 p-4 pt-0">
-                    <Button variant="outline-primary" className="w-100" onClick={() => {}}>
-                      Xem chi tiết
-                    </Button>
                   </div>
                 </div>
               </div>

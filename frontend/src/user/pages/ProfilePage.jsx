@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageFrame from "../../components/PageFrame";
-import Button from "../../components/Button";
 import Layout from "../../components/Layout";
-import studentApi from "../../api/studentApi"; // Import API
+import studentApi from "../../api/studentApi";
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    phone: "",
+    dob: "",
+    gender: "",
+    password: "" // [MỚI] Thêm trường password
+  });
 
   useEffect(() => {
     loadProfile();
@@ -16,9 +23,14 @@ const ProfilePage = () => {
 
   const loadProfile = async () => {
     try {
-      // GỌI API THẬT
       const data = await studentApi.getProfile();
       setProfile(data);
+      setFormData({
+        phone: data.phone || "",
+        dob: data.dob ? new Date(data.dob).toISOString().split('T')[0] : "",
+        gender: data.gender || "Nam",
+        password: "" // [MỚI] Luôn để rỗng khi mới load
+      });
     } catch (error) {
       console.error("Lỗi tải hồ sơ:", error);
     } finally {
@@ -26,10 +38,41 @@ const ProfilePage = () => {
     }
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSubmit = async () => {
+    try {
+      await studentApi.updateProfile(formData);
+      
+      // Update UI (Lưu ý: Không cần update password vào state profile để hiển thị)
+      setProfile({ ...profile, ...formData }); 
+      
+      // Reset lại password trong form về rỗng để tránh lộ hoặc gửi lại lần sau
+      setFormData(prev => ({ ...prev, password: "" }));
+      
+      setIsEditing(false);
+      alert("Cập nhật thành công!");
+    } catch (error) {
+      alert("Lỗi cập nhật: " + error.message);
+    }
+  };
+
+  const handleCancel = () => {
+    setFormData({
+      phone: profile.phone || "",
+      dob: profile.dob ? new Date(profile.dob).toISOString().split('T')[0] : "",
+      gender: profile.gender || "Nam",
+      password: "" // [MỚI] Reset pass về rỗng
+    });
+    setIsEditing(false);
+  };
+
   if (loading) return <Layout><div>Đang tải dữ liệu...</div></Layout>;
   if (!profile) return <Layout><div>Không tìm thấy hồ sơ</div></Layout>;
 
-  // Dùng dữ liệu thật từ API để hiển thị (Giữ nguyên cấu trúc giao diện cũ)
   return (
     <Layout>
       <PageFrame title="Hồ sơ sinh viên" subtitle="Thông tin cá nhân và học vấn">
@@ -41,14 +84,78 @@ const ProfilePage = () => {
               </div>
               <h4>{profile.name}</h4>
               <p className="text-muted">{profile.code}</p>
+              
               <div className="mt-3 text-start">
                 <p><strong>Email:</strong> {profile.email}</p>
-                <p><strong>Số điện thoại:</strong> {profile.phone || "Chưa cập nhật"}</p>
-                <p><strong>Ngày sinh:</strong> {profile.dob ? new Date(profile.dob).toLocaleDateString('vi-VN') : "Chưa cập nhật"}</p>
-                <p><strong>Giới tính:</strong> {profile.gender || "Chưa cập nhật"}</p>
+                
+                <div className="mb-3">
+                  <strong>Số điện thoại: </strong>
+                  {isEditing ? (
+                    <input type="text" className="form-control form-control-sm mt-1" name="phone" value={formData.phone} onChange={handleInputChange}/>
+                  ) : (
+                    <span>{profile.phone || "Chưa cập nhật"}</span>
+                  )}
+                </div>
+
+                <div className="mb-3">
+                  <strong>Ngày sinh: </strong>
+                  {isEditing ? (
+                    <input type="date" className="form-control form-control-sm mt-1" name="dob" value={formData.dob} onChange={handleInputChange}/>
+                  ) : (
+                    <span>{profile.dob ? new Date(profile.dob).toLocaleDateString('vi-VN') : "Chưa cập nhật"}</span>
+                  )}
+                </div>
+
+                <div className="mb-3">
+                  <strong>Giới tính: </strong>
+                  {isEditing ? (
+                    <select className="form-select form-select-sm mt-1" name="gender" value={formData.gender} onChange={handleInputChange}>
+                      <option value="Nam">Nam</option>
+                      <option value="Nữ">Nữ</option>
+                      <option value="Khác">Khác</option>
+                    </select>
+                  ) : (
+                    <span>{profile.gender || "Chưa cập nhật"}</span>
+                  )}
+                </div>
+
+                {/* [MỚI] KHU VỰC ĐỔI MẬT KHẨU - CHỈ HIỆN KHI EDIT */}
+                {isEditing && (
+                    <div className="mb-3 pt-3 mt-3 border-top">
+                        <strong className="text-danger"><i className="bi bi-shield-lock me-1"></i>Đổi mật khẩu:</strong>
+                        <input 
+                            type="password" 
+                            className="form-control form-control-sm mt-1 border-danger" 
+                            name="password"
+                            placeholder="Nhập mật khẩu mới..." 
+                            value={formData.password} 
+                            onChange={handleInputChange}
+                        />
+                        <div className="form-text text-muted small fst-italic">
+                            Để trống nếu không muốn thay đổi.
+                        </div>
+                    </div>
+                )}
+                {/* ----------------------------------------------- */}
+
               </div>
+
+              <div className="mt-auto pt-3 border-top">
+                {!isEditing ? (
+                  <button className="btn btn-outline-primary w-100" onClick={() => setIsEditing(true)}>
+                    Chỉnh sửa thông tin
+                  </button>
+                ) : (
+                  <div className="d-flex gap-2">
+                    <button className="btn btn-success flex-grow-1" onClick={handleSubmit}>Lưu</button>
+                    <button className="btn btn-secondary flex-grow-1" onClick={handleCancel}>Hủy</button>
+                  </div>
+                )}
+              </div>
+
             </div>
           </div>
+
           <div className="col-md-8">
             <div className="card h-100">
               <div className="card-body">
@@ -70,7 +177,7 @@ const ProfilePage = () => {
                     <div className="col-md-6">
                       <label className="form-label text-muted small">Niên khóa</label>
                       <input type="text" className="form-control bg-light" 
-                             value={profile.curriculum ? `${profile.curriculum.startYear} - ${profile.curriculum.endYear}` : ""} disabled />
+                             value={profile.year ? `${profile.year} - ${profile.year + 4}` : ""} disabled />
                     </div>
                   </div>
                 </form>

@@ -18,6 +18,8 @@ import CourseRegistration from "./user/pages/CourseRegistration";
 import StudentDetail from "./admin/pages/StudentDetail";
 import EditStudent from "./admin/pages/EditStudent";
 import ProgressMonitor from "./admin/pages/ProgressMonitor";
+import RegistrationManager from "./admin/pages/RegistrationManager";
+import CreateStudent from "./admin/pages/CreateStudent";
 function App() {
   return (
     <div className="app-container">
@@ -34,11 +36,13 @@ function App() {
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/courses" element={<ManageCourses />} />
             <Route path="/admin/students" element={<ManageStudents />} />
+            <Route path="/admin/students/new" element={<CreateStudent />} />
             <Route path="/admin/students/:id" element={<StudentDetail />} />
             <Route path="/admin/students/:id/edit" element={<EditStudent />} />
             <Route path="/admin/reports" element={<Reports />} />
             <Route path="/admin/progress-monitor" element={<ProgressMonitor />} />
             <Route path="/admin/announcements" element={<Announcements />} />
+            <Route path="/admin/registration-control" element={<RegistrationManager />} />
             <Route
               path="/admin/post-announcement"
               element={<PostAnnouncement />}

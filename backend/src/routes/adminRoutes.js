@@ -17,14 +17,22 @@ router.get('/progress', adminController.getAcademicProgress); // <--- Thêm dòn
 // Courses
 router.get('/courses', adminController.getAllCourses);
 router.post('/courses', adminController.createCourse);
+router.get('/majors', adminController.getAllMajors);
+router.get('/curriculums', adminController.getAllCurriculums);
 
 // Classes
 router.get('/classes', adminController.getAllClasses);
 router.post('/classes', adminController.createClass);
+router.post('/registration-period', adminController.setRegistrationPeriod);
+router.put('/classes/:id/status', adminController.toggleClassStatus);
+router.delete('/classes/:id', adminController.deleteClass);
+router.get('/registration-period', adminController.getRegistrationConfig);
 
 // Announcements
 router.get('/announcements', adminController.getAnnouncements);
 router.post('/announcements', adminController.createAnnouncement);
+router.put('/announcements/:id', adminController.updateAnnouncement); // API Sửa
+router.delete('/announcements/:id', adminController.deleteAnnouncement); // API Xóa
 
 // Uploads
 router.post('/grades/upload', upload.single('file'), adminController.uploadGrades);

@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const bcrypt = require('bcryptjs');
 
 // Lấy Profile
 exports.getProfile = async (req, res) => {
@@ -12,26 +13,67 @@ exports.getProfile = async (req, res) => {
 
 // Lấy danh sách lớp mở đăng ký (registrationApi.getOpenCourses)
 exports.getOpenCourses = async (req, res) => {
-  const classes = await prisma.class.findMany({
-    include: { course: true }
-  });
+  try {
+    // 1. KIỂM TRA THỜI GIAN ĐĂNG KÝ
+    const config = await prisma.systemConfig.findUnique({
+      where: { key: 'REGISTRATION_PERIOD' }
+    });
 
-  // Map dữ liệu để khớp với Frontend
-  const formatted = classes.map(c => ({
-    id: c.id,
-    code: c.course.code,      // Mã môn (INT3306)
-    name: c.course.name,      // Tên môn
-    classCode: c.code,        // Mã lớp (INT3306 1)
-    credits: c.course.credits,
-    schedule: c.schedule,     // JSON từ DB
-    enrolled: c.enrolledCount,
-    capacity: c.capacity
-  }));
-  res.json(formatted);
+    const now = new Date();
+    
+    // Nếu chưa cấu hình, hoặc không active, hoặc ngoài khung giờ
+    if (!config || !config.isActive) {
+      return res.json([]); // Trả về rỗng (Đóng đăng ký)
+    }
+    
+    if (config.startDate && now < config.startDate) {
+       return res.status(403).json({ message: "Chưa đến thời gian đăng ký tín chỉ." });
+    }
+    
+    if (config.endDate && now > config.endDate) {
+       return res.status(403).json({ message: "Đã hết hạn đăng ký tín chỉ." });
+    }
+
+    // 2. LẤY DANH SÁCH LỚP (Chỉ lấy lớp được mở)
+    const classes = await prisma.class.findMany({
+      where: {
+        isRegistrationOpen: true, // Chỉ lấy lớp Admin cho phép
+        // Có thể thêm logic: active: true (nếu có soft delete)
+      },
+      include: { course: true }
+    });
+
+    // 3. Map dữ liệu (Giữ nguyên logic cũ của bạn)
+    const formatted = classes.map(c => ({
+      id: c.id,
+      code: c.course.code,
+      name: c.course.name,
+      classCode: c.code,
+      credits: c.course.credits,
+      schedule: c.schedule,
+      enrolled: c.enrolledCount,
+      capacity: c.capacity,
+      // Status hiển thị trên FE
+      status: c.enrolledCount >= c.capacity ? 'FULL' : 'OPEN'
+    }));
+
+    res.json(formatted);
+
+  } catch (err) {
+    res.status(500).json({ message: "Lỗi hệ thống: " + err.message });
+  }
 };
 
 // Xử lý gửi đăng ký (registrationApi.submitRegistration)
 exports.submitRegistration = async (req, res) => {
+  // --- THÊM CHECK THỜI GIAN ---
+  const config = await prisma.systemConfig.findUnique({ where: { key: 'REGISTRATION_PERIOD' } });
+  const now = new Date();
+  if (!config?.isActive || now < config?.startDate || now > config?.endDate) {
+    return res.status(400).json({ message: "Cổng đăng ký đang đóng!" });
+  }
+  // -----------------------------
+
   const { courses } = req.body; // Mảng class IDs
   const studentId = req.user.id;
 
@@ -82,4 +124,85 @@ exports.getGrades = async (req, res) => {
     letterGrade: g.letterGrade
   }));
   res.json(formatted);
+};
+exports.getAnnouncements = async (req, res) => {
+  try {
+    const announcements = await prisma.announcement.findMany({
+      where: {
+        OR: [
+          { audience: 'all' },      // Lấy tin cho tất cả
+          { audience: 'students' }  // Lấy tin riêng cho sinh viên
+        ]
+      },
+      orderBy: { postedAt: 'desc' }, // Tin mới nhất lên đầu
+      take: 10 // Chỉ lấy 10 tin mới nhất để nhẹ API
+    });
+    res.json(announcements);
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi lấy thông báo: " + error.message });
+  }
+};
+
+// [QUAN TRỌNG] Bạn cũng đang THIẾU hàm getMyEnrollments cho Dashboard
+// Dashboard.jsx có gọi studentApi.getMyEnrollments() để lấy lịch học
+// Nhưng controller của bạn chưa có. Hãy thêm hàm này luôn:
+exports.getMyEnrollments = async (req, res) => {
+  try {
+    const enrollments = await prisma.enrollment.findMany({
+      where: { studentId: req.user.id },
+      include: { 
+        class: { 
+          include: { course: true } 
+        } 
+      }
+    });
+
+    // Map dữ liệu trả về đúng format Dashboard cần (schedule, courseName, credits)
+    const formatted = enrollments.map(en => ({
+      id: en.id,
+      courseName: en.class.course.name,
+      classCode: en.class.code,
+      credits: en.class.course.credits,
+      schedule: en.class.schedule, // Dashboard cần cái này để hiển thị "Thứ 2 (Tiết 1-3)..."
+      room: en.class.room          // Nếu DB có trường room
+    }));
+
+    res.json(formatted);
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi lấy lịch học: " + error.message });
+  }
+};
+exports.updateProfile = async (req, res) => {
+  try {
+    const studentId = req.user.id;
+    // 2. Lấy thêm password từ request
+    const { phone, dob, gender, password } = req.body;
+
+    const updateData = {};
+    if (phone) updateData.phone = phone;
+    if (gender) updateData.gender = gender;
+    
+    if (dob) {
+        const dateObject = new Date(dob);
+        if (!isNaN(dateObject.getTime())) {
+             updateData.dob = dateObject;
+        }
+    }
+
+    // 3. LOGIC ĐỔI MẬT KHẨU (Nếu có nhập thì mới đổi)
+    if (password && password.trim() !== "") {
+        const salt = bcrypt.genSaltSync(10);
+        updateData.password = bcrypt.hashSync(password, salt);
+    }
+
+    const updatedStudent = await prisma.student.update({
+      where: { id: studentId },
+      data: updateData,
+    });
+
+    res.json({ message: "Cập nhật hồ sơ thành công", student: updatedStudent });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Lỗi cập nhật: " + err.message });
+  }
 };

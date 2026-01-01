@@ -74,6 +74,20 @@ const ManageCourses = () => {
     } catch (err) { alert("Lỗi: " + err.message); }
   };
 
+  // [MỚI] Hàm xử lý xóa lớp
+const handleDeleteClass = async (id, code) => {
+    // Cảnh báo gắt hơn
+    if (window.confirm(`CẢNH BÁO: Lớp ${code} có thể đang có sinh viên theo học.\n\nHành động xóa này sẽ:\n1. Xóa vĩnh viễn lớp học.\n2. Hủy đăng ký của tất cả sinh viên trong lớp.\n3. XÓA TOÀN BỘ ĐIỂM SỐ của sinh viên trong lớp này.\n\nBạn có chắc chắn muốn tiếp tục?`)) {
+        try {
+            await adminApi.deleteClass(id);
+            alert("Đã xóa lớp và dọn dẹp dữ liệu thành công!");
+            loadData();
+        } catch (err) {
+            alert("Lỗi xóa: " + (err.response?.data?.message || err.message));
+        }
+    }
+};
+
   // Helper hiển thị lịch
   const renderSchedule = (sch) => {
     if(Array.isArray(sch)) return sch.map(s => `${s.day} (${s.slots.join('-')}) phòng ${s.room}`).join('; ');
@@ -90,8 +104,8 @@ const ManageCourses = () => {
           <Tab eventKey="courses" title="Danh mục Môn học">
             <Button className="mb-3" onClick={() => setShowCourseModal(true)}>+ Thêm Môn học</Button>
             <Card className="shadow-sm">
-              <Table hover responsive>
-                <thead><tr><th>Mã môn</th><th>Tên môn</th><th>Tín chỉ</th></tr></thead>
+              <Table hover responsive className="align-middle mb-0">
+                <thead className="bg-light"><tr><th>Mã môn</th><th>Tên môn</th><th>Tín chỉ</th></tr></thead>
                 <tbody>
                   {courses.map(c => (
                     <tr key={c.id}>
@@ -109,18 +123,44 @@ const ManageCourses = () => {
           <Tab eventKey="classes" title="Lớp học phần (Mở lớp)">
              <Button className="mb-3" onClick={() => setShowClassModal(true)}>+ Mở Lớp mới</Button>
              <Card className="shadow-sm">
-              <Table hover responsive>
-                <thead><tr><th>Mã lớp</th><th>Môn học</th><th>HK/Năm</th><th>Lịch học</th><th>Sĩ số</th></tr></thead>
+              <Table hover responsive className="align-middle mb-0">
+                <thead className="bg-light">
+                    <tr>
+                        <th>Mã lớp</th>
+                        <th>Môn học</th>
+                        <th>HK/Năm</th>
+                        <th>Lịch học</th>
+                        <th>Sĩ số</th>
+                        <th className="text-end">Hành động</th> {/* [MỚI] Thêm cột Action */}
+                    </tr>
+                </thead>
                 <tbody>
                   {classes.map(c => (
                     <tr key={c.id}>
                       <td className="fw-bold">{c.code}</td>
                       <td>{c.course?.name}</td>
                       <td>{c.semester}/{c.year}</td>
-                      <td>{renderSchedule(c.schedule)}</td>
-                      <td>{c.enrolledCount}/{c.capacity}</td>
+                      <td className="small text-muted">{renderSchedule(c.schedule)}</td>
+                      <td>
+                        <Badge bg={c.enrolledCount >= c.capacity ? "danger" : "success"}>
+                            {c.enrolledCount}/{c.capacity}
+                        </Badge>
+                      </td>
+                      {/* [MỚI] Nút Xóa */}
+                      <td className="text-end">
+                        <Button 
+                            variant="outline-danger" 
+                            size="sm" 
+                            onClick={() => handleDeleteClass(c.id, c.code)}
+                        >
+                            <i className="bi bi-trash"></i> Xóa
+                        </Button>
+                      </td>
                     </tr>
                   ))}
+                  {classes.length === 0 && (
+                      <tr><td colSpan="6" className="text-center text-muted py-3">Chưa có lớp học phần nào</td></tr>
+                  )}
                 </tbody>
               </Table>
             </Card>

@@ -2,6 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const fs = require('fs');
 const csv = require('csv-parser');
+const bcrypt = require('bcryptjs');
 
 // --- QUẢN LÝ SINH VIÊN ---
 
@@ -41,12 +42,17 @@ exports.getStudentById = async (req, res) => {
 // [MỚI] Tạo sinh viên
 exports.createStudent = async (req, res) => {
   try {
-    // Mặc định pass là 123 nếu không gửi lên
     const { password, year, majorId, curriculumId, ...rest } = req.body;
+    
+    // 1. Xử lý mật khẩu: Nếu không nhập thì dùng '123', sau đó MÃ HÓA LUÔN
+    const plainPassword = password || '123';
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(plainPassword, salt);
+
     const newStudent = await prisma.student.create({
       data: { 
         ...rest, 
-        password: password || '123',
+        password: hashedPassword, // Lưu mật khẩu đã mã hóa
         year: parseInt(year),
         majorId: parseInt(majorId),
         curriculumId: parseInt(curriculumId)
@@ -56,16 +62,23 @@ exports.createStudent = async (req, res) => {
   } catch (err) { res.status(400).json({ message: err.message }); }
 };
 
-// [MỚI] Cập nhật sinh viên
+// [CẬP NHẬT] Sửa sinh viên (Có mã hóa pass mới)
 exports.updateStudent = async (req, res) => {
   try {
     const { id } = req.params;
-    // Loại bỏ các trường không được update trực tiếp hoặc các object quan hệ
-    const { major, curriculum, enrollments, id: _id, ...data } = req.body;
+    const { password, major, curriculum, enrollments, id: _id, ...restData } = req.body;
     
+    const updateData = { ...restData };
+
+    // 2. Nếu có nhập password mới thì mã hóa
+    if (password && password.trim() !== "") {
+      const salt = bcrypt.genSaltSync(10);
+      updateData.password = bcrypt.hashSync(password.trim(), salt);
+    }
+
     const updated = await prisma.student.update({
       where: { id: parseInt(id) },
-      data: data
+      data: updateData
     });
     res.json(updated);
   } catch (err) { res.status(400).json({ message: 'Lỗi cập nhật: ' + err.message }); }
@@ -125,6 +138,31 @@ exports.createClass = async (req, res) => {
     });
     res.json(newClass);
   } catch (err) { res.status(400).json({ message: err.message }); }
+};
+exports.deleteClass = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const classId = parseInt(id);
+
+    // Sử dụng Transaction để đảm bảo xóa sạch hoặc không xóa gì cả
+    await prisma.$transaction([
+      // 1. Xóa tất cả sinh viên ra khỏi lớp này (Xóa enrollment)
+      // Điều này đồng nghĩa xóa luôn điểm số của sinh viên trong môn này
+      prisma.enrollment.deleteMany({
+        where: { classId: classId }
+      }),
+
+      // 2. Sau khi sạch enrollment thì mới xóa Lớp
+      prisma.class.delete({
+        where: { id: classId }
+      })
+    ]);
+
+    res.json({ message: "Đã xóa lớp và hủy toàn bộ đăng ký liên quan!" });
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ message: "Lỗi hệ thống: " + err.message });
+  }
 };
 
 // --- CÁC API KHÁC (Giữ nguyên hoặc mock backend upload) ---
@@ -340,4 +378,135 @@ exports.getAcademicProgress = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
+};
+
+// [MỚI] Cài đặt thời gian đăng ký
+exports.setRegistrationPeriod = async (req, res) => {
+  try {
+    const { startDate, endDate, isActive } = req.body;
+    
+    // Dùng upsert: Nếu có rồi thì update, chưa có thì tạo mới
+    const config = await prisma.systemConfig.upsert({
+      where: { key: 'REGISTRATION_PERIOD' },
+      update: { 
+        startDate: new Date(startDate), 
+        endDate: new Date(endDate),
+        isActive: isActive 
+      },
+      create: { 
+        key: 'REGISTRATION_PERIOD',
+        startDate: new Date(startDate), 
+        endDate: new Date(endDate),
+        isActive: isActive 
+      }
+    });
+    res.json(config);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// [MỚI] Bật/Tắt đăng ký cho một lớp cụ thể
+exports.toggleClassStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isOpen } = req.body; // true hoặc false
+
+    const updatedClass = await prisma.class.update({
+      where: { id: parseInt(id) },
+      data: { isRegistrationOpen: isOpen }
+    });
+    res.json(updatedClass);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+exports.getRegistrationConfig = async (req, res) => {
+  try {
+    const config = await prisma.systemConfig.findUnique({
+      where: { key: 'REGISTRATION_PERIOD' }
+    });
+    // Nếu chưa có config thì trả về default
+    res.json(config || { startDate: null, endDate: null, isActive: false });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+exports.getAllAnnouncements = async (req, res) => {
+  try {
+    const data = await prisma.announcement.findMany({
+      orderBy: { postedAt: 'desc' }
+    });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// [CẬP NHẬT] Tạo thông báo mới
+exports.createAnnouncement = async (req, res) => {
+  try {
+    const { title, content, priority, audience } = req.body;
+    const newAnn = await prisma.announcement.create({
+      data: {
+        title,
+        content,
+        priority: priority || 'normal',
+        audience: audience || 'all',
+        postedAt: new Date(), // Reset thời gian đăng
+      }
+    });
+    res.json(newAnn);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+// [MỚI] Cập nhật thông báo
+exports.updateAnnouncement = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, content, priority, audience } = req.body;
+    
+    const updated = await prisma.announcement.update({
+      where: { id: parseInt(id) },
+      data: { 
+        title, 
+        content, 
+        priority, 
+        audience,
+        // --- THÊM DÒNG NÀY ---
+        postedAt: new Date() // Cập nhật thời gian thành 'ngay bây giờ' -> Tự động lên đầu
+        // ---------------------
+      }
+    });
+    res.json(updated);
+  } catch (err) {
+    res.status(400).json({ message: "Lỗi cập nhật: " + err.message });
+  }
+};
+
+// [MỚI] Xóa thông báo
+exports.deleteAnnouncement = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.announcement.delete({ where: { id: parseInt(id) } });
+    res.json({ message: "Đã xóa thành công" });
+  } catch (err) {
+    res.status(400).json({ message: "Lỗi xóa: " + err.message });
+  }
+};
+exports.getAllMajors = async (req, res) => {
+  try {
+    const majors = await prisma.major.findMany();
+    res.json(majors);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+};
+
+// [MỚI] Lấy danh sách CTĐT
+exports.getAllCurriculums = async (req, res) => {
+  try {
+    const curriculums = await prisma.curriculum.findMany();
+    res.json(curriculums);
+  } catch (err) { res.status(500).json({ error: err.message }); }
 };

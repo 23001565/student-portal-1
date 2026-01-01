@@ -91,7 +91,7 @@ model Class {
   year          Int
   capacity      Int          @default(50)
   enrolledCount Int          @default(0)
-  
+  isRegistrationOpen Boolean @default(true)
   // Quan trọng: Lưu lịch học dạng JSON để khớp Frontend
   // VD: [{"day": "T2", "slots": [1,2,3], "room": "301"}]
   schedule      Json?        
@@ -126,4 +126,13 @@ model Announcement {
   postedById Int?
   postedBy   Admin?   @relation(fields: [postedById], references: [id])
   postedAt   DateTime @default(now())
+}
+
+model SystemConfig {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique // Ví dụ: "REGISTRATION_PERIOD"
+  value     String?  // Có thể lưu JSON hoặc text
+  startDate DateTime? // Ngày bắt đầu đợt đăng ký
+  endDate   DateTime? // Ngày kết thúc đợt đăng ký
+  isActive  Boolean  @default(false)
 }

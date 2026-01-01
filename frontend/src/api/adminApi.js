@@ -5,6 +5,7 @@ const adminApi = {
   getDashboardStats: () => axiosClient.get('/admin/stats'),
 
   // --- Quản lý Sinh viên ---
+  getStudentById: (id) => axiosClient.get(`/admin/students/${id}`),
   getAllStudents: () => axiosClient.get('/admin/students'),
   createStudent: (data) => axiosClient.post('/admin/students', data),
   updateStudent: (id, data) => axiosClient.put(`/admin/students/${id}`, data),
@@ -20,10 +21,13 @@ const adminApi = {
   // --- Quản lý Lớp học phần (Classes) ---
   getAllClasses: () => axiosClient.get('/admin/classes'),
   createClass: (data) => axiosClient.post('/admin/classes', data),
+  deleteClass: (id) => axiosClient.delete(`/admin/classes/${id}`),
   
   // --- Thông báo ---
   getAllAnnouncements: () => axiosClient.get('/admin/announcements'),
   createAnnouncement: (data) => axiosClient.post('/admin/announcements', data),
+  updateAnnouncement: (id, data) => axiosClient.put(`/admin/announcements/${id}`, data),
+  deleteAnnouncement: (id) => axiosClient.delete(`/admin/announcements/${id}`),
   
   // --- Upload ---
   uploadGrades: (formData) => axiosClient.post('/admin/grades/upload', formData, {
@@ -32,6 +36,22 @@ const adminApi = {
   uploadCurriculum: (formData) => axiosClient.post('/admin/curriculum/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
+  // --- QUẢN LÝ ĐỢT ĐĂNG KÝ (MỚI) ---
+  
+  // 1. Lấy cấu hình thời gian hiện tại
+  getRegistrationConfig: () => axiosClient.get('/admin/registration-period'),
+  
+  // 2. Lưu cấu hình thời gian
+  setRegistrationConfig: (data) => axiosClient.post('/admin/registration-period', data),
+  
+  // 3. Bật/Tắt trạng thái đăng ký của 1 lớp
+  toggleClassStatus: (id, isOpen) => axiosClient.put(`/admin/classes/${id}/status`, { isOpen }),
+  
+  // 4. Lấy danh sách lớp kèm trạng thái đóng/mở (Dùng lại getAllClasses nhưng cần đảm bảo backend trả về isRegistrationOpen)
+  getAllClassesConfig: () => axiosClient.get('/admin/classes'), 
+  getAllMajors: () => axiosClient.get('/admin/majors'),
+  getAllCurriculums: () => axiosClient.get('/admin/curriculums'),
 };
+
 
 export default adminApi;

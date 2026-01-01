@@ -43,7 +43,7 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
       section: "QUẢN TRỊ",
       items: [
         {
-          path: "/admin/dashboard", // Sửa: Link đúng về Admin Dashboard
+          path: "/admin/dashboard",
           label: "Tổng quan",
           icon: "📊",
           exact: true,
@@ -57,6 +57,11 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
           path: "/admin/courses",
           label: "Quản lý Lớp học",
           icon: "📚",
+        },
+        {
+          path: "/admin/registration-control",
+          label: "Quản lý Đợt Đăng ký",
+          icon: "🗓️", 
         },
         {
           path: "/admin/announcements",
