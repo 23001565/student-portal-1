@@ -17,9 +17,10 @@ app.use('/api/registration', studentRoutes); // Khớp registrationApi.js
 app.use('/api/student', studentRoutes);      // Khớp studentApi.js (profile, grades)
 
 const chatRoutes = require('./routes/chat');
+
 app.use('/api/chat', chatRoutes);
 
-
+console.log('GROQ KEY:', process.env.GROQ_API_KEY?.slice(0,10));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server chạy tại http://localhost:${PORT}`));
