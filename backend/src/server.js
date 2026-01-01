@@ -16,8 +16,9 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/registration', studentRoutes); // Khớp registrationApi.js
 app.use('/api/student', studentRoutes);      // Khớp studentApi.js (profile, grades)
 
-const chatRoute = require('./chat');
-app.use('/api', chatRoute);
+const chatRoutes = require('./routes/chat');
+app.use('/api/chat', chatRoutes);
+
 
 
 const PORT = process.env.PORT || 5000;
