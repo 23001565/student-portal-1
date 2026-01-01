@@ -200,23 +200,41 @@ const GeminiChat = () => {
     document.addEventListener('mouseup', onMouseUp);
   };
 
-  const handleSendMessage = async () => {
-    if (!input.trim()) return;
-    const userMsg = { role: 'user', text: input };
-    setMessages(prev => [...prev, userMsg]);
-    setInput("");
-    try {
-      const response = await fetch('http://localhost:5000/api/ask-gemini', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: input }),
-      });
-      const data = await response.json();
-      setMessages(prev => [...prev, { role: 'bot', text: data.reply }]);
-    } catch (err) {
-      setMessages(prev => [...prev, { role: 'bot', text: 'Lỗi kết nối AI!' }]);
+ const handleSendMessage = async () => {
+  if (!input.trim()) return;
+
+  const userText = input;
+  setMessages(prev => [...prev, { role: 'user', text: userText }]);
+  setInput("");
+
+  try {
+    const response = await fetch('http://localhost:5000/api/chat/ask-gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: userText }),
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(err);
     }
-  };
+
+    const data = await response.json();
+
+    setMessages(prev => [
+      ...prev,
+      { role: 'bot', text: data.reply || '⚠️ Gemini không trả lời được' }
+    ]);
+
+  } catch (err) {
+    console.error(err);
+    setMessages(prev => [
+      ...prev,
+      { role: 'bot', text: '❌ Lỗi AI / Backend' }
+    ]);
+  }
+};
+
 
   return (
     <div 
@@ -256,8 +274,8 @@ const GeminiChat = () => {
             <img src="https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg" width="15" alt="gemini" />
         </div>
       </div>
-
-      Khung Chat (Giữ nguyên logic của bà)
+{/* 
+      Khung Chat (Giữ nguyên logic của bà) */}
       {isOpen && (
         <div style={{
           position: 'absolute', 
