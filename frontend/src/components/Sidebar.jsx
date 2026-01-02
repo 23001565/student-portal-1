@@ -84,11 +84,6 @@ const Sidebar = ({ isCollapsed = false, onToggle }) => {
           icon: "📝",
         },
         {
-          path: "/admin/upload-curriculum",
-          label: "CT Đào tạo",
-          icon: "🎓",
-        },
-        {
           path: "/admin/progress-monitor",
           label: "Tiến độ học tập",
           icon: "👁️",

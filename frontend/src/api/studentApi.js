@@ -8,6 +8,8 @@ const studentApi = {
   updateProfile: (data) => axiosClient.put('/student/profile', data),
   // Lấy các lớp đã đăng ký (cho Dashboard và trang Courses)
   getMyEnrollments: () => axiosClient.get('/student/enrollments'), 
+  registerClass: (classId) => axiosClient.post('/student/enroll', { classId }),
+  cancelRegistration: (classId) => axiosClient.post('/student/enroll/cancel', { classId }),
   
   // Lấy thông báo cho sinh viên
   getAnnouncements: () => axiosClient.get('/student/announcements'),

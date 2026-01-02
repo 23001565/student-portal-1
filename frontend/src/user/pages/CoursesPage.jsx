@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageFrame from "../../components/PageFrame";
-import Button from "../../components/Button";
 import Layout from "../../components/Layout";
 import studentApi from "../../api/studentApi";
 
@@ -21,13 +20,33 @@ const CoursesPage = () => {
 
   const loadData = async () => {
     try {
-      // Lấy danh sách các lớp ĐÃ ĐĂNG KÝ
       const data = await studentApi.getMyEnrollments();
       setEnrolledCourses(data);
     } catch (error) {
       console.error("Lỗi tải môn học:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // [MỚI] Hàm xử lý Hủy đăng ký
+  const handleCancel = async (classId, courseName) => {
+    // 1. Hỏi xác nhận
+    if (!window.confirm(`Bạn có chắc chắn muốn HỦY môn: ${courseName}?\n\nHành động này sẽ xóa tên bạn khỏi danh sách lớp và không thể hoàn tác.`)) {
+      return;
+    }
+
+    try {
+      // 2. Gọi API (Backend sẽ tự kiểm tra thời hạn cho phép)
+      await studentApi.cancelRegistration(classId);
+      
+      alert("Đã hủy học phần thành công!");
+      
+      // 3. Tải lại danh sách để cập nhật giao diện
+      loadData();
+    } catch (error) {
+      // Hiện thông báo lỗi từ Backend (ví dụ: Đã hết hạn hủy...)
+      alert("Không thể hủy: " + (error.response?.data?.message || "Lỗi hệ thống"));
     }
   };
 
@@ -71,8 +90,17 @@ const CoursesPage = () => {
                       </div>
                     </div>
                   </div>
+                  
+                  {/* [CẬP NHẬT] Thêm nút Hủy vào phần Footer đang trống */}
                   <div className="card-footer bg-white border-top-0 p-4 pt-0">
+                     <button 
+                        className="btn btn-outline-danger w-100"
+                        onClick={() => handleCancel(course.id, course.courseName)}
+                     >
+                        <i className="bi bi-x-circle me-2"></i>Hủy đăng ký
+                     </button>
                   </div>
+
                 </div>
               </div>
             ))

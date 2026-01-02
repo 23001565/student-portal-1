@@ -50,13 +50,28 @@ const ManageCourses = () => {
     } catch (err) { alert("Lỗi: " + err.message); }
   };
 
+// src/admin/pages/ManageCourses.jsx
+
   const handleAddClass = async (e) => {
     e.preventDefault();
     try {
-      // Format schedule thành JSON để gửi lên backend
+      // 1. Xử lý chuỗi "1-3" thành mảng [1, 2, 3]
+      const processSlots = (slotStr) => {
+        if (slotStr.includes('-')) {
+            const [start, end] = slotStr.split('-').map(Number);
+            const range = [];
+            for (let i = start; i <= end; i++) {
+                range.push(i);
+            }
+            return range;
+        }
+        // Nếu nhập kiểu "1,2,3" hoặc số đơn "1"
+        return slotStr.split(',').map(Number);
+      };
+
       const scheduleJSON = [{
-        day: classForm.day,
-        slots: classForm.slots.split('-').map(Number), // "1-3" -> [1,2,3]
+        day: classForm.day, // VD: "T2"
+        slots: processSlots(classForm.slots), // SỬA TẠI ĐÂY: Dùng hàm processSlots
         room: classForm.room
       }];
 

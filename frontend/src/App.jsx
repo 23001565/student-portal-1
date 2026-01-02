@@ -13,7 +13,6 @@ import Reports from "./admin/pages/Reports";
 import Announcements from "./admin/pages/Announcements";
 import PostAnnouncement from "./admin/pages/PostAnnouncement";
 import UploadGrades from "./admin/pages/UploadGrades";
-import UploadCurriculum from "./admin/pages/UploadCurriculum";
 import CourseRegistration from "./user/pages/CourseRegistration";
 import StudentDetail from "./admin/pages/StudentDetail";
 import EditStudent from "./admin/pages/EditStudent";
@@ -51,10 +50,6 @@ function App() {
               element={<PostAnnouncement />}
             />
             <Route path="/admin/upload-grades" element={<UploadGrades />} />
-            <Route
-              path="/admin/upload-curriculum"
-              element={<UploadCurriculum />}
-            />
           </Routes>
             {/* Chatbot nằm ở đây để trang nào cũng thấy */}
           <GeminiChat /> 

@@ -1,14 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Container, Row, Col, Card, Table, Badge, Alert, Form, ProgressBar } from "react-bootstrap";
-import studentApi from "../../api/studentApi"; // Import API mới
+import studentApi from "../../api/studentApi"; 
 import Layout from "../../components/Layout";
 import PageFrame from "../../components/PageFrame";
 import Button from "../../components/Button";
 
-// Hàm parse lịch học (Backend trả về JSON, ta cần xử lý để hiển thị đẹp)
+// Hàm parse lịch học
 function parseScheduleToSlots(schedule) {
   if (!schedule) return [];
-  // Nếu backend trả về mảng object JSON [{day: 'T2', slots: [1,2]}]
   if (Array.isArray(schedule)) {
     const slots = [];
     schedule.forEach(s => {
@@ -23,12 +22,12 @@ function parseScheduleToSlots(schedule) {
 
 export default function CourseRegistration() {
   const [courses, setCourses] = useState([]);
-  const [cart, setCart] = useState([]); // Danh sách môn đang chọn
+  const [cart, setCart] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState(null); // { type: 'success'|'danger', text: '' }
+  const [message, setMessage] = useState(null); 
 
-  // 1. Tải dữ liệu môn học từ API
+  // 1. Tải dữ liệu
   useEffect(() => {
     loadCourses();
   }, []);
@@ -45,7 +44,7 @@ export default function CourseRegistration() {
     }
   };
 
-  // 2. Logic thêm/bớt môn vào giỏ (Giữ nguyên logic cũ)
+  // 2. Logic thêm/bớt môn vào giỏ
   const toggleCourse = (course) => {
     const exists = cart.find((c) => c.id === course.id);
     if (exists) {
@@ -53,9 +52,11 @@ export default function CourseRegistration() {
     } else {
       setCart([...cart, course]);
     }
+    setMessage(null); // Xóa thông báo cũ khi thao tác
   };
 
-  // 3. Logic kiểm tra trùng lịch (Giữ nguyên logic cũ)
+  // 3. Logic kiểm tra trùng lịch (TRONG GIỎ HÀNG - Client Side)
+  // Cái này giúp chặn user chọn 2 môn trùng nhau ngay từ đầu
   const conflicts = useMemo(() => {
     const slotMap = {};
     const conflictList = [];
@@ -64,7 +65,7 @@ export default function CourseRegistration() {
       const slots = parseScheduleToSlots(c.schedule);
       slots.forEach((s) => {
         if (!slotMap[s]) slotMap[s] = [];
-        slotMap[s].push(c.code);
+        slotMap[s].push(c.classCode); // Dùng classCode để hiển thị dễ nhìn hơn
       });
     });
 
@@ -78,25 +79,64 @@ export default function CourseRegistration() {
 
   const totalCredits = cart.reduce((sum, c) => sum + c.credits, 0);
 
-  // 4. Gửi đăng ký lên Server
+  // 4. Gửi đăng ký (ĐÃ SỬA LOGIC)
   const onSubmit = async () => {
+    // Chặn nếu nội bộ giỏ hàng đã bị trùng
     if (conflicts.length > 0) return;
+
     setSubmitting(true);
-    try {
-      // Gửi mảng ID các lớp học lên backend
-      await studentApi.submitRegistration({ courses: cart.map(c => c.id) });
-      setMessage({ type: 'success', text: 'Đăng ký thành công!' });
-      // Tải lại dữ liệu để cập nhật sĩ số
-      setCart([]);
-      loadCourses();
-    } catch (error) {
-      setMessage({ type: 'danger', text: error.response?.data?.message || 'Đăng ký thất bại' });
-    } finally {
-      setSubmitting(false);
+    setMessage(null);
+
+    let successCount = 0;
+    let errorList = [];
+    
+    // Danh sách môn đăng ký thành công để loại khỏi giỏ
+    let registeredIds = [];
+
+    // Duyệt qua từng môn trong giỏ để đăng ký (Gọi API check trùng lịch phía Server)
+    for (const course of cart) {
+        try {
+            // Gọi API đăng ký từng lớp (Hàm này đã thêm ở bước trước)
+            await studentApi.registerClass(course.id);
+            successCount++;
+            registeredIds.push(course.id);
+        } catch (error) {
+            // Lấy thông báo lỗi cụ thể từ Backend (VD: "Trùng lịch học với lớp INT3306...")
+            const msg = error.response?.data?.message || "Lỗi không xác định";
+            errorList.push(`- Lớp ${course.classCode}: ${msg}`);
+        }
     }
+
+    // Xử lý kết quả sau khi chạy hết vòng lặp
+    if (errorList.length > 0) {
+        // Có lỗi xảy ra (dù có thể có môn thành công)
+        setMessage({ 
+            type: 'danger', 
+            // Hiển thị danh sách lỗi dòng xuống dòng
+            text: (
+                <div>
+                    <strong>Có {errorList.length} môn đăng ký thất bại:</strong>
+                    <br/>
+                    {errorList.map((e, i) => <div key={i}>{e}</div>)}
+                    {successCount > 0 && <div className="mt-2 text-success">Đã đăng ký thành công {successCount} môn khác.</div>}
+                </div>
+            )
+        });
+    } else {
+        // Thành công 100%
+        setMessage({ type: 'success', text: `Đăng ký thành công tất cả ${successCount} môn!` });
+    }
+
+    // Cập nhật lại giỏ hàng (chỉ giữ lại những môn bị lỗi)
+    const remainingCart = cart.filter(c => !registeredIds.includes(c.id));
+    setCart(remainingCart);
+
+    // Tải lại danh sách để cập nhật sĩ số mới nhất
+    loadCourses();
+    setSubmitting(false);
   };
 
-  // Render giữ nguyên
+  // --- GIAO DIỆN KHÔNG THAY ĐỔI ---
   return (
     <Layout>
       <PageFrame title="Đăng ký tín chỉ" subtitle="Học kỳ 1 - Năm học 2025-2026">
@@ -127,7 +167,6 @@ export default function CourseRegistration() {
                                 const isSelected = cart.some(c => c.id === course.id);
                                 const isFull = course.enrolled >= course.capacity;
                                 
-                                // Render lịch học từ JSON
                                 const renderSchedule = (sch) => {
                                     if(Array.isArray(sch)) {
                                         return sch.map((s, idx) => (
@@ -141,26 +180,26 @@ export default function CourseRegistration() {
 
                                 return (
                                     <tr key={course.id} className={isSelected ? "table-primary" : ""}>
-                                        <td className="fw-bold">{course.classCode}</td>
-                                        <td>
-                                            <div className="fw-semibold">{course.name}</div>
-                                            <small className="text-muted">{course.code}</small>
-                                        </td>
-                                        <td>{course.credits}</td>
-                                        <td>{renderSchedule(course.schedule)}</td>
-                                        <td>
-                                            <Badge bg={isFull ? 'danger' : 'success'}>
-                                                {course.enrolled}/{course.capacity}
-                                            </Badge>
-                                        </td>
-                                        <td>
-                                            <Form.Check 
-                                                type="checkbox"
-                                                checked={isSelected}
-                                                disabled={isFull && !isSelected}
-                                                onChange={() => toggleCourse(course)}
-                                            />
-                                        </td>
+                                            <td className="fw-bold">{course.classCode}</td>
+                                            <td>
+                                                <div className="fw-semibold">{course.name}</div>
+                                                <small className="text-muted">{course.code}</small>
+                                            </td>
+                                            <td>{course.credits}</td>
+                                            <td>{renderSchedule(course.schedule)}</td>
+                                            <td>
+                                                <Badge bg={isFull ? 'danger' : 'success'}>
+                                                    {course.enrolled}/{course.capacity}
+                                                </Badge>
+                                            </td>
+                                            <td>
+                                                <Form.Check 
+                                                    type="checkbox"
+                                                    checked={isSelected}
+                                                    disabled={isFull && !isSelected}
+                                                    onChange={() => toggleCourse(course)}
+                                                />
+                                            </td>
                                     </tr>
                                 )
                             })}
@@ -170,7 +209,7 @@ export default function CourseRegistration() {
               </Card>
             </Col>
 
-            {/* GIỎ ĐĂNG KÝ (BÊN PHẢI) - Giữ nguyên */}
+            {/* GIỎ ĐĂNG KÝ (BÊN PHẢI) */}
             <Col md={4}>
               <div className="sticky-top" style={{ top: "100px", zIndex: 1 }}>
                 <Card className="shadow-sm border-primary">
@@ -201,7 +240,7 @@ export default function CourseRegistration() {
                             <span className="h4 mb-0 text-primary fw-bold">{totalCredits}</span>
                         </div>
 
-                        {/* Cảnh báo trùng lịch */}
+                        {/* Cảnh báo trùng lịch nội bộ */}
                         {conflicts.length > 0 && (
                             <Alert variant="danger" className="mb-3">
                                 <div className="fw-bold mb-1">⚠️ Phát hiện trùng lịch:</div>

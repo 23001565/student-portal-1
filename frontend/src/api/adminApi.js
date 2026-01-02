@@ -36,6 +36,11 @@ const adminApi = {
   uploadCurriculum: (formData) => axiosClient.post('/admin/curriculum/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
+  // [MỚI] Lấy danh sách SV trong lớp để nhập điểm
+  getClassGrades: (classId) => axiosClient.get(`/admin/classes/${classId}/grades`),
+  
+  // [MỚI] Cập nhật điểm sinh viên
+  updateGrade: (data) => axiosClient.put('/admin/grades/update', data),
   // --- QUẢN LÝ ĐỢT ĐĂNG KÝ (MỚI) ---
   
   // 1. Lấy cấu hình thời gian hiện tại

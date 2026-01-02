@@ -510,3 +510,68 @@ exports.getAllCurriculums = async (req, res) => {
     res.json(curriculums);
   } catch (err) { res.status(500).json({ error: err.message }); }
 };
+exports.getClassEnrollments = async (req, res) => {
+  try {
+    const { classId } = req.params;
+    const enrollments = await prisma.enrollment.findMany({
+      where: { classId: parseInt(classId) },
+      include: { 
+        student: true // Lấy thông tin tên, mã sinh viên
+      },
+      orderBy: { student: { code: 'asc' } } // Sắp xếp theo mã SV
+    });
+    res.json(enrollments);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// [MỚI] Cập nhật điểm số cho 1 sinh viên
+exports.updateGrade = async (req, res) => {
+  try {
+    const { enrollmentId, midTerm, finalExam } = req.body;
+
+    // 1. Chuyển đổi sang số thực (float)
+    const mid = parseFloat(midTerm);
+    const final = parseFloat(finalExam);
+
+    // 2. Tính toán điểm Tổng kết (Hệ 10)
+    // Giả sử công thức: Quá trình 40% - Cuối kỳ 60%
+    // Bạn có thể sửa tỷ lệ này tùy quy chế trường
+    let total10 = null;
+    let total4 = null;
+    let letterGrade = null;
+
+    if (!isNaN(mid) && !isNaN(final)) {
+        total10 = (mid * 0.4) + (final * 0.6);
+        total10 = parseFloat(total10.toFixed(1)); // Làm tròn 1 chữ số thập phân
+
+        // 3. Quy đổi sang Điểm Chữ & Hệ 4 (Quy chế tín chỉ)
+        if (total10 >= 8.5) { letterGrade = 'A'; total4 = 4.0; }
+        else if (total10 >= 8.0) { letterGrade = 'B+'; total4 = 3.5; }
+        else if (total10 >= 7.0) { letterGrade = 'B'; total4 = 3.0; }
+        else if (total10 >= 6.5) { letterGrade = 'C+'; total4 = 2.5; }
+        else if (total10 >= 5.5) { letterGrade = 'C'; total4 = 2.0; }
+        else if (total10 >= 5.0) { letterGrade = 'D+'; total4 = 1.5; }
+        else if (total10 >= 4.0) { letterGrade = 'D'; total4 = 1.0; }
+        else { letterGrade = 'F'; total4 = 0.0; }
+    }
+
+    // 4. Lưu vào Database
+    const updated = await prisma.enrollment.update({
+      where: { id: parseInt(enrollmentId) },
+      data: {
+        midTerm: isNaN(mid) ? null : mid,
+        finalExam: isNaN(final) ? null : final,
+        total10,
+        total4,
+        letterGrade
+      }
+    });
+
+    res.json(updated);
+
+  } catch (err) {
+    res.status(500).json({ message: "Lỗi cập nhật điểm: " + err.message });
+  }
+};

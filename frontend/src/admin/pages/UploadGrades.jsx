@@ -1,184 +1,221 @@
-import React, { useMemo, useState } from "react";
-import FileUpload from "../../components/FileUpload";
-import CSVPreviewTable from "../../components/CSVPreviewTable";
-import { uploadGrades } from "../../api/gradesApi";
+import React, { useState, useEffect } from "react";
+import { Container, Card, Form, Table, Button, Row, Col, Badge, Alert } from "react-bootstrap";
 import Layout from "../../components/Layout";
+import PageFrame from "../../components/PageFrame";
+import adminApi from "../../api/adminApi";
 
-function parseCSV(text) {
-  // Simple CSV parser (no quoted commas). For production replace with PapaParse if needed.
-  const lines = text.split(/\r?\n/).filter((l) => l.trim().length);
-  const rows = lines.map((l) => l.split(","));
-  return rows;
-}
-
-export default function UploadGrades() {
-  const [file, setFile] = useState(null);
-  const [headers, setHeaders] = useState([]);
-  const [rows, setRows] = useState([]);
-  const [mapping, setMapping] = useState({
-    studentId: "",
-    courseCode: "",
-    term: "",
-    score: "",
-  });
+const UploadGrades = () => {
+  // State quản lý
+  const [classes, setClasses] = useState([]);
+  const [selectedClassId, setSelectedClassId] = useState("");
+  const [students, setStudents] = useState([]); 
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [msg, setMsg] = useState(null); // Thông báo thành công/thất bại
 
-  const headerOptions = useMemo(() => headers, [headers]);
-
-  const onFileSelected = async (f) => {
-    setFile(f);
-    setMessage("");
-    try {
-      const text = await f.text();
-      const r = parseCSV(text);
-      if (!r.length) {
-        setHeaders([]);
-        setRows([]);
-        return;
+  // 1. Tải danh sách lớp khi vào trang
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        const data = await adminApi.getAllClasses();
+        setClasses(data);
+      } catch (error) {
+        console.error("Lỗi tải lớp:", error);
       }
-      setHeaders(r[0]);
-      setRows(r.slice(1));
-      // Auto map based on common names
-      const lower = r[0].map((h) => h.toLowerCase().trim());
-      setMapping((m) => ({
-        studentId:
-          m.studentId ||
-          r[0][lower.indexOf("studentid")] ||
-          r[0][lower.indexOf("mssv")] ||
-          "",
-        courseCode:
-          m.courseCode ||
-          r[0][lower.indexOf("coursecode")] ||
-          r[0][lower.indexOf("mamh")] ||
-          "",
-        term:
-          m.term ||
-          r[0][lower.indexOf("term")] ||
-          r[0][lower.indexOf("hocky")] ||
-          "",
-        score:
-          m.score ||
-          r[0][lower.indexOf("score")] ||
-          r[0][lower.indexOf("diem")] ||
-          "",
-      }));
-    } catch (e) {
-      console.error(e);
-      setMessage("Không thể đọc file CSV");
-    }
-  };
+    };
+    fetchClasses();
+  }, []);
 
-  const handleUpload = async () => {
-    if (!file) return;
+  // 2. Khi chọn lớp -> Tải bảng điểm
+  useEffect(() => {
+    if (!selectedClassId) {
+        setStudents([]);
+        return;
+    }
+    loadStudents(selectedClassId);
+  }, [selectedClassId]);
+
+  const loadStudents = async (classId) => {
     setLoading(true);
-    setMessage("");
+    setMsg(null);
     try {
-      const form = new FormData();
-      form.append("file", file);
-      form.append("mapping", JSON.stringify(mapping));
-      const res = await uploadGrades(form);
-      setMessage(`Tải lên thành công: ${res?.inserted || 0} bản ghi`);
-    } catch (e) {
-      setMessage(e.message || "Tải lên thất bại");
+      const data = await adminApi.getClassGrades(classId);
+      setStudents(data);
+    } catch (error) {
+      setMsg({ type: 'danger', text: "Lỗi tải sinh viên: " + error.message });
     } finally {
       setLoading(false);
     }
   };
 
+  // 3. Xử lý khi gõ điểm vào ô input
+  const handleInputChange = (enrollmentId, field, value) => {
+    // Cho phép nhập số hoặc chuỗi rỗng (để xóa điểm)
+    setStudents(prev => prev.map(s => 
+        s.id === enrollmentId ? { ...s, [field]: value } : s
+    ));
+  };
+
+  // 4. Bấm nút Lưu trên từng dòng
+  const handleSaveRow = async (enrollmentId, midTerm, finalExam) => {
+    setMsg(null);
+    try {
+      // Validate cơ bản
+      if ((midTerm && (midTerm < 0 || midTerm > 10)) || (finalExam && (finalExam < 0 || finalExam > 10))) {
+        alert("Điểm phải nằm trong khoảng 0 - 10");
+        return;
+      }
+
+      // Gọi API cập nhật
+      const updatedData = await adminApi.updateGrade({
+        enrollmentId,
+        midTerm,
+        finalExam
+      });
+
+      // Cập nhật lại giao diện (hiển thị điểm tổng kết mới tính từ server)
+      setStudents(prev => prev.map(s => 
+        s.id === enrollmentId ? { 
+            ...s, 
+            total10: updatedData.total10,
+            letterGrade: updatedData.letterGrade 
+        } : s
+      ));
+      
+      // Hiển thị thông báo nhỏ hoặc Toast thì tốt hơn, ở đây dùng alert cho nhanh
+      // alert("Lưu thành công!"); 
+    } catch (error) {
+      alert("Lỗi lưu điểm: " + error.message);
+    }
+  };
+
   return (
     <Layout>
-      <div style={{ padding: 20 }}>
-        <h2>Upload điểm sinh viên (CSV)</h2>
-        <p style={{ color: "#64748b" }}>
-          Định dạng khuyến nghị: studentId,courseCode,term,score
-        </p>
+      <PageFrame title="Quản lý Điểm số" subtitle="Nhập điểm trực tiếp cho sinh viên">
+        <Container fluid className="p-0">
+          
+          {msg && <Alert variant={msg.type}>{msg.text}</Alert>}
 
-        <div style={{ marginTop: 16 }}>
-          <FileUpload onFileSelected={onFileSelected} />
-        </div>
+          {/* 1. KHUNG CHỌN LỚP */}
+          <Card className="mb-4 shadow-sm border-0">
+            <Card.Body>
+                <Row className="align-items-center">
+                    <Col md={5}>
+                        <Form.Label className="fw-bold text-primary">Chọn Lớp học phần:</Form.Label>
+                        <Form.Select 
+                            value={selectedClassId}
+                            onChange={(e) => setSelectedClassId(e.target.value)}
+                            className="border-primary"
+                        >
+                            <option value="">-- Vui lòng chọn lớp --</option>
+                            {classes.map(cls => (
+                                <option key={cls.id} value={cls.id}>
+                                    {cls.code} - {cls.course?.name}
+                                </option>
+                            ))}
+                        </Form.Select>
+                    </Col>
+                    <Col md={7} className="text-end">
+                         {selectedClassId && students.length > 0 && (
+                             <div className="text-muted mt-4">
+                                 Đang hiển thị: <strong>{students.length}</strong> sinh viên
+                             </div>
+                         )}
+                    </Col>
+                </Row>
+            </Card.Body>
+          </Card>
 
-        {headers.length > 0 && (
-          <div style={{ marginTop: 24 }}>
-            <h3>Mapping cột</h3>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                gap: 16,
-              }}
-            >
-              {["studentId", "courseCode", "term", "score"].map((key) => (
-                <div key={key}>
-                  <label
-                    style={{
-                      display: "block",
-                      fontWeight: 500,
-                      marginBottom: 6,
-                    }}
-                  >
-                    {key}
-                  </label>
-                  <select
-                    value={mapping[key]}
-                    onChange={(e) =>
-                      setMapping({ ...mapping, [key]: e.target.value })
-                    }
-                    style={{
-                      padding: 8,
-                      border: "1px solid #cbd5e1",
-                      borderRadius: 6,
-                      width: "100%",
-                    }}
-                  >
-                    <option value="">-- chọn cột --</option>
-                    {headerOptions.map((h, idx) => (
-                      <option key={idx} value={h}>
-                        {h}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+          {/* 2. BẢNG NHẬP ĐIỂM */}
+          {selectedClassId && (
+              <Card className="shadow-sm border-0">
+                <Table hover responsive className="align-middle mb-0">
+                    <thead className="bg-light text-center">
+                        <tr>
+                            <th className="text-start">Sinh viên</th>
+                            <th style={{width: '150px'}}>Quá trình (40%)</th>
+                            <th style={{width: '150px'}}>Cuối kỳ (60%)</th>
+                            <th>Tổng (10)</th>
+                            <th>Điểm Chữ</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {students.length > 0 ? students.map((s) => (
+                            <tr key={s.id}>
+                                {/* Cột thông tin sinh viên */}
+                                <td>
+                                    <div className="fw-bold text-dark">{s.student?.name}</div>
+                                    <small className="text-muted">{s.student?.code}</small>
+                                </td>
 
-        {rows.length > 0 && (
-          <div style={{ marginTop: 24 }}>
-            <h3>Xem trước</h3>
-            <CSVPreviewTable headers={headers} rows={rows} />
-          </div>
-        )}
+                                {/* Ô nhập điểm Quá trình */}
+                                <td>
+                                    <Form.Control 
+                                        type="number" min="0" max="10" step="0.1"
+                                        value={s.midTerm !== null ? s.midTerm : ""}
+                                        onChange={(e) => handleInputChange(s.id, 'midTerm', e.target.value)}
+                                        className="text-center fw-bold text-primary"
+                                        placeholder="..."
+                                    />
+                                </td>
 
-        <div style={{ marginTop: 24 }}>
-          <button
-            onClick={handleUpload}
-            disabled={!file || loading}
-            style={{
-              background: "#2563eb",
-              color: "white",
-              padding: "10px 16px",
-              borderRadius: 6,
-              border: "none",
-              cursor: loading ? "not-allowed" : "pointer",
-            }}
-          >
-            {loading ? "Đang tải..." : "Tải lên"}
-          </button>
-        </div>
+                                {/* Ô nhập điểm Cuối kỳ */}
+                                <td>
+                                    <Form.Control 
+                                        type="number" min="0" max="10" step="0.1"
+                                        value={s.finalExam !== null ? s.finalExam : ""}
+                                        onChange={(e) => handleInputChange(s.id, 'finalExam', e.target.value)}
+                                        className="text-center fw-bold text-primary"
+                                        placeholder="..."
+                                    />
+                                </td>
 
-        {message && (
-          <div
-            style={{
-              marginTop: 16,
-              color: message.includes("thất bại") ? "#dc2626" : "#16a34a",
-            }}
-          >
-            {message}
-          </div>
-        )}
-      </div>
+                                {/* Điểm tổng kết (Readonly) */}
+                                <td className="text-center fw-bold fs-5">
+                                    {s.total10 !== null ? s.total10 : "-"}
+                                </td>
+
+                                {/* Điểm chữ (Badge màu) */}
+                                <td className="text-center">
+                                    {s.letterGrade ? (
+                                        <Badge bg={
+                                            s.letterGrade === 'F' ? 'danger' : 
+                                            s.letterGrade.includes('A') ? 'success' : 'info'
+                                        } className="px-3 py-2">
+                                            {s.letterGrade}
+                                        </Badge>
+                                    ) : "-"}
+                                </td>
+
+                                {/* Nút Lưu */}
+                                <td className="text-center">
+                                    <Button 
+                                        variant="light" 
+                                        size="sm"
+                                        className="text-success border-success hover-shadow"
+                                        title="Lưu điểm sinh viên này"
+                                        onClick={() => handleSaveRow(s.id, s.midTerm, s.finalExam)}
+                                    >
+                                        <i className="bi bi-check-lg me-1"></i>Lưu
+                                    </Button>
+                                </td>
+                            </tr>
+                        )) : (
+                            <tr>
+                                <td colSpan="6" className="text-center py-5 text-muted">
+                                    {loading ? "Đang tải dữ liệu..." : "Lớp này chưa có sinh viên nào đăng ký."}
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </Table>
+              </Card>
+          )}
+
+        </Container>
+      </PageFrame>
     </Layout>
   );
-}
+};
+
+export default UploadGrades;

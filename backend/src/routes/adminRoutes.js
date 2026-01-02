@@ -19,6 +19,18 @@ router.get('/courses', adminController.getAllCourses);
 router.post('/courses', adminController.createCourse);
 router.get('/majors', adminController.getAllMajors);
 router.get('/curriculums', adminController.getAllCurriculums);
+router.post('/config/registration-period', adminController.setRegistrationPeriod);
+router.get('/config/registration-period', async (req, res) => {
+    // Viết nhanh logic lấy config tại đây hoặc chuyển vào controller
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient();
+    try {
+        const config = await prisma.systemConfig.findUnique({
+            where: { key: 'REGISTRATION_PERIOD' }
+        });
+        res.json(config || {}); 
+    } catch (err) { res.status(500).json({error: err.message}) }
+});
 
 // Classes
 router.get('/classes', adminController.getAllClasses);
@@ -36,5 +48,7 @@ router.delete('/announcements/:id', adminController.deleteAnnouncement); // API 
 
 // Uploads
 router.post('/grades/upload', upload.single('file'), adminController.uploadGrades);
+router.get('/classes/:classId/grades', adminController.getClassEnrollments); // Lấy bảng điểm lớp
+router.put('/grades/update', adminController.updateGrade); // Lưu điểm
 
 module.exports = router;

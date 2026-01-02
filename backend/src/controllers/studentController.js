@@ -159,12 +159,18 @@ exports.getMyEnrollments = async (req, res) => {
 
     // Map dữ liệu trả về đúng format Dashboard cần (schedule, courseName, credits)
     const formatted = enrollments.map(en => ({
-      id: en.id,
+      id: en.class.id,
       courseName: en.class.course.name,
       classCode: en.class.code,
+      courseCode: en.class.course.code, // Mã môn (INTxxxx)
       credits: en.class.course.credits,
-      schedule: en.class.schedule, // Dashboard cần cái này để hiển thị "Thứ 2 (Tiết 1-3)..."
-      room: en.class.room          // Nếu DB có trường room
+      schedule: en.class.schedule,
+      room: en.class.room,
+      // Thêm các trường này để khớp với giao diện của bạn:
+      semester: en.class.semester,
+      year: en.class.year,
+      enrolledCount: en.class.enrolledCount,
+      capacity: en.class.capacity
     }));
 
     res.json(formatted);
