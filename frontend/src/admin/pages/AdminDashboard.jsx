@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Card, Alert } from "react-bootstrap";
+import { Container, Row, Col, Card, Alert, Spinner } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import PageFrame from "../../components/PageFrame";
 import Layout from "../../components/Layout";
 import adminApi from "../../api/adminApi"; // Import API
+import "./adminDashboard.css";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -11,7 +12,7 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalStudents: 0,
     totalClasses: 0,
-    recentAnnouncements: []
+    recentAnnouncements: [],
   });
   const [loading, setLoading] = useState(true);
 
@@ -31,42 +32,193 @@ const AdminDashboard = () => {
 
   return (
     <Layout>
-      <PageFrame title="Quản trị hệ thống" subtitle="Tổng quan tình hình đào tạo">
+      <PageFrame
+        title="Quản trị hệ thống"
+        subtitle="Tổng quan tình hình đào tạo"
+      >
         <Container fluid className="p-0">
-          {/* Thẻ Thống kê */}
-          <Row className="mb-4 g-3">
-            <Col md={3}>
-              <Card className="shadow-sm border-0 h-100 text-center py-3">
-                <Card.Body>
-                  <h3 className="display-6 fw-bold text-primary">{stats.totalStudents}</h3>
-                  <div className="text-muted">Tổng sinh viên</div>
+          <Row className="dashboard-grid g-4 g-md-5 mb-4 justify-content-around">
+            <Col xs={12} sm={6} lg={5}>
+              <Card className="stat-card">
+                <Card.Body className="d-flex flex-column gap-2">
+                  <div className="d-flex align-items-start justify-content-between">
+                    <div>
+                      <div className="stat-label mb-1">Tổng sinh viên</div>
+                      <div className="stat-value text-primary">
+                        {loading ? (
+                          <Spinner animation="border" size="sm" />
+                        ) : (
+                          stats.totalStudents
+                        )}
+                      </div>
+                    </div>
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 40,
+                        height: 40,
+                        borderRadius: 12,
+                        background: "rgba(47,143,47,0.1)",
+                      }}
+                    >
+                      👥
+                    </span>
+                  </div>
+                  <small
+                    className={`d-inline-flex align-items-center ${
+                      stats.studentsGrowth > 0
+                        ? "text-success"
+                        : stats.studentsGrowth < 0
+                        ? "text-danger"
+                        : "text-muted"
+                    }`}
+                  >
+                    {typeof stats.studentsGrowth === "number" ? (
+                      <>
+                        <span className="me-1">
+                          {stats.studentsGrowth > 0
+                            ? "▲"
+                            : stats.studentsGrowth < 0
+                            ? "▼"
+                            : "•"}
+                        </span>
+                        {Math.abs(stats.studentsGrowth)}% so với kỳ trước
+                      </>
+                    ) : (
+                      "—"
+                    )}
+                  </small>
                 </Card.Body>
               </Card>
             </Col>
-            <Col md={3}>
-              <Card className="shadow-sm border-0 h-100 text-center py-3">
-                <Card.Body>
-                  <h3 className="display-6 fw-bold text-success">{stats.totalClasses}</h3>
-                  <div className="text-muted">Lớp học phần</div>
+            <Col xs={12} sm={6} lg={5}>
+              <Card className="stat-card">
+                <Card.Body className="d-flex flex-column gap-2">
+                  <div className="d-flex align-items-start justify-content-between">
+                    <div>
+                      <div className="stat-label mb-1">Lớp học phần</div>
+                      <div className="stat-value text-success">
+                        {loading ? (
+                          <Spinner animation="border" size="sm" />
+                        ) : (
+                          stats.totalClasses
+                        )}
+                      </div>
+                    </div>
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 40,
+                        height: 40,
+                        borderRadius: 12,
+                        background: "rgba(16,185,129,0.1)",
+                      }}
+                    >
+                      📘
+                    </span>
+                  </div>
+                  <small
+                    className={`d-inline-flex align-items-center ${
+                      stats.classesGrowth > 0
+                        ? "text-success"
+                        : stats.classesGrowth < 0
+                        ? "text-danger"
+                        : "text-muted"
+                    }`}
+                  >
+                    {typeof stats.classesGrowth === "number" ? (
+                      <>
+                        <span className="me-1">
+                          {stats.classesGrowth > 0
+                            ? "▲"
+                            : stats.classesGrowth < 0
+                            ? "▼"
+                            : "•"}
+                        </span>
+                        {Math.abs(stats.classesGrowth)}% so với kỳ này
+                      </>
+                    ) : (
+                      "—"
+                    )}
+                  </small>
                 </Card.Body>
               </Card>
             </Col>
             {/* Bạn có thể thêm các thẻ thống kê khác nếu API trả về */}
           </Row>
 
-          <Row>
-            {/* Danh sách thông báo mới nhất */}
-            <Col md={6}>
-              <Card className="shadow-sm border-0">
+          {/* Biểu đồ tổng quan */}
+          <Row className="g-3 g-md-4 mb-4">
+            <Col xs={12} lg={7}>
+              <Card className="shadow-sm border-0 h-100">
                 <Card.Header className="bg-white py-3">
+                  <h5 className="mb-0">Biểu đồ học sinh</h5>
+                </Card.Header>
+                <Card.Body>
+                  <div
+                    style={{
+                      minHeight: 260,
+                      border: "1px dashed var(--border-color)",
+                      borderRadius: 12,
+                      background: "var(--bg-tertiary)",
+                    }}
+                    className="w-100 d-flex align-items-center justify-content-center text-muted"
+                  >
+                    <span>Placeholder biểu đồ (tích hợp chart sau)</span>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col xs={12} lg={5}>
+              <Card className="shadow-sm border-0 h-100">
+                <Card.Header className="bg-white py-3">
+                  <h5 className="mb-0">Phân loại học lực</h5>
+                </Card.Header>
+                <Card.Body>
+                  <div
+                    style={{
+                      minHeight: 260,
+                      border: "1px dashed var(--border-color)",
+                      borderRadius: 12,
+                      background: "var(--bg-tertiary)",
+                    }}
+                    className="w-100 d-flex align-items-center justify-content-center text-muted"
+                  >
+                    <span>Placeholder cột phân loại</span>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+
+          <Row className="g-3 g-md-4">
+            {/* Danh sách thông báo mới nhất */}
+            <Col xs={12} lg={7}>
+              <Card className="shadow-sm border-0">
+                <Card.Header className="bg-white py-3 d-flex align-items-center justify-content-between">
                   <h5 className="mb-0">Thông báo gần đây</h5>
+                  <button
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => navigate("/admin/announcements")}
+                  >
+                    Quản lý
+                  </button>
                 </Card.Header>
                 <Card.Body>
                   {stats.recentAnnouncements?.length > 0 ? (
-                    <div>
+                    <div className="list-group list-group-flush">
                       {stats.recentAnnouncements.map((ann) => (
-                        <div key={ann.id} className="border-bottom py-2">
-                          <div className="fw-bold">{ann.title}</div>
+                        <div
+                          key={ann.id}
+                          className="list-group-item px-0 py-2 d-flex flex-column"
+                        >
+                          <div className="fw-semibold text-truncate-2">
+                            {ann.title}
+                          </div>
                           <small className="text-muted">
                             {new Date(ann.postedAt).toLocaleDateString()}
                           </small>
@@ -74,12 +226,21 @@ const AdminDashboard = () => {
                       ))}
                     </div>
                   ) : (
-                    <Alert variant="info">Chưa có thông báo nào</Alert>
+                    <Alert variant="info" className="mb-0">
+                      Chưa có thông báo nào
+                    </Alert>
                   )}
-                  <div className="mt-3 text-end">
-                    <button className="btn btn-link" onClick={() => navigate("/admin/announcements")}>
-                        Quản lý thông báo &rarr;
-                    </button>
+                </Card.Body>
+              </Card>
+            </Col>
+
+            {/* Chừa chỗ cho các widget khác cho cân đối bố cục */}
+            <Col xs={12} lg={5}>
+              <Card className="shadow-sm border-0 h-100">
+                <Card.Body className="d-flex align-items-center justify-content-center text-muted">
+                  <div className="text-center">
+                    <div className="mb-1">Khu vực widget</div>
+                    <small>Thêm báo cáo/tiến độ để cân đối bố cục</small>
                   </div>
                 </Card.Body>
               </Card>
