@@ -16,11 +16,21 @@ async function createRegistrationWindow(data) {
 async function getActiveRegistrationWindow() {
   return prisma.courseRegistrationWindow.findFirst({
     where: {
-      isActive: true,
-      startTime: { lte: new Date() },
+      //isActive: true,
+      //startTime: { lte: new Date() },
       endTime: { gte: new Date() },
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { startTime: 'desc' },
+  });
+}
+
+async function getStudentActiveRegistrationWindow() {
+  return prisma.courseRegistrationWindow.findFirst({
+    where: {
+      isActive: true,
+      endTime: { gte: new Date() },
+    },
+    orderBy: { startTime: 'desc' },
   });
 }
 
@@ -55,4 +65,5 @@ module.exports = {
   getAllRegistrationWindows,
   updateRegistrationWindow,
   deleteRegistrationWindow,
+  getStudentActiveRegistrationWindow,
 };

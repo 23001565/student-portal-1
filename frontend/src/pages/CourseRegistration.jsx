@@ -45,7 +45,7 @@ function checkConflicts(cart) {
 }
 
 export default function CourseRegistration() {
-  const [filters, setFilters] = useState({ curriculumId: '', q: '' });
+  const [filters, setFilters] = useState({ curriculumId: null, q: '' });
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -56,7 +56,12 @@ export default function CourseRegistration() {
   const loadCourses = async () => {
     setLoading(true); setError('');
     try {
-      const data = await getOpenCourses(filters);
+      // Prepare curriculumId for API: null for all, 'my-curriculum' for personal, or number
+      let sendFilters = { ...filters };
+      if (filters.curriculumId === null) sendFilters.curriculumId = null;
+      else if (filters.curriculumId === 'my-curriculum') sendFilters.curriculumId = 'my-curriculum';
+      else sendFilters.curriculumId = filters.curriculumId;
+      const data = await getOpenCourses(sendFilters);
       setCourses(data?.items || []);
       setRegistrationWindow(data?.window || null);
     } catch (e) {
@@ -133,9 +138,18 @@ export default function CourseRegistration() {
       <h2>Đăng ký học phần</h2>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12, marginTop: 12 }}>
-        <select value={filters.curriculumId} onChange={(e) => setFilters({ ...filters, curriculumId: e.target.value })}
-          style={{ padding: 8, border: '1px solid #cbd5e1', borderRadius: 6 }}>
-          <option value="">Tất cả ngành</option>
+        <select
+          value={filters.curriculumId === null ? '' : filters.curriculumId}
+          onChange={(e) => {
+            const val = e.target.value;
+            setFilters({
+              ...filters,
+              curriculumId: val === '' ? null : val === 'my-curriculum' ? 'my-curriculum' : parseInt(val, 10)
+            });
+          }}
+          style={{ padding: 8, border: '1px solid #cbd5e1', borderRadius: 6 }}
+        >
+          <option value="">Tất cả CT</option>
           <option value="my-curriculum">CT của tôi</option>
         </select>
         <input placeholder="Từ khóa" value={filters.q} onChange={(e) => setFilters({ ...filters, q: e.target.value })}

@@ -1,29 +1,49 @@
 const redisClient = require("../../data/redis.js");
 const prisma = require("../../data/prisma.js");
 
+async function getCurriculumIdForStudent(studentId) {
+  const student = await prisma.student.findUnique({
+    where: { code: studentId },
+    select: { curriculumId: true }
+  });
+  return student ? student.curriculumId : null;
+}
+
+async function getStudentId(studentCode) {
+  const student = await prisma.student.findUnique({
+    where: { code: studentCode },
+  });
+  return student ? student.id : null;
+}
 
 async function getClassesForRegistration(semester, year, curriculumId, q = null) {
-  // Try cache first if we have a curriculumId
-  if (curriculumId) {
+  console.log('getClassesForRegistration called with:', { semester, year, curriculumId, q });
+
+  // ---------- CACHE (only when curriculumId exists) ----------
+  if (curriculumId && redisClient) {
     const cacheKey = `curriculum:${curriculumId}:classes:${semester}:${year}`;
-    const cached = await redisClient.get(cacheKey);
-    if (cached) {
-      const cachedClasses = JSON.parse(cached);
-      // Still need to add dynamic seats_taken
-      let classesWithSeats = await Promise.all(cachedClasses.map(async (cls) => {
-        const key = `class:${cls.id}:seats_taken`;
-        const seatsTaken = parseInt(await redisClient.get(key) || "0", 10);
-        return {
-          ...cls,
-          seatsTaken,
-        };
-      }));
-      
-      return classesWithSeats;
+    try {
+      const cached = await redisClient.get(cacheKey);
+      if (cached) {
+        const cachedClasses = JSON.parse(cached);
+
+        const classesWithSeats = await Promise.all(
+          cachedClasses.map(async (cls) => {
+            const key = `class:${cls.id}:seats_taken`;
+            const seatsTaken = parseInt((await redisClient.get(key)) || '0', 10);
+            return { ...cls, seatsTaken };
+          })
+        );
+
+        console.log('Returning from cache');
+        return classesWithSeats;
+      }
+    } catch (e) {
+      console.log('Redis cache error:', e.message);
     }
   }
 
-  // Cache miss or no curriculumId - fetch from DB
+  // ---------- DB QUERY ----------
   const where = {
     archivedAt: null,
     canceledAt: null,
@@ -31,16 +51,16 @@ async function getClassesForRegistration(semester, year, curriculumId, q = null)
     year,
   };
 
+  //  Only filter by curriculum if provided
   if (curriculumId) {
-    // Filter by specific curriculum
     where.course = {
       groups: {
         some: {
           curriculumGroup: {
-            curriculumId: parseInt(curriculumId)
-          }
-        }
-      }
+            curriculumId: Number(curriculumId),
+          },
+        },
+      },
     };
   }
 
@@ -50,37 +70,47 @@ async function getClassesForRegistration(semester, year, curriculumId, q = null)
       course: true,
       enrollments: {
         where: { status: 'ENROLLED' },
-        select: { id: true }
-      }
-    }
+        select: { id: true },
+      },
+    },
   });
 
-  // Add seats_taken from Redis or DB
-  let classesWithSeats = await Promise.all(classes.map(async (cls) => {
-    const key = `class:${cls.id}:seats_taken`;
-    const seatsTaken = parseInt(await redisClient.get(key) || cls.enrollments.length.toString(), 10);
-    return {
-      ...cls,
-      seatsTaken,
-      courseName: cls.course.name,
-      courseCode: cls.course.code,
-      credits: cls.course.credits,
-    };
-  }));
+  // ---------- ADD seats_taken ----------
+  let classesWithSeats = await Promise.all(
+    classes.map(async (cls) => {
+      let seatsTaken = cls.enrollments.length;
 
+      if (redisClient) {
+        try {
+          const key = `class:${cls.id}:seats_taken`;
+          seatsTaken = parseInt((await redisClient.get(key)) || seatsTaken.toString(), 10);
+        } catch {}
+      }
+
+      return {
+        ...cls,
+        seatsTaken,
+        courseName: cls.course.name,
+        courseCode: cls.course.code,
+        credits: cls.course.credits,
+      };
+    })
+  );
+
+  // ---------- SEARCH ----------
   if (q) {
     const qLower = q.toLowerCase();
-    classesWithSeats = classesWithSeats.filter(cls => 
-      cls.courseCode.toLowerCase().includes(qLower) ||
-      cls.courseName.toLowerCase().includes(qLower)
+    classesWithSeats = classesWithSeats.filter(
+      (cls) =>
+        cls.courseCode.toLowerCase().includes(qLower) ||
+        cls.courseName.toLowerCase().includes(qLower)
     );
   }
 
-  // Cache the result if we have a curriculumId
-  if (curriculumId && classesWithSeats.length > 0) {
+  // ---------- CACHE RESULT (only with curriculumId) ----------
+  if (curriculumId && classesWithSeats.length && redisClient) {
     const cacheKey = `curriculum:${curriculumId}:classes:${semester}:${year}`;
-    // Remove dynamic seats_taken from cache (will be added on retrieval)
-    const cacheData = classesWithSeats.map(cls => ({
+    const cacheData = classesWithSeats.map((cls) => ({
       id: cls.id,
       code: cls.code,
       semester: cls.semester,
@@ -95,14 +125,21 @@ async function getClassesForRegistration(semester, year, curriculumId, q = null)
       courseCode: cls.courseCode,
       credits: cls.credits,
     }));
-    await redisClient.set(cacheKey, JSON.stringify(cacheData), 'EX', 60*60*24*7); // 7 days
+
+    try {
+      await redisClient.set(cacheKey, JSON.stringify(cacheData), 'EX', 60 * 60 * 24 * 7);
+    } catch (e) {
+      console.log('Redis set error:', e.message);
+    }
   }
 
   return classesWithSeats;
 }
 
 //
- async function initClassCapacity(classId) {
+async function initClassCapacity(classId) {
+  if (!redisClient) return;
+
   const keyTaken = `class:${classId}:seats_taken`;
   const keyCapacity = `class:${classId}:capacity`;
 
@@ -120,6 +157,24 @@ async function getClassesForRegistration(semester, year, curriculumId, q = null)
 
 //
 async function reserveSeat(classId) {
+  if (!redisClient) {
+    // Without redis, check capacity from DB
+    const cls = await prisma.class.findUnique({
+      where: { id: classId },
+      select: { capacity: true },
+      include: {
+        enrollments: {
+          where: { status: 'ENROLLED' },
+          select: { id: true }
+        }
+      }
+    });
+    if (cls.enrollments.length >= cls.capacity) {
+      return { success: false, message: "Class is full" };
+    }
+    return { success: true };
+  }
+
   const key = `class:${classId}:seats_taken`;
   const capacityKey = `class:${classId}:capacity`;
 
@@ -147,6 +202,7 @@ async function reserveSeat(classId) {
 
 //
 async function releaseSeat(classId) {
+  if (!redisClient) return;
   const key = `class:${classId}:seats_taken`;
   await redisClient.decr(key);
 }
@@ -307,4 +363,6 @@ module.exports = {
   dropEnrollment,
   getStudentEnrollments,
   checkEnrollmentConflicts,
+  getCurriculumIdForStudent,
+  getStudentId
 };

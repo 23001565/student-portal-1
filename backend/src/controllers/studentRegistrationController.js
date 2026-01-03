@@ -1,6 +1,5 @@
-const prisma = require('../data/prisma.js');
-const { getActiveRegistrationWindow } = require('../services/courseRegistration/registrationWindowService.js');
-const { getClassesForRegistration, enrollStudent, dropEnrollment, getStudentEnrollments, checkEnrollmentConflicts } = require('../services/courseRegistration/enrollmentService.js');
+const { getActiveRegistrationWindow, getStudentActiveRegistrationWindow } = require('../services/courseRegistration/registrationWindowService.js');
+const { getClassesForRegistration, enrollStudent, dropEnrollment, getStudentEnrollments, checkEnrollmentConflicts, getCurriculumIdForStudent, getStudentId } = require('../services/courseRegistration/enrollmentService.js');
 
 async function getAvailableClasses(req, res) {
   try {
@@ -9,11 +8,28 @@ async function getAvailableClasses(req, res) {
     console.log('GET AVAILABLE CLASSES REQ USER:', req.user);
     const studentId = req.user.id; // from auth middleware
     const isAdmin = req.user.role === 'admin';
+    console.log('STUDENT ID:', studentId);
+    console.log('IS ADMIN:', isAdmin);
 
     // Get active window
-    const window = await getActiveRegistrationWindow();
+    let window;
+    if (isAdmin) {
+      window = await getActiveRegistrationWindow();
+    } else {
+      window = await getStudentActiveRegistrationWindow();
+    }
+    console.log('Active registration window:', window);
+    console.log('WINDOW DETAILS:', window ? { id: window.id, semester: window.semester, year: window.year, startTime: window.startTime, endTime: window.endTime, isActive: window.isActive } : null);
 
     let filterCurriculumId = curriculumId;
+    // Fix: treat 'null' string as null
+    if (filterCurriculumId === 'null') filterCurriculumId = null;
+    if (filterCurriculumId === "my-curriculum" ) {
+      // Get student's curriculumId
+      filterCurriculumId = await getCurriculumIdForStudent(studentId);
+      console.log('Derived curriculumId for student:', filterCurriculumId);
+    }
+
     let semester, year;
 
     if (window) {
@@ -26,17 +42,7 @@ async function getAvailableClasses(req, res) {
       year = now.getFullYear();
     }
 
-
-    // For students, default to their curriculum if no filter
-    if (!isAdmin && !filterCurriculumId) {
-      const student = await prisma.student.findUnique({
-        where: { id: studentId },
-        include: { curriculumId: true }
-      });
-      if (student.curriculumId) {
-        filterCurriculumId = student.curriculumId;
-      }
-    }
+    console.log('Filtering classes for curriculumId:', filterCurriculumId, 'semester:', semester, 'year:', year, 'role:', req.user.role);
 
     const classes = await getClassesForRegistration(semester, year, filterCurriculumId, q);
 
@@ -61,8 +67,13 @@ async function getAvailableClasses(req, res) {
 
 async function enrollInClass(req, res) {
   try {
+    console.log('ENROLL IN CLASS REQ BODY:', req.body);
+    console.log('ENROLL IN CLASS REQ USER:', req.user);
+
     const { classId } = req.body;
-    const studentId = req.user.id;
+    const studentId = await getStudentId(req.user.id);
+
+    console.log('STUDENT ID:', studentId);
 
     // Check active window
     const window = await getActiveRegistrationWindow();

@@ -46,7 +46,7 @@ function checkConflicts(cart) {
 }
 
 export default function AdminCourseRegistration() {
-  const [filters, setFilters] = useState({ curriculumId: '', q: '' });
+  const [filters, setFilters] = useState({ curriculumId: null, q: '' });
   const [courses, setCourses] = useState([]);
   const [curricula, setCurricula] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -74,11 +74,11 @@ export default function AdminCourseRegistration() {
 
 
   const loadCourses = async () => {
-    if (!filters.curriculumId) return;
-
     setLoading(true); setError('');
     try {
-      const data = await getOpenCourses({ curriculumId: filters.curriculumId, q: filters.q });
+      // curriculumId: null for all, or a number for specific curriculum
+      let sendCurriculumId = filters.curriculumId;
+      const data = await getOpenCourses({ curriculumId: sendCurriculumId, q: filters.q });
       setCourses(data?.items || []);
       setRegistrationWindow(data?.window || null);
     } catch (e) {
@@ -103,11 +103,17 @@ export default function AdminCourseRegistration() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, marginTop: 12 }}>
         <select
-          value={filters.curriculumId}
-          onChange={(e) => setFilters({ ...filters, curriculumId: e.target.value })}
-          style={{ padding: 8, border: '1px solid #cbd5e1', borderRadius: 6 }}
-        >
-          <option value="">Chọn chương trình đào tạo</option>
+           value={filters.curriculumId === null ? '' : filters.curriculumId}
+           onChange={(e) => {
+             const val = e.target.value;
+             setFilters({
+               ...filters,
+               curriculumId: val === '' ? null : parseInt(val, 10)
+             });
+           }}
+           style={{ padding: 8, border: '1px solid #cbd5e1', borderRadius: 6 }}
+         >
+          <option value="">Tất cả các lớp mở</option>
           {curricula.map((curriculum) => (
             <option key={curriculum.id} value={curriculum.id}>
               {curriculum.code} - {curriculum.majorName} ({curriculum.startYear}-{curriculum.endYear || 'Hiện tại'})
@@ -130,66 +136,58 @@ export default function AdminCourseRegistration() {
 
       {error && <div style={{ color: '#dc2626', marginTop: 8 }}>{error}</div>}
 
-      {!filters.curriculumId && (
-        <div style={{ marginTop: 20, padding: 20, border: '1px solid #e2e8f0', borderRadius: 8, textAlign: 'center', color: '#64748b' }}>
-          Vui lòng chọn chương trình đào tạo để xem danh sách lớp học phần.
+      <div style={{ marginTop: 20 }}>
+        <div style={{ fontWeight: 600, marginBottom: 8 }}>
+          Học phần mở đăng ký ({courses.length} lớp)
         </div>
-      )}
-
-      {filters.curriculumId && (
-        <div style={{ marginTop: 20 }}>
-          <div style={{ fontWeight: 600, marginBottom: 8 }}>
-            Học phần mở đăng ký ({courses.length} lớp)
-          </div>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Mã MH</th>
+                <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Tên môn</th>
+                <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Nhóm</th>
+                <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Lịch học</th>
+                <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Địa điểm</th>
+                <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>TC</th>
+                <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Sĩ số</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
                 <tr>
-                  <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Mã MH</th>
-                  <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Tên môn</th>
-                  <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Nhóm</th>
-                  <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Lịch học</th>
-                  <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Địa điểm</th>
-                  <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>TC</th>
-                  <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Sĩ số</th>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: 20, color: '#64748b' }}>
+                    Đang tải...
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan="7" style={{ textAlign: 'center', padding: 20, color: '#64748b' }}>
-                      Đang tải...
-                    </td>
+              ) : courses.length === 0 ? (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: 20, color: '#64748b' }}>
+                    Không có lớp học phần nào.
+                  </td>
+                </tr>
+              ) : (
+                courses.map((c, idx) => (
+                  <tr key={idx}>
+                    <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.courseCode}</td>
+                    <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.courseName}</td>
+                    <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.sectionId}</td>
+                    <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.schedule}</td>
+                    <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.location}</td>
+                    <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.credits}</td>
+                    <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.registered}/{c.capacity}</td>
                   </tr>
-                ) : courses.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" style={{ textAlign: 'center', padding: 20, color: '#64748b' }}>
-                      Không có lớp học phần nào.
-                    </td>
-                  </tr>
-                ) : (
-                  courses.map((c, idx) => (
-                    <tr key={idx}>
-                      <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.courseCode}</td>
-                      <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.courseName}</td>
-                      <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.sectionId}</td>
-                      <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.schedule}</td>
-                      <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.location}</td>
-                      <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.credits}</td>
-                      <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.registered}/{c.capacity}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          {!loading && courses.length > 0 && (
-            <div style={{ marginTop: 12, paddingTop: 8, borderTop: '1px solid #e2e8f0' }}>
-              <div style={{ fontWeight: 600 }}>Tổng số tín chỉ: <strong>{totalCredits}</strong></div>
-            </div>
-          )}
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+        {!loading && courses.length > 0 && (
+          <div style={{ marginTop: 12, paddingTop: 8, borderTop: '1px solid #e2e8f0' }}>
+            <div style={{ fontWeight: 600 }}>Tổng số tín chỉ: <strong>{totalCredits}</strong></div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
