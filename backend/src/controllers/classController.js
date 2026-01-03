@@ -70,10 +70,11 @@ async function remove(req, res) {
 
 async function list(req, res) {
   try {
-    const { courseCode, semester, year, includeArchived } = req.query;
+    const { courseCode, curriculumCode, semester, year, includeArchived } = req.query;
 
     const result = await listClasses({
       courseCode,
+      curriculumCode,
       semester: semester !== undefined ? Number(semester) : undefined,
       year: year !== undefined ? Number(year) : undefined,
       includeArchived: includeArchived === '1' || includeArchived === 'true',

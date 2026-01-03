@@ -80,6 +80,11 @@ async function deleteCourseByCode(code) {
   return { deleted: true };
 }
 
+async function getCourseList(curriculumCode) {
+  if (!curriculumCode) { const e = new Error('curriculumCode is required'); e.status = 400; throw e; }
+  return listCourses({ curriculumCode, includeArchived: false });
+}
+
 async function listCourses({ code, curriculumCode, includeArchived } = {}) {
   const where = {};
   if (code) where.code = { contains: code, mode: 'insensitive' };
@@ -162,6 +167,7 @@ module.exports = {
   updateCourseByCode,
   archiveCourse,
   deleteCourseByCode,
+  getCourseList,
   listCourses,
   uploadCoursesFromCSV,
 };

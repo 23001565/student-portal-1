@@ -171,10 +171,12 @@ async function deleteClass(code, semester, year) {
 /**
  * Filter classes
  * - by courseCode
+ * - by curriculumCode
  * - by semester + year
  */
 async function listClasses({
   courseCode,
+  curriculumCode,
   semester,
   year,
   includeArchived,
@@ -192,6 +194,20 @@ async function listClasses({
     });
     if (!course) return { items: [] };
     where.courseId = course.id;
+  }
+
+  // Filter by curriculumCode via join if provided
+  if (curriculumCode) {
+    // Find curriculum by code, then its groups, then groupCourse courseIds
+    const curriculum = await prisma.curriculum.findUnique({ where: { code: curriculumCode }, select: { id: true } });
+    if (!curriculum) return { items: [] };
+    const groups = await prisma.curriculumGroup.findMany({ where: { curriculumId: curriculum.id }, select: { id: true } });
+    const groupIds = groups.map(g => g.id);
+    if (groupIds.length === 0) return { items: [] };
+    const groupCourses = await prisma.groupCourse.findMany({ where: { groupId: { in: groupIds } }, select: { courseId: true } });
+    const courseIds = Array.from(new Set(groupCourses.map(gc => gc.courseId)));
+    if (courseIds.length === 0) return { items: [] };
+    where.courseId = { in: courseIds };
   }
 
   const items = await prisma.class.findMany({

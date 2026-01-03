@@ -1,10 +1,11 @@
 import { http } from './http.js';
 
 /* =========================
-   LIST / FILTER CLASSES
+    LIST / FILTER CLASSES
 ========================= */
 export async function listClasses({
   courseCode,
+  curriculumCode,
   semester,
   year,
   includeArchived,
@@ -12,6 +13,7 @@ export async function listClasses({
   const params = new URLSearchParams();
 
   if (courseCode) params.set('courseCode', courseCode);
+  if (curriculumCode) params.set('curriculumCode', curriculumCode);
   if (semester !== undefined && semester !== '') params.set('semester', String(semester));
   if (year !== undefined && year !== '') params.set('year', String(year));
   if (includeArchived) params.set('includeArchived', '1');

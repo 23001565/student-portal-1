@@ -24,6 +24,7 @@ const ManageClasses = () => {
 
   const [filters, setFilters] = useState({
     courseCode: "",
+    curriculumCode: "",
     semester: "",
     year: "",
   });
@@ -54,6 +55,7 @@ const ManageClasses = () => {
       const { listClasses } = await import("../../api/classApi");
       const res = await listClasses({
         courseCode: filters.courseCode,
+        curriculumCode: filters.curriculumCode,
         semester: filters.semester,
         year: filters.year,
       });
@@ -249,6 +251,15 @@ const ManageClasses = () => {
                 value={filters.courseCode}
                 onChange={(e) =>
                   setFilters({ ...filters, courseCode: e.target.value })
+                }
+              />
+            </InputGroup>
+            <InputGroup style={{ width: 160 }}>
+              <FormControl
+                placeholder="Mã chương trình"
+                value={filters.curriculumCode}
+                onChange={(e) =>
+                  setFilters({ ...filters, curriculumCode: e.target.value })
                 }
               />
             </InputGroup>
