@@ -41,6 +41,7 @@ const Navbar = () => {
                 </Nav.Link>
                 <Nav.Link as={Link} to="/courses">Courses</Nav.Link>
                 <Nav.Link as={Link} to="/curriculum">Curriculum</Nav.Link>
+                <Nav.Link as={Link} to="/registration">Course Registration</Nav.Link>
                 <Nav.Link as={Link} to="/grades">Grades</Nav.Link>
                 <Nav.Link as={Link} to="/profile">Profile</Nav.Link>
               </>
@@ -60,6 +61,12 @@ const Navbar = () => {
                 </Nav.Link>
                 <Nav.Link as={Link} to="/admin/curricula">
                   Manage Curricula
+                </Nav.Link>
+                <Nav.Link as={Link} to="/admin/registration-windows">
+                  Registration Windows
+                </Nav.Link>
+                <Nav.Link as={Link} to="/admin/course-registration">
+                  Course Registration Preview
                 </Nav.Link>
                 <Nav.Link as={Link} to="/admin/announcements">
                   Manage Announcement

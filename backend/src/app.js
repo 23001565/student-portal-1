@@ -13,6 +13,8 @@ const courseRoutes = require ('./routes/courseRoutes.js');
 const auth = require('./routes/auth/auth.js');
 const announcementRoutes = require('./routes/announcementRoutes.js');
 const adminAnnouncementRoutes = require('./routes/adminAnnouncementRoutes.js');
+const adminRegistrationWindowRoutes = require('./routes/adminRegistrationWindowRoutes.js');
+const studentRegistrationRoutes = require('./routes/studentRegistrationRoutes.js');
 const passwordRoutes = require('./routes/passwordRoutes.js');
 
 const app = express();
@@ -48,6 +50,8 @@ app.use('/api/admin/curriculum', curriculumRoutes);
 app.use('/api/admin/courses', courseRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/admin/announcements', adminAnnouncementRoutes);
+app.use('/api/admin/registration-windows', adminRegistrationWindowRoutes);
+app.use('/api/registration', studentRegistrationRoutes);
 app.use('/api/password', passwordRoutes);
 
 

@@ -22,6 +22,8 @@ import CourseRegistration from "./pages/CourseRegistration";
 import ManageClasses from "./pages/Admin/ManageClasses";
 import ClassCSVUpload from "./pages/Admin/ClassCSVUpload";
 import CourseCSVUpload from "./pages/Admin/CourseCSVUpload";
+import ManageRegistrationWindows from "./pages/Admin/ManageRegistrationWindows";
+import AdminCourseRegistration from "./pages/Admin/AdminCourseRegistration";
 import UploadCurriculum from "./pages/Admin/UploadCurriculum";
 import Navbar from "./components/Navbar";
 import { useAuth } from "./context/authContext";
@@ -53,6 +55,8 @@ function App() {
           <Route path="/admin/classes" element={<ManageClasses />} />
           <Route path="/admin/upload-classes" element={<ClassCSVUpload />} />
           <Route path="/admin/progress-monitor" element={<ProgressMonitor />} />
+          <Route path="/admin/registration-windows" element={<ManageRegistrationWindows />} />
+          <Route path="/admin/course-registration" element={<AdminCourseRegistration />} />
         </Routes>
       </div>
     </div>

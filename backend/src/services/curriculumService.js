@@ -305,7 +305,7 @@ async function listCurricula({ majorName, startYear, endYear } = {}) {
   if (endYear && endYear !== 'undefined') where.endYear = endYear ? Number(endYear) : null;
   const items = await prisma.curriculum.findMany({
     where,
-    select: { code: true, startYear: true, endYear: true, archivedAt: true, major: { select: { name: true } } },
+    select: { id: true, code: true, startYear: true, endYear: true, archivedAt: true, major: { select: { name: true } } },
     orderBy: [ {major: { name: 'asc' }}, { startYear: 'asc' }, { code: 'asc' }],
   });
   const mappedItems = items.map(item => ({

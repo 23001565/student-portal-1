@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { getOpenCourses, submitRegistration } from '../api/registrationApi';
+import { getOpenCourses, enrollInClass, dropClass, getMyEnrollments } from '../api/registrationApi';
 
 // schedule format example: { day: 'T2', slots: [7,8,9] } or string 'T2 7-9'
 function parseScheduleToSlots(schedule) {
@@ -45,72 +45,110 @@ function checkConflicts(cart) {
 }
 
 export default function CourseRegistration() {
-  const [filters, setFilters] = useState({ term: '', programId: '', q: '' });
+  const [filters, setFilters] = useState({ curriculumId: '', q: '' });
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [cart, setCart] = useState([]);
   const [message, setMessage] = useState('');
+  const [registrationWindow, setRegistrationWindow] = useState(null);
 
   const loadCourses = async () => {
     setLoading(true); setError('');
     try {
       const data = await getOpenCourses(filters);
       setCourses(data?.items || []);
+      setRegistrationWindow(data?.window || null);
     } catch (e) {
       setError(e.message || 'Lỗi tải danh sách');
     } finally { setLoading(false); }
   };
 
   useEffect(() => {
-    // optionally auto-load on mount
     loadCourses();
+    loadMyEnrollments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const loadMyEnrollments = async () => {
+    try {
+      const data = await getMyEnrollments();
+      const enrolledClasses = (data?.enrollments || []).map(e => ({
+        id: e.class.id,
+        courseCode: e.class.course.code,
+        courseName: e.class.course.name,
+        credits: e.class.course.credits,
+        sectionId: e.class.code,
+        schedule: `${e.class.dayOfWeek} ${e.class.startPeriod}-${e.class.endPeriod}`,
+        location: e.class.location,
+        capacity: e.class.capacity,
+        registered: 0, // will be updated
+      }));
+      setCart(enrolledClasses);
+    } catch (e) {
+      console.error('Failed to load enrollments', e);
+    }
+  };
 
   const totalCredits = useMemo(() => cart.reduce((sum, c) => sum + (c.credits || 0), 0), [cart]);
   const conflicts = useMemo(() => checkConflicts(cart), [cart]);
 
-  const addToCart = (c) => {
-    if (cart.find(x => x.courseCode === c.courseCode && x.sectionId === c.sectionId)) return;
-    setCart([...cart, c]);
+  // Check if a class would conflict with current cart
+  const wouldConflict = (newClass) => {
+    const tempCart = [...cart, newClass];
+    const tempConflicts = checkConflicts(tempCart);
+    return tempConflicts.length > 0;
   };
 
-  const removeFromCart = (c) => {
-    setCart(cart.filter(x => !(x.courseCode === c.courseCode && x.sectionId === c.sectionId)));
+  // Check if class is for same course as already selected
+  const sameCourse = (newClass) => {
+    return cart.some(c => c.courseCode === newClass.courseCode);
   };
 
-  const onSubmit = async () => {
-    setMessage('');
-    if (conflicts.length) {
-      setMessage('Có xung đột lịch. Vui lòng điều chỉnh giỏ đăng ký.');
-      return;
-    }
+  const addToCart = async (c) => {
+    if (cart.find(x => x.id === c.id)) return;
     try {
-      const payload = { term: filters.term, items: cart.map(({ courseCode, sectionId }) => ({ courseCode, sectionId })) };
-      const res = await submitRegistration(payload);
-      setMessage(`Đăng ký thành công ${res?.registered || cart.length} học phần.`);
-      setCart([]);
+      await enrollInClass(c.id);
+      setCart([...cart, c]);
+      setMessage('Đăng ký thành công');
     } catch (e) {
       setMessage(e.message || 'Đăng ký thất bại');
     }
   };
 
+  const removeFromCart = async (c) => {
+    try {
+      await dropClass(c.id);
+      setCart(cart.filter(x => x.id !== c.id));
+      setMessage('Hủy đăng ký thành công');
+    } catch (e) {
+      setMessage(e.message || 'Hủy đăng ký thất bại');
+    }
+  };
+
+  // Removed onSubmit since enroll/drop are immediate
+
   return (
     <div style={{ padding: 20 }}>
       <h2>Đăng ký học phần</h2>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, marginTop: 12 }}>
-        <input placeholder="Học kỳ (vd: 2024-2025 HK1)" value={filters.term} onChange={(e) => setFilters({ ...filters, term: e.target.value })}
-          style={{ padding: 8, border: '1px solid #cbd5e1', borderRadius: 6 }} />
-        <input placeholder="Program ID" value={filters.programId} onChange={(e) => setFilters({ ...filters, programId: e.target.value })}
-          style={{ padding: 8, border: '1px solid #cbd5e1', borderRadius: 6 }} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12, marginTop: 12 }}>
+        <select value={filters.curriculumId} onChange={(e) => setFilters({ ...filters, curriculumId: e.target.value })}
+          style={{ padding: 8, border: '1px solid #cbd5e1', borderRadius: 6 }}>
+          <option value="">Tất cả ngành</option>
+          <option value="my-curriculum">CT của tôi</option>
+        </select>
         <input placeholder="Từ khóa" value={filters.q} onChange={(e) => setFilters({ ...filters, q: e.target.value })}
           style={{ padding: 8, border: '1px solid #cbd5e1', borderRadius: 6 }} />
         <button onClick={loadCourses} disabled={loading} style={{ background: '#2563eb', color: 'white', padding: '8px 12px', border: 'none', borderRadius: 6 }}>
           {loading ? 'Đang tải...' : 'Tải danh sách'}
         </button>
       </div>
+      {registrationWindow && (
+        <div style={{ marginTop: 8, color: '#16a34a' }}>
+          Đợt đăng ký: {registrationWindow.semester}/{registrationWindow.year} (từ {new Date(registrationWindow.startTime).toLocaleString()} đến {new Date(registrationWindow.endTime).toLocaleString()})
+        </div>
+      )}
 
       {error && <div style={{ color: '#dc2626', marginTop: 8 }}>{error}</div>}
 
@@ -121,14 +159,15 @@ export default function CourseRegistration() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Mã MH</th>
-                  <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Tên môn</th>
-                  <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Nhóm</th>
-                  <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Lịch học</th>
-                  <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>TC</th>
-                  <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Sĩ số</th>
-                  <th></th>
-                </tr>
+                   <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Mã MH</th>
+                   <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Tên môn</th>
+                   <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Nhóm</th>
+                   <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Lịch học</th>
+                   <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Địa điểm</th>
+                   <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>TC</th>
+                   <th style={{ textAlign: 'left', padding: 8, borderBottom: '1px solid #e2e8f0', background: '#f1f5f9' }}>Sĩ số</th>
+                   <th></th>
+                 </tr>
               </thead>
               <tbody>
                 {(courses || []).map((c, idx) => (
@@ -136,11 +175,38 @@ export default function CourseRegistration() {
                     <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.courseCode}</td>
                     <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.courseName}</td>
                     <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.sectionId}</td>
-                    <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{Array.isArray(c.schedule) ? c.schedule.map(x => typeof x === 'string' ? x : `${x.day} ${Array.isArray(x.slots) ? `${Math.min(...x.slots)}-${Math.max(...x.slots)}` : ''}`).join('; ') : (c.schedule || '')}</td>
+                    <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.schedule}</td>
+                    <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.location}</td>
                     <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.credits}</td>
                     <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.registered}/{c.capacity}</td>
                     <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>
-                      <button onClick={() => addToCart(c)} style={{ background: '#10b981', color: 'white', padding: '6px 10px', border: 'none', borderRadius: 6 }}>Thêm</button>
+                      {(() => {
+                        const isEnrolled = cart.find(x => x.id === c.id);
+                        const hasConflict = wouldConflict(c);
+                        const hasSameCourse = sameCourse(c);
+                        const disabled = isEnrolled || hasConflict || hasSameCourse;
+                        let buttonText = 'Đăng ký';
+                        let bgColor = '#10b981';
+                        if (isEnrolled) {
+                          buttonText = 'Đã đăng ký';
+                          bgColor = '#6b7280';
+                        } else if (hasSameCourse) {
+                          buttonText = 'Cùng môn';
+                          bgColor = '#f59e0b';
+                        } else if (hasConflict) {
+                          buttonText = 'Xung đột';
+                          bgColor = '#ef4444';
+                        }
+                        return (
+                          <button
+                            onClick={() => addToCart(c)}
+                            disabled={disabled}
+                            style={{ background: bgColor, color: 'white', padding: '6px 10px', border: 'none', borderRadius: 6 }}
+                          >
+                            {buttonText}
+                          </button>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}
@@ -149,26 +215,20 @@ export default function CourseRegistration() {
           </div>
         </div>
         <div>
-          <div style={{ fontWeight: 600, marginBottom: 8 }}>Giỏ đăng ký</div>
-          <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 12 }}>
-            {(cart || []).length === 0 && <div style={{ color: '#64748b' }}>Chưa có học phần.</div>}
+          <div style={{ fontWeight: 600, marginBottom: 8 }}>Lớp đã đăng ký ({cart.length})</div>
+          <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 12, maxHeight: '400px', overflowY: 'auto' }}>
+            {(cart || []).length === 0 && <div style={{ color: '#64748b' }}>Chưa đăng ký lớp nào.</div>}
             {(cart || []).map((c, idx) => (
-              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px dashed #e2e8f0' }}>
+              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px dashed #e2e8f0' }}>
                 <div>
                   <div style={{ fontWeight: 600 }}>{c.courseCode} - {c.courseName}</div>
-                  <div className="small" style={{ color: '#64748b' }}>Nhóm {c.sectionId} | {Array.isArray(c.schedule) ? c.schedule.map(x => typeof x === 'string' ? x : `${x.day} ${Array.isArray(x.slots) ? `${Math.min(...x.slots)}-${Math.max(...x.slots)}` : ''}`).join('; ') : (c.schedule || '')}</div>
+                  <div className="small" style={{ color: '#64748b' }}>Nhóm {c.sectionId} | {c.schedule} | {c.location}</div>
                 </div>
-                <button onClick={() => removeFromCart(c)} style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: 6, padding: '6px 10px' }}>Xóa</button>
+                <button onClick={() => removeFromCart(c)} style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: 6, padding: '6px 10px' }}>Hủy</button>
               </div>
             ))}
-            <div style={{ marginTop: 8 }}>Tổng số tín chỉ: <strong>{totalCredits}</strong></div>
-            {conflicts.length > 0 && (
-              <div style={{ color: '#dc2626', marginTop: 6 }}>
-                Phát hiện xung đột lịch: {conflicts.map(cf => `${cf.slot} (${cf.list.join(', ')})`).join(' | ')}
-              </div>
-            )}
-            <div style={{ marginTop: 12 }}>
-              <button onClick={onSubmit} disabled={cart.length === 0} style={{ background: '#2563eb', color: 'white', padding: '8px 12px', border: 'none', borderRadius: 6 }}>Đăng ký</button>
+            <div style={{ marginTop: 12, paddingTop: 8, borderTop: '1px solid #e2e8f0' }}>
+              <div style={{ fontWeight: 600 }}>Tổng số tín chỉ: <strong>{totalCredits}</strong></div>
             </div>
             {message && <div style={{ marginTop: 8, color: message.includes('thất bại') || message.includes('xung đột') ? '#dc2626' : '#16a34a' }}>{message}</div>}
           </div>
