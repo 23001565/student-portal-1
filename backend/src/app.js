@@ -47,6 +47,7 @@ app.use('/api/admin/students', adminStudentRoutes);
 //app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/admin/classes', classRoutes);
 app.use('/api/admin/curriculum', curriculumRoutes);
+app.use('/api/students', curriculumRoutes);
 app.use('/api/admin/courses', courseRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/admin/announcements', adminAnnouncementRoutes);

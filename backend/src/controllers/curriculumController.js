@@ -34,15 +34,24 @@ async function listCurriculaController(req, res) {
 }
 
 async function getStudentCurriculumController(req, res) {
+  console.log('getStudentCurriculumController called with user:', req.user);
   const { role, id } = req.user;
 
   if (role !== 'student') {
+    console.warn('Access denied: user is not a student. User:', req.user);
     return res.status(403).json({ message: 'Student access required' });
   }
   try {
     const curriculum = await getStudentCurriculum(id);
+    if (!curriculum) {
+      console.error('No curriculum found for student id:', id);
+      return res.status(404).json({ message: 'No curriculum found for this student.' });
+    }
     res.json(curriculum);
-  } catch (err) { sendError(res, err); }
+  } catch (err) {
+    console.error('Error in getStudentCurriculumController:', err);
+    sendError(res, err);
+  }
 }
 
 async function uploadCurriculumController(req, res) {
