@@ -1,14 +1,4 @@
-#   db:
-#     image: postgres:14
-#     restart: always
-#     environment:
-#       POSTGRES_USER: user
-#       POSTGRES_PASSWORD: password
-#       POSTGRES_DB: studentportal
-#     volumes:
-#       - pgdata:/var/lib/postgresql/data
-#     ports:
-#       - "5432:5432"
+version: "3.9"
 
 services:
   backend:
@@ -20,26 +10,13 @@ services:
     depends_on:
       - db
       - redis
-    volumes: # only in development
-      - ./backend:/usr/src/app
-      - /usr/src/app/node_modules
-    command: npm run dev
 
   frontend:
     build: ./frontend
     ports:
       - "80:80"
-#   db:
-#     image: postgres:14
-#     restart: always
-#     environment:
-#       POSTGRES_USER: user
-#       POSTGRES_PASSWORD: password
-#       POSTGRES_DB: studentportal
-#     volumes:
-#       - pgdata:/var/lib/postgresql/data
-#     ports:
-#       - "5432:5432"
+    depends_on:
+      - backend
 
   db:
     image: postgres:14
@@ -50,14 +27,9 @@ services:
       POSTGRES_DB: student_portal
     volumes:
       - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
 
   redis:
     image: redis:alpine
-    ports:
-      - "6379:6379"
 
 volumes:
   pgdata:
-
