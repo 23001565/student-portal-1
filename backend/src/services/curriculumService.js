@@ -263,8 +263,8 @@ async function getCurriculumByCode(code) {
   }
   const groupCourses = await prisma.groupCourse.findMany({ where: { groupId: { in: groups.map(g => g.id) } }, select: { groupId: true, courseId: true } });
   const courseIds = Array.from(new Set(groupCourses.map(gc => gc.courseId)));
-  const courses = courseIds.length ? await prisma.course.findMany({ where: { id: { in: courseIds } }, select: { id: true, code: true } }) : [];
-  const idToCode = new Map(courses.map(c => [c.id, c.code]));
+  const courses = courseIds.length ? await prisma.course.findMany({ where: { id: { in: courseIds } }, select: { id: true, code: true, name: true, credits: true } }) : [];
+  const idToCourse = new Map(courses.map(c => [c.id, { code: c.code, name: c.name, credits: c.credits }]));
 
   function buildTree(pid = 0) {
     const arr = children.get(pid) || [];
@@ -273,7 +273,7 @@ async function getCurriculumByCode(code) {
       type: g.type,
       required: g.required,
       totalCredits: g.totalCredits,
-      courses: groupCourses.filter(gc => gc.groupId === g.id).map(gc => idToCode.get(gc.courseId)).filter(Boolean),
+      courses: groupCourses.filter(gc => gc.groupId === g.id).map(gc => idToCourse.get(gc.courseId)).filter(Boolean),
       subgroups: buildTree(g.id),
     }));
   }
@@ -292,8 +292,7 @@ async function getCurriculumByCode(code) {
 
 async function listCurricula({ majorName, startYear, endYear } = {}) {
   const majorId = null;
-  if (majorName) {
-    
+  if (majorName && majorName !== 'undefined') {
     const major = await prisma.major.findUnique({ where: { name: majorName } });
     if (!major) {
       const err = new Error('Major not found'); err.status = 400; throw err;
@@ -302,14 +301,19 @@ async function listCurricula({ majorName, startYear, endYear } = {}) {
   }
   const where = {};
   if (majorId !== null) where.majorId = majorId;
-  if (startYear !== undefined) where.startYear = startYear;
-  if (endYear !== undefined) where.endYear = endYear;
+  if (startYear && startYear !== 'undefined') where.startYear = Number(startYear);
+  if (endYear && endYear !== 'undefined') where.endYear = endYear ? Number(endYear) : null;
   const items = await prisma.curriculum.findMany({
     where,
     select: { code: true, startYear: true, endYear: true, archivedAt: true, major: { select: { name: true } } },
     orderBy: [ {major: { name: 'asc' }}, { startYear: 'asc' }, { code: 'asc' }],
   });
-  return { items};
+  const mappedItems = items.map(item => ({
+    ...item,
+    majorName: item.major?.name || '',
+    major: undefined, // remove the object
+  }));
+  return { items: mappedItems };
 }
 
 

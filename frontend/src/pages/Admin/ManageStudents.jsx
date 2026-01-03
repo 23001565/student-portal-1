@@ -67,7 +67,11 @@ const ManageStudents = () => {
 
   useEffect(() => {
     fetchStudents();
-  }, [filters]);
+  }, []);
+
+  const handleFilter = () => {
+    fetchStudents();
+  };
 
   /* ---------------- SUBMIT ---------------- */
 
@@ -143,34 +147,39 @@ const ManageStudents = () => {
         <Card.Header>
           <div className="d-flex justify-content-between mb-3">
             <Form className="d-flex" style={{ flex: 1, marginRight: 10 }}>
-              <Row className="g-2">
-                <Col md={3}>
+              <Row className="g-2" style={{ flex: 1 }}>
+                <Col md={2}>
                   <FormControl
                     placeholder="Mã sinh viên"
                     value={filters.studentCode}
                     onChange={(e) => setFilters({ ...filters, studentCode: e.target.value })}
                   />
                 </Col>
-                <Col md={3}>
+                <Col md={2}>
                   <FormControl
                     placeholder="Năm"
                     value={filters.year}
                     onChange={(e) => setFilters({ ...filters, year: e.target.value })}
                   />
                 </Col>
-                <Col md={3}>
+                <Col md={2}>
                   <FormControl
                     placeholder="Tên ngành"
                     value={filters.majorName}
                     onChange={(e) => setFilters({ ...filters, majorName: e.target.value })}
                   />
                 </Col>
-                <Col md={3}>
+                <Col md={2}>
                   <FormControl
                     placeholder="Mã chương trình"
                     value={filters.curriculumCode}
                     onChange={(e) => setFilters({ ...filters, curriculumCode: e.target.value })}
                   />
+                </Col>
+                <Col md={2}>
+                  <Button onClick={handleFilter} variant="outline-primary">
+                    Lọc
+                  </Button>
                 </Col>
               </Row>
             </Form>

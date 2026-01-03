@@ -2,7 +2,7 @@ const authService = require ('../services/login.js');
 
 async function login(req, res, next) {
   try {
-    //console.log('LOGIN BODY:', req.body);
+    console.log('LOGIN BODY:', req.body);
     const { email, password, role } = req.body;
 
     // HTTP metadata
@@ -20,6 +20,7 @@ async function login(req, res, next) {
       userAgent,
       ipAddress,
     });
+    console.log('LOGIN RESPONSE:', { token, user });
 
     // Set token in HttpOnly cookie
     res

@@ -15,11 +15,14 @@ export async function login({ email, password, role }) {
 }
 
 export async function logout() {
+  console.log("API logout called");
   try {
     await http('/auth/logout', {
       method: 'POST',
     });
-  } catch {
+    console.log("API logout HTTP request completed");
+  } catch (error) {
+    console.error("API logout HTTP request failed:", error);
     // Ignore errors (expired cookie, etc.)
   }
 }

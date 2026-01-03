@@ -1,41 +1,71 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import PageFrame from "../components/PageFrame";
 import Button from "../components/Button";
 import { getMyCurriculum } from '../api/studentApi';
+import { getCurriculumByCode } from '../api/curriculumApi';
+import { useAuth } from '../context/authContext';
 
 const CurriculumPage = () => {
   const [curriculum, setCurriculum] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
 
   useEffect(() => {
-    getMyCurriculum()
-      .then(setCurriculum)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+    const code = searchParams.get('code');
+    if (code && user?.role === 'admin') {
+      getCurriculumByCode(code)
+        .then(setCurriculum)
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    } else {
+      getMyCurriculum()
+        .then(setCurriculum)
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    }
+  }, [searchParams, user]);
 
-  const renderGroup = (group, level = 0) => (
-    <div key={group.name + level} style={{ marginLeft: level * 20, marginBottom: 16 }}>
-      <div style={{ fontWeight: 'bold', marginBottom: 8 }}>
-        {group.name} {group.required ? '(Bắt buộc)' : '(Tự chọn)'} - Tổng tín chỉ: {group.totalCredits}
-      </div>
-      {group.courses && group.courses.length > 0 && (
-        <div style={{ marginBottom: 8 }}>
-          <div style={{ fontWeight: '600', marginBottom: 4 }}>Các môn học:</div>
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            {group.courses.map(course => (
-              <li key={course.code} style={{ marginBottom: 4 }}>
-                {course.code} - {course.name} ({course.credits} tín chỉ)
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {group.subgroups && group.subgroups.map(sub => renderGroup(sub, level + 1))}
-    </div>
-  );
+  const renderGroup = (group, level = 0, isLast = true) => {
+    const rows = [];
+    const indent = '  '.repeat(level);
+    const prefix = level > 0 ? (isLast ? '└── ' : '├── ') : '';
+    const bgColor = level === 0 ? '#e8f4f8' : level === 1 ? '#f0f8e8' : '#fff8e8';
+    // Group header row
+    rows.push(
+      <tr key={`${group.name}-${level}-header`} style={{ backgroundColor: bgColor }}>
+        <td colSpan="4" style={{ fontWeight: 'bold', padding: '8px', border: '1px solid #ddd', paddingLeft: `${8 + level * 20}px` }}>
+          {indent}{prefix}{group.name} {group.required ? '(Bắt buộc)' : '(Tự chọn)'} - Tổng tín chỉ: {group.totalCredits}
+        </td>
+      </tr>
+    );
+    // Courses rows
+    if (group.courses && group.courses.length > 0) {
+      group.courses.forEach((course, index) => {
+        const coursePrefix = index === group.courses.length - 1 && (!group.subgroups || group.subgroups.length === 0) ? '└── ' : '├── ';
+        rows.push(
+          <tr key={`${group.name}-${level}-${course.code}`}>
+            <td style={{ padding: '4px 8px', border: '1px solid #ddd', paddingLeft: `${8 + (level + 1) * 20}px` }}>
+              {indent}  {coursePrefix}
+            </td>
+            <td style={{ padding: '4px 8px', border: '1px solid #ddd' }}>{course.code}</td>
+            <td style={{ padding: '4px 8px', border: '1px solid #ddd' }}>{course.name}</td>
+            <td style={{ padding: '4px 8px', border: '1px solid #ddd' }}>{course.credits}</td>
+          </tr>
+        );
+      });
+    }
+    // Subgroups
+    if (group.subgroups && group.subgroups.length > 0) {
+      group.subgroups.forEach((sub, index) => {
+        const isLastSub = index === group.subgroups.length - 1;
+        rows.push(...renderGroup(sub, level + 1, isLastSub));
+      });
+    }
+    return rows;
+  };
 
   if (loading) {
     return (
@@ -53,8 +83,8 @@ const CurriculumPage = () => {
       title="Chương trình đào tạo"
       subtitle="Xem chương trình đào tạo của bạn"
       headerActions={
-        <Button variant="outline" onClick={() => navigate("/dashboard")}>
-          ← Về Dashboard
+        <Button variant="outline" onClick={() => navigate(user?.role === 'admin' ? "/admin/curricula" : "/dashboard")}>
+          ← {user?.role === 'admin' ? 'Về Quản lý CTĐT' : 'Về Dashboard'}
         </Button>
       }
     >
@@ -63,7 +93,19 @@ const CurriculumPage = () => {
           {curriculum?.code} - {curriculum?.majorName} ({curriculum?.startYear}{curriculum?.endYear ? `-${curriculum.endYear}` : ''})
         </div>
         <div className="card-body">
-          {curriculum?.groups && curriculum.groups.map(group => renderGroup(group))}
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th style={{ padding: '8px', border: '1px solid #ddd', backgroundColor: '#e0e0e0' }}>Nhóm</th>
+                <th style={{ padding: '8px', border: '1px solid #ddd', backgroundColor: '#e0e0e0' }}>Mã môn</th>
+                <th style={{ padding: '8px', border: '1px solid #ddd', backgroundColor: '#e0e0e0' }}>Tên môn</th>
+                <th style={{ padding: '8px', border: '1px solid #ddd', backgroundColor: '#e0e0e0' }}>Tín chỉ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {curriculum?.groups && curriculum.groups.flatMap(group => renderGroup(group))}
+            </tbody>
+          </table>
         </div>
       </div>
     </PageFrame>

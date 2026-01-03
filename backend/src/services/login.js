@@ -35,7 +35,7 @@ async function findUserByEmail(email, role) {
   });
 }
 
-async function getId(user, role){
+function getId(user, role){
   if (role === 'student') {
     return user.code;
   } else if (role === 'admin') {
@@ -164,9 +164,6 @@ async function login({
   }
 
   /* ---- Fetch user ---- */
-  //console.log('DATABASE_URL:', process.env.DATABASE_URL);
-  //const admins = await prisma.admin.findMany();
-  //console.log('ALL ADMINS:', admins);
   
   const user = await findUserByEmail(email, role);
   if (!user || !user.password) {

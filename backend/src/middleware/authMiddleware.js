@@ -31,6 +31,7 @@ async function authenticate(req, res, next) {
     }
 
     req.token = token;
+    console.log('JWT payload:', payload);
 
     if (payload.role === 'admin') {
       req.user = {

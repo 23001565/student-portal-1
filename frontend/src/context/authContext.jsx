@@ -48,8 +48,11 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
+    console.log("Auth context logout called");
     await authApi.logout();
+    console.log("Auth API logout completed, setting user to null");
     setUser(null);
+    console.log("User set to null");
   };
 
   return (

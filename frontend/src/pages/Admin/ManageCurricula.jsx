@@ -1,12 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   listCurricula,
   getCurriculumByCode,
   uploadCurriculum,
-  updateCurriculum,
-  archiveCurriculum,
   deleteCurriculum,
-  cloneCurriculum,
+  archiveCurriculum,
 } from '../../api/curriculumApi.js';
 
 function uid() {
@@ -143,16 +142,13 @@ function GroupEditor({ group, onChange, onDelete }) {
 }
 
 export default function ManageCurricula() {
-  const [mode, setMode] = useState('create'); // 'create' | 'update' | 'clone'
+  const navigate = useNavigate();
+  const [mode, setMode] = useState('create'); // 'create'
 
   // Filter/list state
   const [filters, setFilters] = useState({ majorName: '', startYear: '', endYear: '' });
   const [curricula, setCurricula] = useState([]);
   const [listLoading, setListLoading] = useState(false);
-
-  // Selected / details for update/clone
-  const [selectedCode, setSelectedCode] = useState('');
-  const [detailLoading, setDetailLoading] = useState(false);
 
   // Metadata and tree editor state
   const [code, setCode] = useState('');
@@ -160,10 +156,6 @@ export default function ManageCurricula() {
   const [startYear, setStartYear] = useState('');
   const [endYear, setEndYear] = useState('');
   const [groups, setGroups] = useState([]);
-
-  // Clone
-  const [cloneFromCode, setCloneFromCode] = useState('');
-  const [cloneToCode, setCloneToCode] = useState('');
 
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
@@ -185,7 +177,7 @@ export default function ManageCurricula() {
     }
   };
 
-  useEffect(() => { loadList(); /* initial */ }, []);
+  useEffect(() => { loadList(); }, []);
 
   const resetEditor = () => {
     setCode(''); setMajorName(''); setStartYear(''); setEndYear(''); setGroups([]);
@@ -212,38 +204,15 @@ export default function ManageCurricula() {
   };
 
   const validate = () => {
-    if (mode !== 'clone') {
-      if (!code.trim()) return 'Mã chương trình (code) là bắt buộc';
-      const sy = Number(startYear); if (!sy || sy < 1900 || sy > 3000) return 'Năm bắt đầu không hợp lệ';
-      if (endYear) { const ey = Number(endYear); if (!ey || ey < sy) return 'Năm kết thúc không hợp lệ'; }
-      if (groups.length === 0) return 'Cần ít nhất một group trong CTĐT';
-    } else {
-      if (!cloneFromCode.trim()) return 'Chọn CTĐT nguồn để clone';
-      if (!cloneToCode.trim()) return 'Nhập mã CTĐT mới';
-    }
+    if (!code.trim()) return 'Mã chương trình (code) là bắt buộc';
+    const sy = Number(startYear); if (!sy || sy < 1900 || sy > 3000) return 'Năm bắt đầu không hợp lệ';
+    if (endYear) { const ey = Number(endYear); if (!ey || ey < sy) return 'Năm kết thúc không hợp lệ'; }
+    if (groups.length === 0) return 'Cần ít nhất một group trong CTĐT';
     return '';
   };
 
-  const loadDetail = async (codeValue) => {
-    setDetailLoading(true);
-    setMessage('');
-    try {
-      const d = await getCurriculumByCode(codeValue);
-      setSelectedCode(d.code);
-      setCode(d.code);
-      setMajorName(d.majorName ?? '');
-      setStartYear(d.startYear ?? '');
-      setEndYear(d.endYear ?? '');
-      const eg = (d.groups || []).map(normalizeGroupForEditor);
-      setGroups(eg);
-    } catch (e) {
-      setMessage(e?.message || 'Không tải được CTĐT');
-    } finally {
-      setDetailLoading(false);
-    }
-  };
 
-  const handleCreateOrUpdate = async () => {
+  const handleCreate = async () => {
     const err = validate(); if (err) { setMessage(err); return; }
     setSaving(true); setMessage('');
     try {
@@ -257,15 +226,10 @@ export default function ManageCurricula() {
       const form = new FormData();
       form.append('payload', JSON.stringify(payload));
 
-      if (mode === 'create') {
-        const res = await uploadCurriculum(form);
-        setMessage(`Tạo CTĐT thành công (ID ${res?.curriculumId || ''})`);
-        await loadList();
-      } else {
-        const res = await updateCurriculum(selectedCode || code, form);
-        setMessage(`Cập nhật CTĐT thành công (ID ${res?.curriculumId || ''})`);
-        await loadList();
-      }
+      const res = await uploadCurriculum(form);
+      setMessage(`Tạo CTĐT thành công (ID ${res?.curriculumId || ''})`);
+      await loadList();
+      resetEditor();
     } catch (e) {
       const missing = e?.details?.missing; // if backend returns details
       if (missing) setMessage(`Thiếu mã học phần: ${missing.join(', ')}`);
@@ -275,49 +239,29 @@ export default function ManageCurricula() {
     }
   };
 
-  const handleArchive = async () => {
-    if (!selectedCode) { setMessage('Chọn CTĐT để lưu trữ'); return; }
+
+  const handleDelete = async (code) => {
+    if (!confirm('Xóa CTĐT này? Hành động không thể hoàn tác.')) return;
     setSaving(true); setMessage('');
     try {
-      await archiveCurriculum(selectedCode);
+      await deleteCurriculum(code);
+      setMessage('Đã xóa CTĐT');
+      await loadList();
+    } catch (e) { setMessage(e?.message || 'Xóa thất bại'); }
+    finally { setSaving(false); }
+  };
+
+  const handleArchive = async (code) => {
+    if (!confirm('Lưu trữ CTĐT này? Bạn có thể khôi phục sau.')) return;
+    setSaving(true); setMessage('');
+    try {
+      await archiveCurriculum(code);
       setMessage('Đã lưu trữ CTĐT');
       await loadList();
     } catch (e) { setMessage(e?.message || 'Lưu trữ thất bại'); }
     finally { setSaving(false); }
   };
 
-  const handleDelete = async () => {
-    if (!selectedCode) { setMessage('Chọn CTĐT để xóa'); return; }
-    if (!confirm('Xóa CTĐT này? Hành động không thể hoàn tác.')) return;
-    setSaving(true); setMessage('');
-    try {
-      await deleteCurriculum(selectedCode);
-      setMessage('Đã xóa CTĐT');
-      setSelectedCode('');
-      resetEditor();
-      await loadList();
-    } catch (e) { setMessage(e?.message || 'Xóa thất bại'); }
-    finally { setSaving(false); }
-  };
-
-  const handleClone = async () => {
-    const err = validate(); if (err) { setMessage(err); return; }
-    setSaving(true); setMessage('');
-    try {
-      const body = new URLSearchParams();
-      body.set('fromCode', cloneFromCode.trim());
-      body.set('toCode', cloneToCode.trim());
-      if (majorName) body.set('majorName', majorName);
-      if (startYear) body.set('startYear', String(Number(startYear)));
-      if (endYear) body.set('endYear', String(Number(endYear)));
-      const res = await cloneCurriculum(body);
-      setMessage(`Đã clone CTĐT (ID ${res?.curriculumId || ''}). Đang tải CTĐT mới để chỉnh sửa...`);
-      await loadList();
-      await loadDetail(cloneToCode.trim());
-      setMode('update');
-    } catch (e) { setMessage(e?.message || 'Clone thất bại'); }
-    finally { setSaving(false); }
-  };
 
   return (
     <div style={{ padding: 20 }}>
@@ -345,99 +289,72 @@ export default function ManageCurricula() {
       {/* List */}
       <div style={{ marginTop: 12 }}>
         <div style={{ fontWeight: 600, marginBottom: 8 }}>Danh sách CTĐT</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {curricula.map((c) => (
-            <button key={c.code} className={`btn btn-sm ${selectedCode === c.code ? 'btn-success' : 'btn-outline-secondary'}`} onClick={() => loadDetail(c.code)}>
-              {c.code} (Major {c.majorName ?? '-'}, {c.startYear}{c.endYear ? `-${c.endYear}` : ''}){c.archivedAt ? ' [archived]' : ''}
-            </button>
+        <table className="table table-striped">
+          <thead>
+            <tr>
+              <th>Major Name</th>
+              <th>Curriculum Code</th>
+              <th>Start Year</th>
+              <th>End Year</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {curricula.map((c) => (
+              <tr key={c.code}>
+                <td>{c.majorName ?? '-'}</td>
+                <td>{c.code}</td>
+                <td>{c.startYear}</td>
+                <td>{c.endYear ?? '-'}</td>
+                <td>
+                  <button className="btn btn-sm btn-info me-2" onClick={() => navigate(`/curriculum?code=${encodeURIComponent(c.code)}`)}>Detail</button>
+                  <button className="btn btn-sm btn-warning me-2" onClick={() => handleArchive(c.code)} disabled={saving}>Archive</button>
+                  <button className="btn btn-sm btn-danger" onClick={() => handleDelete(c.code)} disabled={saving}>Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+
+      {/* Create form */}
+      <div style={{ marginTop: 16 }}>
+        <h4>Create New Curriculum</h4>
+        <div className="row g-3">
+          <div className="col-md-3">
+            <label className="form-label">Code</label>
+            <input type="text" className="form-control" value={code} onChange={(e) => setCode(e.target.value)} />
+          </div>
+          <div className="col-md-3">
+            <label className="form-label">Major Name</label>
+            <input type="text" className="form-control" value={majorName} onChange={(e) => setMajorName(e.target.value)} />
+          </div>
+          <div className="col-md-3">
+            <label className="form-label">Start Year</label>
+            <input type="number" className="form-control" value={startYear} onChange={(e) => setStartYear(e.target.value)} />
+          </div>
+          <div className="col-md-3">
+            <label className="form-label">End Year</label>
+            <input type="number" className="form-control" value={endYear} onChange={(e) => setEndYear(e.target.value)} />
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
+          <h5 style={{ margin: 0 }}>Groups</h5>
+          <button className="btn btn-success" onClick={addTopLevelGroup}>Add group</button>
+        </div>
+        {groups.length === 0 && <div className="text-muted" style={{ marginTop: 8 }}>No groups yet.</div>}
+        <div style={{ marginTop: 8 }}>
+          {groups.map(g => (
+            <GroupEditor key={g._id} group={g} onChange={(u) => updateGroup(g._id, u)} onDelete={() => deleteGroup(g._id)} />
           ))}
         </div>
-      </div>
 
-      {/* Mode selector */}
-      <div style={{ marginTop: 16 }}>
-        <div className="btn-group" role="group">
-          <input type="radio" className="btn-check" name="mode" id="mode-create" autoComplete="off" checked={mode==='create'} onChange={() => { setMode('create'); resetEditor(); setSelectedCode(''); }} />
-          <label className="btn btn-outline-primary" htmlFor="mode-create">Create</label>
-          <input type="radio" className="btn-check" name="mode" id="mode-update" autoComplete="off" checked={mode==='update'} onChange={() => setMode('update')} />
-          <label className="btn btn-outline-primary" htmlFor="mode-update">Update</label>
-          <input type="radio" className="btn-check" name="mode" id="mode-clone" autoComplete="off" checked={mode==='clone'} onChange={() => { setMode('clone'); setCloneFromCode(selectedCode || ''); setCloneToCode(''); }} />
-          <label className="btn btn-outline-primary" htmlFor="mode-clone">Clone</label>
+        <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+          <button className="btn btn-primary" onClick={handleCreate} disabled={saving}>{saving ? 'Creating...' : 'Create'}</button>
         </div>
       </div>
-
-      {/* Editor or Clone panel */}
-      {mode !== 'clone' ? (
-        <div style={{ marginTop: 16 }}>
-          <div className="row g-3">
-            <div className="col-md-3">
-              <label className="form-label">Code</label>
-              <input type="text" className="form-control" value={code} onChange={(e) => setCode(e.target.value)} disabled={mode==='update'} />
-            </div>
-            <div className="col-md-3">
-              <label className="form-label">Major Name</label>
-              <input type="number" className="form-control" value={majorName} onChange={(e) => setMajorName(e.target.value)} />
-            </div>
-            <div className="col-md-3">
-              <label className="form-label">Start Year</label>
-              <input type="number" className="form-control" value={startYear} onChange={(e) => setStartYear(e.target.value)} />
-            </div>
-            <div className="col-md-3">
-              <label className="form-label">End Year</label>
-              <input type="number" className="form-control" value={endYear} onChange={(e) => setEndYear(e.target.value)} />
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 }}>
-            <h4 style={{ margin: 0 }}>Groups</h4>
-            <button className="btn btn-success" onClick={addTopLevelGroup}>Add group</button>
-          </div>
-          {groups.length === 0 && <div className="text-muted" style={{ marginTop: 8 }}>No groups yet.</div>}
-          <div style={{ marginTop: 8 }}>
-            {groups.map(g => (
-              <GroupEditor key={g._id} group={g} onChange={(u) => updateGroup(g._id, u)} onDelete={() => deleteGroup(g._id)} />
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-            <button className="btn btn-primary" onClick={handleCreateOrUpdate} disabled={saving}>{saving ? 'Saving...' : (mode==='create' ? 'Create' : 'Update')}</button>
-            {mode === 'update' && (
-              <>
-                <button className="btn btn-warning" onClick={handleArchive} disabled={saving || !selectedCode}>Archive</button>
-                <button className="btn btn-danger" onClick={handleDelete} disabled={saving || !selectedCode}>Delete</button>
-              </>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div style={{ marginTop: 16 }}>
-          <div className="row g-3">
-            <div className="col-md-4">
-              <label className="form-label">From code</label>
-              <input type="text" className="form-control" value={cloneFromCode} onChange={(e) => setCloneFromCode(e.target.value)} placeholder="Existing code" />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">To code</label>
-              <input type="text" className="form-control" value={cloneToCode} onChange={(e) => setCloneToCode(e.target.value)} placeholder="New unique code" />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Major Name (optional)</label>
-              <input type="text" className="form-control" value={majorName} onChange={(e) => setMajorName(e.target.value)} />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Start Year (optional)</label>
-              <input type="number" className="form-control" value={startYear} onChange={(e) => setStartYear(e.target.value)} />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">End Year (optional)</label>
-              <input type="number" className="form-control" value={endYear} onChange={(e) => setEndYear(e.target.value)} />
-            </div>
-          </div>
-          <div style={{ marginTop: 12 }}>
-            <button className="btn btn-primary" onClick={handleClone} disabled={saving}>{saving ? 'Cloning...' : 'Clone'}</button>
-          </div>
-        </div>
-      )}
 
       {message && (
         <div style={{ marginTop: 16, color: /thất bại|fail|không hợp lệ|Thiếu/.test(message) ? '#dc2626' : '#16a34a' }}>{message}</div>

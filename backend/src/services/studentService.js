@@ -192,8 +192,8 @@ async function filter({
     where: {
       archivedAt: null,
 
-      ...(year !== undefined && { year }),
-      ...(studentCode !== undefined && { code: studentCode }),
+      ...(year !== undefined && year !== '' && { year: parseInt(year, 10) }),
+      ...(studentCode !== undefined && studentCode !== '' && { code: parseInt(studentCode, 10) }),
 
       ...(majorName && {
         major: {

@@ -20,7 +20,9 @@ const LoginPage = () => {
      Redirect AFTER render
   -------------------------- */
   useEffect(() => {
+    console.log("LoginPage useEffect: loading=", loading, "isAuthenticated=", isAuthenticated, "user=", user);
     if (!loading && isAuthenticated && user?.role) {
+      console.log("Redirecting authenticated user to dashboard");
       navigate(
         user.role === "admin"
           ? "/admin/dashboard"

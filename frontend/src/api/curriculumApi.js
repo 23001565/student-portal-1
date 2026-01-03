@@ -38,6 +38,9 @@ export function getCurriculumByCode(code) {
 }
 
 export function listCurricula(params = {}) {
-  const qs = new URLSearchParams(params).toString();
+  const filtered = Object.fromEntries(
+    Object.entries(params).filter(([k, v]) => v !== undefined && v !== null)
+  );
+  const qs = new URLSearchParams(filtered).toString();
   return http(`/api/admin/curriculum${qs ? `?${qs}` : ''}`);
 }

@@ -6,7 +6,9 @@ async function listAnnouncements(req, res) {
 }
 async function createAnnouncement(req, res, next) {
   try {
+    console.log('CREATE ANNOUNCEMENT REQ BODY:', req.body);
     const { title, content } = req.body;
+    console.log('CREATE ANNOUNCEMENT REQ USER:', req.user);
     const { id } = req.user; 
 
     const announcement = await announcementService.createAnnouncement({

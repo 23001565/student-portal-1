@@ -3,6 +3,8 @@ const studentService = require('../services/studentService');
 async function getProfile(req, res) {
   const { role, id } = req.user;
 
+  console.log('GET PROFILE REQ USER:', req.user);
+
   // student → only own profile
   const studentCode = role === 'student' ? id : Number(req.params.code);
 
@@ -16,7 +18,7 @@ async function getProfile(req, res) {
 
 async function updateProfile(req, res) {
   const { role, id } = req.user;
-  const studentCode = role === 'student' ? id : Number(req.params.code);
+  const studentCode = Number(req.params.code);
   try {
     const student = await studentService.updateByCode(studentCode, req.body);
     res.json(student);

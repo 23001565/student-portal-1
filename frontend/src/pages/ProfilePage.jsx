@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import PageFrame from "../components/PageFrame";
 import Button from "../components/Button";
 import { getMyProfile } from '../api/studentApi';
+import { useAuth } from '../context/authContext';
 
 const ProfilePage = () => {
+  const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -12,7 +14,16 @@ const ProfilePage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-   getMyProfile().then(setProfile).catch(console.error);
+    getMyProfile()
+      .then((profile) => {
+        setProfile(profile);
+        setFormData(profile);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error('Error fetching profile:', error);
+        setLoading(false);
+      });
   }, [navigate]);
   
 
@@ -69,7 +80,7 @@ const ProfilePage = () => {
           }}
         >
           <span>Thông tin cá nhân</span>
-          {!isEditing && (
+          {!isEditing && user?.role !== 'student' && (
             <Button size="sm" onClick={() => setIsEditing(true)}>
               Chỉnh sửa
             </Button>
@@ -155,7 +166,7 @@ const ProfilePage = () => {
               <label className="form-label">Ngành học</label>
               <input
                 type="text"
-                value={formData.major?.name || ""}
+                value={formData.majorName || ""}
                 disabled
                 className="form-control"
                 style={{
@@ -171,7 +182,7 @@ const ProfilePage = () => {
               <input
                 type="text"
                 value={
-                  formData.curriculum?.code || ""
+                  formData.curriculumCode || ""
                 }
                 disabled
                 className="form-control"
