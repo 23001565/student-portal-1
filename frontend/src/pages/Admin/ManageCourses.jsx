@@ -23,7 +23,7 @@ const ManageCourses = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("các khóa học của trường");
   const [courses, setCourses] = useState([]);
-  const [filters, setFilters] = useState({ code: '', majorId: '', curriculumCode: '' });
+  const [filters, setFilters] = useState({ code: '', majorName: '', curriculumCode: '' });
   const [loading, setLoading] = useState(false);
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
@@ -33,7 +33,7 @@ const ManageCourses = () => {
     try {
       setLoading(true);
       const { listCourses } = await import('../../api/courseApi');
-      const res = await listCourses({ code: filters.code, majorId: filters.majorId, curriculumCode: filters.curriculumCode });
+      const res = await listCourses({ code: filters.code, majorName: filters.majorName, curriculumCode: filters.curriculumCode });
       setCourses(res.items || []);
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -58,7 +58,7 @@ const ManageCourses = () => {
       try {
         setLoading(true);
         const { listCourses } = await import('../../api/courseApi');
-        const res = await listCourses({ code: filters.code, majorId: filters.majorId, curriculumCode: filters.curriculumCode });
+        const res = await listCourses({ code: filters.code, majorName: filters.majorName, curriculumCode: filters.curriculumCode });
         if (mounted) setCourses(res.items || []);
       } catch (e) {
         // eslint-disable-next-line no-console
@@ -163,24 +163,24 @@ const ManageCourses = () => {
                   <div className="d-flex gap-2 flex-wrap">
                     <InputGroup style={{ width: "240px" }}>
                       <FormControl
-                        placeholder="Tìm kiếm môn học... (client)"
+                        placeholder="Course name"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                       />
                     </InputGroup>
                     <InputGroup style={{ width: "180px" }}>
                       <FormControl
-                        placeholder="Mã môn (API)"
+                        placeholder="Course code"
                         value={filters.code}
                         onChange={(e) => setFilters({ ...filters, code: e.target.value })}
                       />
                     </InputGroup>
                     <InputGroup style={{ width: "140px" }}>
                       <FormControl
-                        type="number"
-                        placeholder="Major ID"
-                        value={filters.majorId}
-                        onChange={(e) => setFilters({ ...filters, majorId: e.target.value })}
+                        
+                        placeholder="Major Name"
+                        value={filters.majorName}
+                        onChange={(e) => setFilters({ ...filters, majorName: e.target.value })}
                       />
                     </InputGroup>
                     <InputGroup style={{ width: "220px" }}>
@@ -191,7 +191,7 @@ const ManageCourses = () => {
                       />
                     </InputGroup>
                     <Button variant="primary" onClick={loadCourses} disabled={loading}>
-                      {loading ? 'Loading...' : 'Lọc (API)'}
+                      {loading ? 'Loading...' : 'Filter'}
                     </Button>
                     <Button
                       variant="success"

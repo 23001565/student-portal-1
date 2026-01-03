@@ -80,7 +80,7 @@ const Dashboard = () => {
                   className="text-xs"
                   style={{ color: "var(--text-tertiary)" }}
                 >
-                  {new Date(a.createdAt).toLocaleDateString("vi-VN")}
+                  {new Date(a.postedAt).toLocaleString("vi-VN")}
                 </p>
               </div>
             ))}

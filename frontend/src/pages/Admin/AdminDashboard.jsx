@@ -63,7 +63,7 @@ const AdminDashboard = () => {
                         : a.content}
                     </p>
                     <small className="text-muted">
-                      Đăng lúc {formatDateTime(a.createdAt)}
+                      Đăng lúc {formatDateTime(a.postedAt)}
                     </small>
                   </div>
                 ))

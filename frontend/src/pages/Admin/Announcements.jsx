@@ -103,7 +103,7 @@ const Announcements = () => {
                 </p>
                 <div className="d-flex justify-content-between align-items-center">
                   <small className="text-muted">
-                    {formatDateTime(a.createdAt)}
+                    {formatDateTime(a.postedAt)}
                   </small>
                   <Button
                     size="sm"
