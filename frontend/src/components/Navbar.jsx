@@ -6,28 +6,18 @@ import {
   NavDropdown,
   Button,
 } from "react-bootstrap";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { logout } from "../api/auth.js"; 
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 
 const Navbar = () => {
-  const { user } = useAuth(); //  role
+  const { user, logout } = useAuth(); //  role
   const location = useLocation();
-  const navigate = useNavigate();
 
   const isActive = (path) => location.pathname === path;
 
   const handleLogout = async () => {
     console.log("Starting logout process");
-    try {
-      await logout();
-      console.log("Logout API call completed");
-    } catch (error) {
-      console.error("Logout API call failed:", error);
-    } finally {
-      console.log("Navigating to /login");
-      navigate("/login", { replace: true });
-    }
+    await logout();
   };
 
   return (

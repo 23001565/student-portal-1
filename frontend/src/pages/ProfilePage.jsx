@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import PageFrame from "../components/PageFrame";
 import Button from "../components/Button";
 import { getMyProfile } from '../api/studentApi';
+import { changePassword } from '../api/passwordApi';
 import { useAuth } from '../context/authContext';
 
 const ProfilePage = () => {
@@ -11,6 +12,12 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,6 +54,47 @@ const ProfilePage = () => {
   const handleCancel = () => {
     setFormData(profile);
     setIsEditing(false);
+  };
+
+  const handlePasswordInputChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData({
+      ...passwordData,
+      [name]: value,
+    });
+  };
+
+  const handleChangePassword = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      alert('Mật khẩu mới và xác nhận mật khẩu không khớp!');
+      return;
+    }
+
+    try {
+      await changePassword({
+        oldPassword: passwordData.oldPassword,
+        newPassword: passwordData.newPassword,
+      });
+      alert('Đổi mật khẩu thành công!');
+      setShowChangePassword(false);
+      setPasswordData({
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (error) {
+      console.error('Error changing password:', error);
+      alert('Đổi mật khẩu thất bại. Vui lòng kiểm tra lại mật khẩu cũ.');
+    }
+  };
+
+  const handleCancelPasswordChange = () => {
+    setShowChangePassword(false);
+    setPasswordData({
+      oldPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
   };
 
   if (loading) {
@@ -234,7 +282,7 @@ const ProfilePage = () => {
       <div className="card mt-6">
         <div className="card-header">Bảo mật</div>
         <div className="card-body">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => setShowChangePassword(true)}>
             Đổi mật khẩu
           </Button>
           <p
@@ -246,6 +294,78 @@ const ProfilePage = () => {
           </p>
         </div>
       </div>
+
+      {/* Change Password Modal */}
+      {showChangePassword && (
+        <div className="modal-overlay" style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="modal-content card" style={{
+            width: '400px',
+            maxWidth: '90vw'
+          }}>
+            <div className="card-header">
+              <span>Đổi mật khẩu</span>
+            </div>
+            <div className="card-body">
+              <div className="form-group">
+                <label className="form-label">Mật khẩu cũ</label>
+                <input
+                  type="password"
+                  name="oldPassword"
+                  value={passwordData.oldPassword}
+                  onChange={handlePasswordInputChange}
+                  className="form-control"
+                  placeholder="Nhập mật khẩu cũ"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Mật khẩu mới</label>
+                <input
+                  type="password"
+                  name="newPassword"
+                  value={passwordData.newPassword}
+                  onChange={handlePasswordInputChange}
+                  className="form-control"
+                  placeholder="Nhập mật khẩu mới"
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Xác nhận mật khẩu mới</label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={passwordData.confirmPassword}
+                  onChange={handlePasswordInputChange}
+                  className="form-control"
+                  placeholder="Nhập lại mật khẩu mới"
+                />
+              </div>
+            </div>
+            <div className="card-footer">
+              <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '0.75rem'
+              }}>
+                <Button variant="outline" onClick={handleCancelPasswordChange}>
+                  Hủy
+                </Button>
+                <Button onClick={handleChangePassword}>Đổi mật khẩu</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </PageFrame>
   );
 };

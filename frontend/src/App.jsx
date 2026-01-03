@@ -2,7 +2,7 @@ import React from "react";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Login from "./pages/LoginPage";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import CoursesPage from "./pages/CoursesPage";
 import GradesPage from "./pages/GradesPage";
@@ -30,32 +30,30 @@ function App() {
   return (
     <div className="app-container">
       <div className="app-content">
-        <BrowserRouter>
-          {isAuthenticated && <Navbar />}
-          <Routes>
-            <Route path="/login" element={<Login />} />
-             <Route path="/" element={<Login />} /> 
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/courses" element={<CoursesPage />} />
-            <Route path="/grades" element={<GradesPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/curriculum" element={<CurriculumPage />} />
-            <Route path="/registration" element={<CourseRegistration />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/courses" element={<ManageCourses />} />
-            <Route path="/admin/upload-courses" element={<CourseCSVUpload />} />
-            <Route path="/admin/students" element={<ManageStudents />} />
-            <Route path="/admin/reports" element={<Reports />} />
-            <Route path="/admin/announcements" element={<Announcements />} />
-            <Route path="/admin/post-announcement" element={<PostAnnouncement />} />
-            <Route path="/admin/upload-grades" element={<UploadGrades />} />
-            <Route path="/admin/upload-curriculum" element={<UploadCurriculum />} />
-            <Route path="/admin/curricula" element={<ManageCurricula />} />
-            <Route path="/admin/classes" element={<ManageClasses />} />
-            <Route path="/admin/upload-classes" element={<ClassCSVUpload />} />
-            <Route path="/admin/progress-monitor" element={<ProgressMonitor />} />
-          </Routes>
-        </BrowserRouter>
+        {isAuthenticated && <Navbar />}
+        <Routes>
+          <Route path="/login" element={<Login />} />
+           <Route path="/" element={<Login />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/courses" element={<CoursesPage />} />
+          <Route path="/grades" element={<GradesPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/curriculum" element={<CurriculumPage />} />
+          <Route path="/registration" element={<CourseRegistration />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/courses" element={<ManageCourses />} />
+          <Route path="/admin/upload-courses" element={<CourseCSVUpload />} />
+          <Route path="/admin/students" element={<ManageStudents />} />
+          <Route path="/admin/reports" element={<Reports />} />
+          <Route path="/admin/announcements" element={<Announcements />} />
+          <Route path="/admin/post-announcement" element={<PostAnnouncement />} />
+          <Route path="/admin/upload-grades" element={<UploadGrades />} />
+          <Route path="/admin/upload-curriculum" element={<UploadCurriculum />} />
+          <Route path="/admin/curricula" element={<ManageCurricula />} />
+          <Route path="/admin/classes" element={<ManageClasses />} />
+          <Route path="/admin/upload-classes" element={<ClassCSVUpload />} />
+          <Route path="/admin/progress-monitor" element={<ProgressMonitor />} />
+        </Routes>
       </div>
     </div>
   );

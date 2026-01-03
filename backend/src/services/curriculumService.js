@@ -159,12 +159,12 @@ async function archiveCurriculum(code) {
 }
 
 async function deleteCurriculumByCode(code) {
-  const students = await prisma.student.findMany({ where: { curriculumCode: code }, select: { id: true } });
+  const curriculum = await prisma.curriculum.findUnique({ where: { code } });
+  if (!curriculum) { const err = new Error('Not found'); err.status = 404; throw err; }
+  const students = await prisma.student.findMany({ where: { curriculumId: curriculum.id }, select: { id: true } });
   if (students.length) {
     const err = new Error('Cannot delete curriculum assigned to students'); err.status = 400; throw err;
   }
-  const curriculum = await prisma.curriculum.findUnique({ where: { code } });
-  if (!curriculum) { const err = new Error('Not found'); err.status = 404; throw err; }
   await prisma.$transaction(async (tx) => {
     await deleteCurriculumTree(curriculum.id);
     await tx.curriculum.delete({ where: { id: curriculum.id } });
@@ -291,7 +291,7 @@ async function getCurriculumByCode(code) {
 }
 
 async function listCurricula({ majorName, startYear, endYear } = {}) {
-  const majorId = null;
+  let majorId = null;
   if (majorName && majorName !== 'undefined') {
     const major = await prisma.major.findUnique({ where: { name: majorName } });
     if (!major) {

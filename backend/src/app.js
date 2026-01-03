@@ -13,6 +13,7 @@ const courseRoutes = require ('./routes/courseRoutes.js');
 const auth = require('./routes/auth/auth.js');
 const announcementRoutes = require('./routes/announcementRoutes.js');
 const adminAnnouncementRoutes = require('./routes/adminAnnouncementRoutes.js');
+const passwordRoutes = require('./routes/passwordRoutes.js');
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use('/api/admin/curriculum', curriculumRoutes);
 app.use('/api/admin/courses', courseRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/admin/announcements', adminAnnouncementRoutes);
+app.use('/api/password', passwordRoutes);
 
 
 app.use((err, req, res, next) => {
