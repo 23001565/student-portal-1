@@ -212,7 +212,8 @@ export default function CourseRegistration() {
                         const isEnrolled = cart.find(x => x.id === c.id);
                         const hasConflict = wouldConflict(c);
                         const hasSameCourse = sameCourse(c);
-                        const disabled = isEnrolled || hasConflict || hasSameCourse;
+                        const isFull = c.registered >= c.capacity;
+                        const disabled = isEnrolled || hasConflict || hasSameCourse || isFull;
                         let buttonText = 'Đăng ký';
                         let bgColor = '#10b981';
                         if (isEnrolled) {
@@ -224,6 +225,9 @@ export default function CourseRegistration() {
                         } else if (hasConflict) {
                           buttonText = 'Xung đột';
                           bgColor = '#ef4444';
+                        } else if (isFull) {
+                          buttonText = 'Đầy';
+                          bgColor = '#6b7280';
                         }
                         return (
                           <button
