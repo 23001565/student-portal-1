@@ -99,7 +99,7 @@ async function adminListEnrollments({ semester, year, classCode, courseCode, stu
   const enrollments = await prisma.enrollment.findMany({
     where,
     include: {
-      class: true,
+      class: { include: { course: true } },
       student: true,
     },
   });
@@ -121,8 +121,10 @@ async function adminAddEnrollment({ classCode, studentCode }) {
   if (!classObj || !studentObj) throw new Error('Class or student not found');
   return prisma.enrollment.create({
     data: {
-      classCode,
-      studentCode,
+      classId: classObj.id,
+      studentId: studentObj.id,
+      semester: classObj.semester,
+      year: classObj.year,
       status: 'ENROLLED',
     }
   });
@@ -162,6 +164,8 @@ async function adminUpdateGrade(enrollmentId, { midTerm, finalExam, total10Scale
 async function adminUploadGradeCSV(classCode, csvText) {
   // CSV format: studentCode,midTerm,final,total10Scale
   const results = [];
+  const classObj = await prisma.class.findUnique({ where: { code: classCode } });
+  if (!classObj) throw new Error('Class not found');
   const records = await new Promise((resolve, reject) => {
     const out = [];
     const stream = streamifier.createReadStream(csvText);
@@ -172,8 +176,15 @@ async function adminUploadGradeCSV(classCode, csvText) {
       .on('error', reject);
   });
   for (const rec of records) {
+    const studentObj = await prisma.student.findUnique({ where: { code: rec.studentCode } });
+    if (!studentObj) continue;
     const enrollment = await prisma.enrollment.findFirst({
-      where: { classCode, studentCode: rec.studentCode }
+      where: {
+        studentId: studentObj.id,
+        classId: classObj.id,
+        semester: classObj.semester,
+        year: classObj.year
+      }
     });
     if (enrollment) {
       const updated = await adminUpdateGrade(enrollment.id, {

@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import PageFrame from '../components/PageFrame';
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Table,
+  InputGroup,
+  FormControl,
+} from 'react-bootstrap';
 import { getStudentEnrollments } from '../api/studentEnrollmentApi';
 import { getAdminStudentEnrollments } from '../api/adminStudentEnrollmentApi';
 
@@ -52,58 +61,90 @@ export default function StudentEnrollmentPage() {
     <PageFrame
       title={studentCode ? `Student ${studentCode} Enrollments` : 'My Enrollments'}
       headerActions={
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <input placeholder="Semester" value={filters.semester} onChange={e => setFilters(f => ({ ...f, semester: e.target.value }))} />
-          <input placeholder="Year" value={filters.year} onChange={e => setFilters(f => ({ ...f, year: e.target.value }))} />
-          <input placeholder="Course Code" value={filters.courseCode} onChange={e => setFilters(f => ({ ...f, courseCode: e.target.value }))} />
-          <input placeholder="Class Code" value={filters.classCode} onChange={e => setFilters(f => ({ ...f, classCode: e.target.value }))} />
+        <div className="d-flex gap-2 flex-wrap">
+          <InputGroup style={{ width: 120 }}>
+            <FormControl
+              placeholder="Semester"
+              value={filters.semester}
+              onChange={e => setFilters(f => ({ ...f, semester: e.target.value }))}
+            />
+          </InputGroup>
+          <InputGroup style={{ width: 120 }}>
+            <FormControl
+              placeholder="Year"
+              value={filters.year}
+              onChange={e => setFilters(f => ({ ...f, year: e.target.value }))}
+            />
+          </InputGroup>
+          <InputGroup style={{ width: 140 }}>
+            <FormControl
+              placeholder="Course Code"
+              value={filters.courseCode}
+              onChange={e => setFilters(f => ({ ...f, courseCode: e.target.value }))}
+            />
+          </InputGroup>
+          <InputGroup style={{ width: 140 }}>
+            <FormControl
+              placeholder="Class Code"
+              value={filters.classCode}
+              onChange={e => setFilters(f => ({ ...f, classCode: e.target.value }))}
+            />
+          </InputGroup>
         </div>
       }
     >
-      {error && <div style={{ color: 'red' }}>{error}</div>}
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            <th>Class Code</th>
-            <th>Course</th>
-            <th>Course Name</th>
-            <th>Credits</th>
-            <th>Semester</th>
-            <th>Year</th>
-            <th>Status</th>
-            <th>Midterm</th>
-            <th>Final</th>
-            <th>Total (10)</th>
-            <th>Total (4)</th>
-            <th>Letter</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            <tr><td colSpan={12}>Loading...</td></tr>
-          ) : enrollments.length === 0 ? (
-            <tr><td colSpan={12}>No enrollments found.</td></tr>
-          ) : enrollments.map(enr => (
-            <tr key={enr.id}>
-              <td>{enr.class?.code}</td>
-              <td>{enr.class?.course?.code}</td>
-              <td>{enr.class?.course?.name}</td>
-              <td>{enr.class?.course?.credits}</td>
-              <td>{enr.semester}</td>
-              <td>{enr.year}</td>
-              <td>{enr.status}</td>
-              <td>{enr.grade?.midTerm ?? ''}</td>
-              <td>{enr.grade?.finalExam ?? ''}</td>
-              <td>{enr.grade?.total10Scale ?? ''}</td>
-              <td>{enr.grade?.total4Scale ?? ''}</td>
-              <td>{enr.grade?.letterGrade ?? ''}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div style={{ marginTop: 12, fontWeight: 600 }}>
-        GPA: {gpa}
-      </div>
+      <Container fluid className="py-4">
+        {error && <Row><Col><div className="text-danger">{error}</div></Col></Row>}
+        <Card>
+          <Card.Body>
+            <Table responsive striped hover>
+              <thead>
+                <tr>
+                  <th>Class Code</th>
+                  <th>Course</th>
+                  <th>Course Name</th>
+                  <th>Credits</th>
+                  <th>Semester</th>
+                  <th>Year</th>
+                  <th>Status</th>
+                  <th>Midterm</th>
+                  <th>Final</th>
+                  <th>Total (10)</th>
+                  <th>Total (4)</th>
+                  <th>Letter</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={13}>Loading...</td></tr>
+                ) : enrollments.length === 0 ? (
+                  <tr><td colSpan={13}>No enrollments found.</td></tr>
+                ) : enrollments.map(enr => (
+                  <tr key={enr.id}>
+                    <td>{enr.class?.code}</td>
+                    <td>{enr.class?.course?.code}</td>
+                    <td>{enr.class?.course?.name}</td>
+                    <td>{enr.class?.course?.credits}</td>
+                    <td>{enr.semester}</td>
+                    <td>{enr.year}</td>
+                    <td>{enr.status}</td>
+                    <td>{enr.grade?.midTerm ?? ''}</td>
+                    <td>{enr.grade?.finalExam ?? ''}</td>
+                    <td>{enr.grade?.total10Scale ?? ''}</td>
+                    <td>{enr.grade?.total4Scale ?? ''}</td>
+                    <td>{enr.grade?.letterGrade ?? ''}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </Card.Body>
+        </Card>
+        <Row className="mt-3">
+          <Col>
+            <div className="fw-bold">GPA: {gpa}</div>
+          </Col>
+        </Row>
+      </Container>
     </PageFrame>
   );
 }
