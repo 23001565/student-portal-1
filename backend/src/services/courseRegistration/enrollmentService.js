@@ -96,13 +96,21 @@ async function adminListEnrollments({ semester, year, classCode, courseCode, stu
     ...(studentId && { studentId }),
   };
   // Return with class and student info for display
-  return prisma.enrollment.findMany({
+  const enrollments = await prisma.enrollment.findMany({
     where,
     include: {
       class: true,
       student: true,
     },
   });
+  return enrollments.map(enr => ({
+    ...enr,
+    classCode: enr.class?.code || '',
+    courseCode: enr.class?.course?.code || '',
+    courseName: enr.class?.course?.name || '',
+    studentCode: enr.student?.code || '',
+    studentName: enr.student?.name || '',
+  }));
 }
 
 // Admin: Add enrollment

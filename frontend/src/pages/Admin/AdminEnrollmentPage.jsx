@@ -104,7 +104,6 @@ export default function AdminEnrollmentPage() {
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
-            <th>ID</th>
             <th>Semester</th>
             <th>Year</th>
             <th>Class Code</th>
@@ -121,17 +120,18 @@ export default function AdminEnrollmentPage() {
         </thead>
         <tbody>
           {loading ? (
-            <tr><td colSpan={13}>Loading...</td></tr>
+            <tr><td colSpan={12}>Loading...</td></tr>
           ) : enrollments.length === 0 ? (
-            <tr><td colSpan={13}>No enrollments found.</td></tr>
+            <tr><td colSpan={12}>No enrollments found.</td></tr>
           ) : enrollments.map(enr => (
             <tr key={enr.id}>
-              <td>{enr.id}</td>
               <td>{enr.semester}</td>
               <td>{enr.year}</td>
               <td>{enr.classCode}</td>
               <td>{enr.courseCode}</td>
+              <td>{enr.courseName}</td>
               <td>{enr.studentCode}</td>
+              <td>{enr.studentName}</td>
               <td>{enr.status}</td>
               <td>{enr.midTerm}</td>
               <td>{enr.finalExam}</td>
