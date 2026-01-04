@@ -55,7 +55,7 @@ async function getAvailableClasses(req, res) {
       courseName: cls.courseName,
       credits: cls.credits,
       sectionId: cls.code, // class code as sectionId
-      schedule: cls.dayOfWeek ? `${dayName(cls.dayOfWeek)} ${cls.startPeriod}-${cls.endPeriod}` : '',
+      schedule: cls.dayOfWeek ? `${dayName(cls.dayOfWeek)} (${cls.startPeriod}-${cls.endPeriod})` : '',
       location: cls.location,
       capacity: cls.capacity,
       registered: cls.seatsTaken,

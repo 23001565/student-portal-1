@@ -14,10 +14,10 @@ function parseScheduleToSlots(schedule) {
   for (const it of items) {
     if (!it) continue;
     if (typeof it === 'string') {
-      // e.g., 'T2 7-9; T5 1-3; CN 1-3'
+      // e.g., 'T2 (7-9); T5 (1-3); CN (1-3)'
       const parts = it.split(';').map(s => s.trim()).filter(Boolean);
       for (const p of parts) {
-        const m = p.match(/(T[2-7]|CN|\d+)\s+(\d+)(?:-(\d+))?/i);
+        const m = p.match(/(T[2-7]|CN|\d+)\s+\((\d+)(?:-(\d+))?\)/i);
         if (m) {
           let day = m[1].toUpperCase();
           if (/^\d+$/.test(day)) {
