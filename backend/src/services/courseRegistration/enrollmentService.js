@@ -66,7 +66,7 @@ async function adminListEnrollments({ semester, year, classCode, courseCode, stu
     } : {}),
     ...(studentCode && {
       student: {
-        code: { contains: studentCode, mode: 'insensitive' }
+        code: Number(studentCode)
       }
     }),
   };
