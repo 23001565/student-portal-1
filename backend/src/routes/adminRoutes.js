@@ -40,6 +40,7 @@ router.post('/registration-period', adminController.setRegistrationPeriod);
 router.put('/classes/:id/status', adminController.toggleClassStatus);
 router.delete('/classes/:id', adminController.deleteClass);
 router.get('/registration-period', adminController.getRegistrationConfig);
+router.delete('/courses/:id', adminController.deleteCourse);
 
 // Announcements
 router.get('/announcements', adminController.getAnnouncements);

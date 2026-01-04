@@ -55,8 +55,7 @@ export default function CourseRegistration() {
     setMessage(null); // Xóa thông báo cũ khi thao tác
   };
 
-  // 3. Logic kiểm tra trùng lịch (TRONG GIỎ HÀNG - Client Side)
-  // Cái này giúp chặn user chọn 2 môn trùng nhau ngay từ đầu
+  // 3a. Logic kiểm tra trùng lịch (TRONG GIỎ HÀNG - Client Side)
   const conflicts = useMemo(() => {
     const slotMap = {};
     const conflictList = [];
@@ -65,7 +64,7 @@ export default function CourseRegistration() {
       const slots = parseScheduleToSlots(c.schedule);
       slots.forEach((s) => {
         if (!slotMap[s]) slotMap[s] = [];
-        slotMap[s].push(c.classCode); // Dùng classCode để hiển thị dễ nhìn hơn
+        slotMap[s].push(c.classCode); 
       });
     });
 
@@ -77,42 +76,61 @@ export default function CourseRegistration() {
     return conflictList;
   }, [cart]);
 
+  // 3b. [MỚI] Logic kiểm tra trùng Môn học (Cùng mã môn hoặc Tên môn)
+  // Ngăn chặn việc chọn 2 lớp khác nhau của cùng 1 môn (VD: Chọn 2 lớp Giải tích 1)
+  const duplicateCourses = useMemo(() => {
+    const codeMap = {};
+    const duplicates = [];
+
+    cart.forEach((c) => {
+       // Gom nhóm theo Mã môn (code)
+       if (!codeMap[c.code]) codeMap[c.code] = [];
+       codeMap[c.code].push({ classCode: c.classCode, name: c.name });
+    });
+
+    // Kiểm tra nhóm nào có > 1 lớp
+    for (const [code, items] of Object.entries(codeMap)) {
+        if (items.length > 1) {
+            duplicates.push({
+                code: code,
+                name: items[0].name,
+                classes: items.map(i => i.classCode)
+            });
+        }
+    }
+    return duplicates;
+  }, [cart]);
+
   const totalCredits = cart.reduce((sum, c) => sum + c.credits, 0);
 
-  // 4. Gửi đăng ký (ĐÃ SỬA LOGIC)
+  // 4. Gửi đăng ký
   const onSubmit = async () => {
-    // Chặn nếu nội bộ giỏ hàng đã bị trùng
-    if (conflicts.length > 0) return;
+    // Chặn nếu có trùng lịch HOẶC trùng môn
+    if (conflicts.length > 0 || duplicateCourses.length > 0) return;
 
     setSubmitting(true);
     setMessage(null);
 
     let successCount = 0;
     let errorList = [];
-    
-    // Danh sách môn đăng ký thành công để loại khỏi giỏ
     let registeredIds = [];
 
-    // Duyệt qua từng môn trong giỏ để đăng ký (Gọi API check trùng lịch phía Server)
+    // Duyệt qua từng môn trong giỏ để đăng ký
     for (const course of cart) {
         try {
-            // Gọi API đăng ký từng lớp (Hàm này đã thêm ở bước trước)
             await studentApi.registerClass(course.id);
             successCount++;
             registeredIds.push(course.id);
         } catch (error) {
-            // Lấy thông báo lỗi cụ thể từ Backend (VD: "Trùng lịch học với lớp INT3306...")
             const msg = error.response?.data?.message || "Lỗi không xác định";
             errorList.push(`- Lớp ${course.classCode}: ${msg}`);
         }
     }
 
-    // Xử lý kết quả sau khi chạy hết vòng lặp
+    // Xử lý kết quả
     if (errorList.length > 0) {
-        // Có lỗi xảy ra (dù có thể có môn thành công)
         setMessage({ 
             type: 'danger', 
-            // Hiển thị danh sách lỗi dòng xuống dòng
             text: (
                 <div>
                     <strong>Có {errorList.length} môn đăng ký thất bại:</strong>
@@ -123,20 +141,17 @@ export default function CourseRegistration() {
             )
         });
     } else {
-        // Thành công 100%
         setMessage({ type: 'success', text: `Đăng ký thành công tất cả ${successCount} môn!` });
     }
 
-    // Cập nhật lại giỏ hàng (chỉ giữ lại những môn bị lỗi)
+    // Cập nhật lại giỏ hàng (giữ lại những môn lỗi)
     const remainingCart = cart.filter(c => !registeredIds.includes(c.id));
     setCart(remainingCart);
 
-    // Tải lại danh sách để cập nhật sĩ số mới nhất
     loadCourses();
     setSubmitting(false);
   };
 
-  // --- GIAO DIỆN KHÔNG THAY ĐỔI ---
   return (
     <Layout>
       <PageFrame title="Đăng ký tín chỉ">
@@ -144,7 +159,7 @@ export default function CourseRegistration() {
             {message && <Alert variant={message.type}>{message.text}</Alert>}
             
             <Row>
-            {/* DANH SÁCH MÔN HỌC (BÊN TRÁI) */}
+            {/* DANH SÁCH MÔN HỌC */}
             <Col md={8}>
               <Card className="shadow-sm mb-4">
                 <Card.Header className="bg-white py-3">
@@ -240,7 +255,7 @@ export default function CourseRegistration() {
                             <span className="h4 mb-0 text-primary fw-bold">{totalCredits}</span>
                         </div>
 
-                        {/* Cảnh báo trùng lịch nội bộ */}
+                        {/* 1. Cảnh báo trùng lịch */}
                         {conflicts.length > 0 && (
                             <Alert variant="danger" className="mb-3">
                                 <div className="fw-bold mb-1">⚠️ Phát hiện trùng lịch:</div>
@@ -254,10 +269,26 @@ export default function CourseRegistration() {
                             </Alert>
                         )}
 
+                        {/* 2. [MỚI] Cảnh báo trùng Môn học */}
+                        {duplicateCourses.length > 0 && (
+                            <Alert variant="warning" className="mb-3">
+                                <div className="fw-bold mb-1">⚠️ Trùng môn học:</div>
+                                <div className="small text-muted mb-1">Bạn không thể đăng ký nhiều lớp cho cùng 1 môn.</div>
+                                <ul className="mb-0 ps-3 small">
+                                    {duplicateCourses.map((d, idx) => (
+                                        <li key={idx}>
+                                            <strong>{d.name} ({d.code})</strong>: Bạn đã chọn {d.classes.length} lớp ({d.classes.join(", ")})
+                                        </li>
+                                    ))}
+                                </ul>
+                            </Alert>
+                        )}
+
                         <Button 
                             variant="primary" 
                             className="w-100 py-2 fs-6 fw-bold"
-                            disabled={cart.length === 0 || conflicts.length > 0 || submitting}
+                            // Disabled nếu: Rỗng HOẶC Trùng lịch HOẶC Trùng môn HOẶC Đang gửi
+                            disabled={cart.length === 0 || conflicts.length > 0 || duplicateCourses.length > 0 || submitting}
                             loading={submitting}
                             onClick={onSubmit}
                         >

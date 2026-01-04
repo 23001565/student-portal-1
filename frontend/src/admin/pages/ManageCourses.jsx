@@ -9,11 +9,11 @@ const ManageCourses = () => {
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // --- STATE BỘ LỌC & PHÂN TRANG (MỚI) ---
-  const [searchTerm, setSearchTerm] = useState(""); // Tìm theo Mã môn
+  // --- STATE BỘ LỌC & PHÂN TRANG ---
+  const [searchTerm, setSearchTerm] = useState(""); 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  // ---------------------------------------
+  // ---------------------------------
 
   // Modals
   const [showCourseModal, setShowCourseModal] = useState(false);
@@ -53,17 +53,13 @@ const ManageCourses = () => {
   };
 
   // --- XỬ LÝ LỌC & PHÂN TRANG ---
-  // 1. Xác định dữ liệu nguồn (Môn học hay Lớp học)
   const sourceData = activeTab === "courses" ? courses : classes;
 
-  // 2. Logic lọc (Filter theo yêu cầu: Mã môn học)
   const filteredData = sourceData.filter(item => {
     const term = searchTerm.toLowerCase();
     if (activeTab === "courses") {
-      // Tab Môn học: Tìm theo Mã môn (code) hoặc Tên (name)
       return item.code.toLowerCase().includes(term) || item.name.toLowerCase().includes(term);
     } else {
-      // Tab Lớp học: Tìm theo Mã lớp HOẶC Mã môn học (course.code)
       return (
         item.code.toLowerCase().includes(term) || 
         item.course?.code.toLowerCase().includes(term) || 
@@ -72,7 +68,6 @@ const ManageCourses = () => {
     }
   });
 
-  // 3. Logic phân trang
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -80,6 +75,8 @@ const ManageCourses = () => {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
   // ------------------------------
+
+  // --- CÁC HÀM XỬ LÝ (HANDLERS) ---
 
   const handleAddCourse = async (e) => {
     e.preventDefault();
@@ -91,10 +88,29 @@ const ManageCourses = () => {
     } catch (err) { alert("Lỗi: " + err.message); }
   };
 
+  // [MỚI] Hàm xóa môn học
+  const handleDeleteCourse = async (id, code) => {
+    if (window.confirm(`Bạn có chắc chắn muốn xóa môn học ${code} không?\nLưu ý: Chỉ xóa được khi môn này chưa có lớp học phần nào.`)) {
+        try {
+            await adminApi.deleteCourse(id);
+            alert("Đã xóa môn học thành công!");
+            loadData(); 
+        } catch (err) {
+            alert("Lỗi xóa: " + (err.response?.data?.message || err.message));
+        }
+    }
+  };
+
   const handleAddClass = async (e) => {
     e.preventDefault();
+    if (!classForm.courseId || classForm.courseId === "") {
+        alert("Vui lòng chọn Môn học gốc trước khi mở lớp!");
+        return;
+    }
+
     try {
       const processSlots = (slotStr) => {
+        if (!slotStr) return [];
         if (slotStr.includes('-')) {
             const [start, end] = slotStr.split('-').map(Number);
             const range = [];
@@ -121,7 +137,10 @@ const ManageCourses = () => {
       setShowClassModal(false);
       loadData();
       alert("Thêm lớp thành công");
-    } catch (err) { alert("Lỗi: " + err.message); }
+    } catch (err) { 
+        console.error(err);
+        alert("Lỗi: " + (err.response?.data?.message || err.message)); 
+    }
   };
 
   const handleDeleteClass = async (id, code) => {
@@ -147,10 +166,10 @@ const ManageCourses = () => {
         <h2 className="mb-4">Quản lý Đào tạo</h2>
         
         <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)} className="mb-4 custom-tabs">
-          {/* TAB 1: MÔN HỌC */}
+          
+          {/* TAB 1: DANH MỤC MÔN HỌC */}
           <Tab eventKey="courses" title="Danh mục Môn học">
             <Card className="shadow-sm border-0">
-               {/* Header Tab 1: Nút Thêm + Tìm kiếm */}
                <Card.Header className="bg-white border-bottom-0 py-3">
                    <div className="d-flex justify-content-between align-items-center">
                        <Button variant="primary" onClick={() => setShowCourseModal(true)}>+ Thêm Môn học</Button>
@@ -168,20 +187,38 @@ const ManageCourses = () => {
                </Card.Header>
 
                <Table hover responsive className="align-middle mb-0">
-                <thead className="bg-light"><tr><th className="ps-4">Mã môn</th><th>Tên môn</th><th>Tín chỉ</th></tr></thead>
+                <thead className="bg-light">
+                    <tr>
+                        <th className="ps-4">Mã môn</th>
+                        <th>Tên môn</th>
+                        <th>Tín chỉ</th>
+                        {/* [MỚI] Thêm cột Hành động */}
+                        <th className="text-end pe-4">Hành động</th>
+                    </tr>
+                </thead>
                 <tbody>
                   {loading ? (
-                     <tr><td colSpan="3" className="text-center py-4"><Spinner animation="border"/></td></tr>
+                     <tr><td colSpan="4" className="text-center py-4"><Spinner animation="border"/></td></tr>
                   ) : currentItems.length > 0 ? (
                     currentItems.map(c => (
                         <tr key={c.id}>
-                        <td className="ps-4 fw-bold">{c.code}</td>
-                        <td>{c.name}</td>
-                        <td>{c.credits}</td>
+                            <td className="ps-4 fw-bold">{c.code}</td>
+                            <td>{c.name}</td>
+                            <td>{c.credits}</td>
+                            {/* [MỚI] Thêm nút Xóa */}
+                            <td className="text-end pe-4">
+                                <Button 
+                                    variant="outline-danger" 
+                                    size="sm"
+                                    onClick={() => handleDeleteCourse(c.id, c.code)}
+                                >
+                                    <i className="bi bi-trash"></i> Xóa
+                                </Button>
+                            </td>
                         </tr>
                     ))
                   ) : (
-                     <tr><td colSpan="3" className="text-center py-4 text-muted">Không tìm thấy môn học nào.</td></tr>
+                     <tr><td colSpan="4" className="text-center py-4 text-muted">Không tìm thấy môn học nào.</td></tr>
                   )}
                 </tbody>
               </Table>
@@ -206,7 +243,6 @@ const ManageCourses = () => {
           {/* TAB 2: LỚP HỌC PHẦN */}
           <Tab eventKey="classes" title="Lớp học phần (Mở lớp)">
              <Card className="shadow-sm border-0">
-                 {/* Header Tab 2: Nút Thêm + Tìm kiếm */}
                  <Card.Header className="bg-white border-bottom-0 py-3">
                     <div className="d-flex justify-content-between align-items-center">
                         <Button variant="success" onClick={() => setShowClassModal(true)}>+ Mở Lớp mới</Button>
@@ -240,24 +276,24 @@ const ManageCourses = () => {
                         ) : currentItems.length > 0 ? (
                            currentItems.map(c => (
                             <tr key={c.id}>
-                            <td className="ps-4 fw-bold">{c.code}</td>
-                            <td>{c.course?.name} <br/><small className="text-muted">{c.course?.code}</small></td>
-                            <td>{c.semester}/{c.year}</td>
-                            <td className="small text-muted" style={{maxWidth: '200px'}}>{renderSchedule(c.schedule)}</td>
-                            <td>
-                                <Badge bg={c.enrolledCount >= c.capacity ? "danger" : "success"}>
-                                    {c.enrolledCount}/{c.capacity}
-                                </Badge>
-                            </td>
-                            <td className="text-end pe-4">
-                                <Button 
-                                    variant="outline-danger" 
-                                    size="sm" 
-                                    onClick={() => handleDeleteClass(c.id, c.code)}
-                                >
-                                    <i className="bi bi-trash"></i> Xóa
-                                </Button>
-                            </td>
+                                <td className="ps-4 fw-bold">{c.code}</td>
+                                <td>{c.course?.name} <br/><small className="text-muted">{c.course?.code}</small></td>
+                                <td>{c.semester}/{c.year}</td>
+                                <td className="small text-muted" style={{maxWidth: '200px'}}>{renderSchedule(c.schedule)}</td>
+                                <td>
+                                    <Badge bg={c.enrolledCount >= c.capacity ? "danger" : "success"}>
+                                        {c.enrolledCount}/{c.capacity}
+                                    </Badge>
+                                </td>
+                                <td className="text-end pe-4">
+                                    <Button 
+                                        variant="outline-danger" 
+                                        size="sm" 
+                                        onClick={() => handleDeleteClass(c.id, c.code)}
+                                    >
+                                        <i className="bi bi-trash"></i> Xóa
+                                    </Button>
+                                </td>
                             </tr>
                            ))
                         ) : (
@@ -284,7 +320,7 @@ const ManageCourses = () => {
           </Tab>
         </Tabs>
 
-        {/* MODAL THÊM MÔN (Giữ nguyên) */}
+        {/* MODAL THÊM MÔN */}
         <Modal show={showCourseModal} onHide={() => setShowCourseModal(false)}>
           <Form onSubmit={handleAddCourse}>
             <Modal.Header closeButton><Modal.Title>Thêm Môn học</Modal.Title></Modal.Header>
@@ -303,7 +339,7 @@ const ManageCourses = () => {
           </Form>
         </Modal>
 
-        {/* MODAL THÊM LỚP (Giữ nguyên) */}
+        {/* MODAL THÊM LỚP */}
         <Modal show={showClassModal} onHide={() => setShowClassModal(false)} size="lg">
            <Form onSubmit={handleAddClass}>
             <Modal.Header closeButton><Modal.Title>Mở Lớp học phần</Modal.Title></Modal.Header>
@@ -312,12 +348,23 @@ const ManageCourses = () => {
                  <Col><Form.Group className="mb-3"><Form.Label>Mã lớp (VD: INT3306 1)</Form.Label>
                    <Form.Control required onChange={e => setClassForm({...classForm, code: e.target.value})} />
                  </Form.Group></Col>
-                 <Col><Form.Group className="mb-3"><Form.Label>Môn học (ID)</Form.Label>
-                   <Form.Select onChange={e => setClassForm({...classForm, courseId: e.target.value})}>
-                       <option>Chọn môn...</option>
-                       {courses.map(c => <option key={c.id} value={c.id}>{c.code} - {c.name}</option>)}
-                   </Form.Select>
-                 </Form.Group></Col>
+                 <Col>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Môn học (ID) <span className="text-danger">*</span></Form.Label>
+                        <Form.Select 
+                            required 
+                            value={classForm.courseId} 
+                            onChange={e => setClassForm({...classForm, courseId: e.target.value})}
+                        >
+                            <option value="">-- Chọn môn học --</option>
+                            {courses.map(c => (
+                                <option key={c.id} value={c.id}>
+                                    {c.code} - {c.name}
+                                </option>
+                            ))}
+                        </Form.Select>
+                    </Form.Group>
+                 </Col>
                </Row>
                <Row>
                  <Col><Form.Group className="mb-3"><Form.Label>Học kỳ</Form.Label>

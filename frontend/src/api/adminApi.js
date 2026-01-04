@@ -18,6 +18,9 @@ const adminApi = {
   getAllCourses: () => axiosClient.get('/admin/courses'),
   createCourse: (data) => axiosClient.post('/admin/courses', data),
   updateCourse: (id, data) => axiosClient.put(`/admin/courses/${id}`, data),
+  deleteCourse: (id) => {
+    return axiosClient.delete(`/admin/courses/${id}`);
+  },
 
   // --- Quản lý Lớp học phần (Classes) ---
   getAllClasses: () => axiosClient.get('/admin/classes'),

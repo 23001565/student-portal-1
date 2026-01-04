@@ -84,7 +84,7 @@ model Course {
 
 model Class {
   id            Int          @id @default(autoincrement())
-  code          String       @unique // VD: INT3306 1
+  code          String       
   courseId      Int
   course        Course       @relation(fields: [courseId], references: [id])
   semester      Int
@@ -97,6 +97,7 @@ model Class {
   schedule      Json?        
   
   enrollments   Enrollment[]
+  @@unique([code, semester, year])
 }
 
 model Enrollment {

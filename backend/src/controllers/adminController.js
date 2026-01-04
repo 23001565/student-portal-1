@@ -125,19 +125,34 @@ exports.getAllClasses = async (req, res) => {
 // [MỚI] Tạo lớp học phần
 exports.createClass = async (req, res) => {
   try {
-    const { courseId, semester, year, capacity, schedule, ...rest } = req.body;
-    const newClass = await prisma.class.create({ 
+    // 1. Lấy rõ ràng các trường dữ liệu, bao gồm cả 'code'
+    const { code, courseId, semester, year, capacity, schedule, ...rest } = req.body;
+
+    const newClass = await prisma.class.create({
       data: {
+        code: code, // Đưa mã lớp vào đây
         ...rest,
         courseId: parseInt(courseId),
         semester: parseInt(semester),
         year: parseInt(year),
         capacity: parseInt(capacity),
-        schedule: schedule // JSON schedule truyền trực tiếp
+        schedule: schedule 
       }
     });
+
     res.json(newClass);
-  } catch (err) { res.status(400).json({ message: err.message }); }
+
+  } catch (err) {
+    // 2. Bắt lỗi trùng lặp từ Prisma (Unique Constraint)
+    if (err.code === 'P2002') {
+      return res.status(400).json({ 
+        message: `Lớp "${req.body.code}" đã tồn tại trong Học kỳ ${req.body.semester} - Năm ${req.body.year}. Vui lòng kiểm tra lại!` 
+      });
+    }
+
+    console.error(err); // Ghi log lỗi để debug nếu cần
+    res.status(500).json({ message: "Lỗi hệ thống: " + err.message });
+  }
 };
 exports.deleteClass = async (req, res) => {
   try {
@@ -766,5 +781,37 @@ exports.getReports = async (req, res) => {
   } catch (err) {
     console.error("Report Error:", err);
     res.status(500).json({ message: "Lỗi tạo báo cáo: " + err.message });
+  }
+};
+exports.deleteCourse = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const courseId = parseInt(id);
+
+    // 1. Kiểm tra xem môn học này có đang được sử dụng trong Lớp học phần nào không
+    const usedInClass = await prisma.class.count({
+      where: { courseId: courseId }
+    });
+
+    if (usedInClass > 0) {
+      return res.status(400).json({ 
+        message: "Không thể xóa: Môn học này đang có lớp học phần hoạt động. Hãy xóa lớp trước!" 
+      });
+    }
+
+    // 2. Nếu không có ràng buộc, tiến hành xóa
+    await prisma.course.delete({
+      where: { id: courseId }
+    });
+
+    res.json({ message: "Xóa môn học thành công" });
+
+  } catch (error) {
+    console.error(error);
+    // Bắt lỗi ràng buộc khóa ngoại (nếu bước kiểm tra trên bị bỏ qua)
+    if (error.code === 'P2003') {
+        return res.status(400).json({ message: "Không thể xóa vì dữ liệu ràng buộc." });
+    }
+    res.status(500).json({ message: "Lỗi Server: " + error.message });
   }
 };
