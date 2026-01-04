@@ -53,47 +53,22 @@ async function adminStudentEnrollments({ studentCode, semester, year, courseCode
 
 // Admin: List enrollments with filters
 async function adminListEnrollments({ semester, year, classCode, courseCode, studentCode, status = 'ENROLLED' }) {
-  // Build filter for classId, studentId
-  let classIds = undefined;
-  let studentId = undefined;
-
-  // If classCode is given, get classId
-  if (classCode) {
-    const classObj = await prisma.class.findUnique({ where: { code: classCode } });
-    if (!classObj) throw new Error('Class not found');
-    classIds = [classObj.id];
-    // If courseCode is also given, check match
-    if (courseCode) {
-      const course = await prisma.course.findUnique({ where: { code: courseCode } });
-      if (!course) throw new Error('Course not found');
-      if (classObj.courseId !== course.id) throw new Error('Class does not belong to the specified course');
-    }
-  } else if (courseCode) {
-    // If only courseCode is given, get all classes for that course (optionally filter by semester/year)
-    const course = await prisma.course.findUnique({ where: { code: courseCode } });
-    if (!course) throw new Error('Course not found');
-    const classWhere = { courseId: course.id };
-    if (semester) classWhere.semester = Number(semester);
-    if (year) classWhere.year = Number(year);
-    const classes = await prisma.class.findMany({ where: classWhere });
-    classIds = classes.map(c => c.id);
-    if (classIds.length === 0) return [];
-  }
-
-  // If studentCode is given, get studentId
-  if (studentCode) {
-    const student = await prisma.student.findUnique({ where: { code: studentCode } });
-    if (!student) throw new Error('Student not found');
-    studentId = student.id;
-  }
-
-  // Build where clause for enrollment
+  // Build where clause for enrollment with partial matching
   const where = {
     status,
     ...(semester && { semester: Number(semester) }),
     ...(year && { year: Number(year) }),
-    ...(classIds && { classId: { in: classIds } }),
-    ...(studentId && { studentId }),
+    ...(classCode || courseCode ? {
+      class: {
+        ...(classCode && { code: { contains: classCode, mode: 'insensitive' } }),
+        ...(courseCode && { course: { code: { contains: courseCode, mode: 'insensitive' } } }),
+      }
+    } : {}),
+    ...(studentCode && {
+      student: {
+        code: { contains: studentCode, mode: 'insensitive' }
+      }
+    }),
   };
   // Return with class and student info for display
   const enrollments = await prisma.enrollment.findMany({
