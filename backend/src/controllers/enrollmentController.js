@@ -70,7 +70,11 @@ async function updateGrade(req, res) {
   try {
     const { id } = req.params;
     const { midTerm, finalExam, total10Scale } = req.body;
-    const updated = await adminUpdateGrade(Number(id), { midTerm, finalExam, total10Scale });
+    const updated = await adminUpdateGrade(Number(id), {
+      midTerm: Number(midTerm),
+      finalExam: Number(finalExam),
+      total10Scale: Number(total10Scale)
+    });
     res.json({ item: updated });
   } catch (e) {
     res.status(400).json({ error: e.message });

@@ -76,10 +76,16 @@ async function adminListEnrollments({ semester, year, classCode, courseCode, stu
     include: {
       class: { include: { course: true } },
       student: true,
+      grade: true,
     },
   });
   return enrollments.map(enr => ({
     ...enr,
+    midTerm: enr.grade?.midTerm,
+    finalExam: enr.grade?.finalExam,
+    total10Scale: enr.grade?.total10Scale,
+    total4Scale: enr.grade?.total4Scale,
+    letterGrade: enr.grade?.letterGrade,
     classCode: enr.class?.code || '',
     courseCode: enr.class?.course?.code || '',
     courseName: enr.class?.course?.name || '',
@@ -112,6 +118,7 @@ async function adminDeleteEnrollment(enrollmentId) {
 
 // Admin: View/edit/add grade for enrollment
 async function adminUpdateGrade(enrollmentId, { midTerm, finalExam, total10Scale }) {
+  console.log('adminUpdateGrade called with:', { enrollmentId, midTerm, finalExam, total10Scale });
   // Default conversion
   function convert10to4(total10) {
     if (total10 >= 8.5) return 4.0;
@@ -129,9 +136,10 @@ async function adminUpdateGrade(enrollmentId, { midTerm, finalExam, total10Scale
   }
   const total4Scale = convert10to4(total10Scale);
   const letterGrade = getLetterGrade(total10Scale);
-  return prisma.enrollment.update({
-    where: { id: enrollmentId },
-    data: { midTerm, finalExam, total10Scale, total4Scale, letterGrade }
+  return prisma.grade.upsert({
+    where: { enrollmentId },
+    update: { midTerm, finalExam, total10Scale, total4Scale, letterGrade },
+    create: { enrollmentId, midTerm, finalExam, total10Scale, total4Scale, letterGrade }
   });
 }
 
