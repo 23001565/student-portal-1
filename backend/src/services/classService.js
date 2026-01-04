@@ -66,7 +66,16 @@ async function createClass({
       semester: true,
       year: true,
       capacity: true,
+      dayOfWeek: true,
+      startPeriod: true,
+      endPeriod: true,
+      location: true,
       courseId: true,
+      course: {
+        select: {
+          code: true,
+        },
+      },
       archivedAt: true,
       canceledAt: true,
       createdAt: true,
@@ -112,6 +121,26 @@ async function updateClass(code, semester, year, data = {}) {
   const updated = await prisma.class.update({
     where: { id: cls.id },
     data: updateData,
+    select: {
+      id: true,
+      code: true,
+      semester: true,
+      year: true,
+      capacity: true,
+      dayOfWeek: true,
+      startPeriod: true,
+      endPeriod: true,
+      location: true,
+      courseId: true,
+      course: {
+        select: {
+          code: true,
+        },
+      },
+      archivedAt: true,
+      canceledAt: true,
+      createdAt: true,
+    },
   });
 
   return updated;
@@ -224,6 +253,11 @@ async function listClasses({
       endPeriod: true,
       location: true,
       courseId: true,
+      course: {
+        select: {
+          code: true,
+        },
+      },
       archivedAt: true,
       canceledAt: true,
       createdAt: true,

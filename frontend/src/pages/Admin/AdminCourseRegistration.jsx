@@ -2,7 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { getOpenCourses } from '../../api/registrationApi';
 import { listCurricula } from '../../api/curriculumApi';
 
-// schedule format example: { day: 'T2', slots: [7,8,9] } or string 'T2 7-9'
+// schedule format example:  'T2 7-9'
+// Mapping between T2-T7/CN and dayOfWeek 1-7 (Sun-Sat)
+const dayOfWeekToLabel = ['', 'CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+const labelToDayOfWeek = { 'CN': 1, 'T2': 2, 'T3': 3, 'T4': 4, 'T5': 5, 'T6': 6, 'T7': 7 };
+
 function parseScheduleToSlots(schedule) {
   // Accept array of objects or string forms
   const items = Array.isArray(schedule) ? schedule : [schedule];
@@ -10,19 +14,27 @@ function parseScheduleToSlots(schedule) {
   for (const it of items) {
     if (!it) continue;
     if (typeof it === 'string') {
-      // e.g., 'T2 7-9; T5 1-3'
+      // e.g., 'T2 7-9; T5 1-3; CN 1-3'
       const parts = it.split(';').map(s => s.trim()).filter(Boolean);
       for (const p of parts) {
-        const m = p.match(/T(\d)\s+(\d+)(?:-(\d+))?/i);
+        const m = p.match(/(T[2-7]|CN|\d+)\s+(\d+)(?:-(\d+))?/i);
         if (m) {
-          const day = `T${m[1]}`;
+          let day = m[1].toUpperCase();
+          if (/^\d+$/.test(day)) {
+            day = dayOfWeekToLabel[parseInt(day, 10)] || day;
+          }
           const start = parseInt(m[2], 10);
           const end = m[3] ? parseInt(m[3], 10) : start;
           for (let s = start; s <= end; s++) normalize.push(`${day}-${s}`);
         }
       }
     } else if (typeof it === 'object' && it.day && it.slots) {
-      for (const s of it.slots) normalize.push(`${it.day}-${s}`);
+      // Accept both T2-T7/CN and 1-7
+      let dayLabel = it.day;
+      if (typeof dayLabel === 'number') {
+        dayLabel = dayOfWeekToLabel[dayLabel];
+      }
+      for (const s of it.slots) normalize.push(`${dayLabel}-${s}`);
     }
   }
   return new Set(normalize);
@@ -172,7 +184,40 @@ export default function AdminCourseRegistration() {
                     <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.courseCode}</td>
                     <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.courseName}</td>
                     <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.sectionId}</td>
-                    <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.schedule}</td>
+                    <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>
+                      {(() => {
+                        // Display schedule in 1-7 (Sun-Sat) format for consistency
+                        if (!c.schedule) return '';
+                        const slots = Array.from(parseScheduleToSlots(c.schedule));
+                        // Group by dayOfWeek (1-7)
+                        const dayMap = {};
+                        for (const slot of slots) {
+                          const [dayLabel, slotNum] = slot.split('-');
+                          const dayIdx = labelToDayOfWeek[dayLabel];
+                          if (dayIdx === undefined) continue;
+                          if (!dayMap[dayIdx]) dayMap[dayIdx] = [];
+                          dayMap[dayIdx].push(Number(slotNum));
+                        }
+                        // Sort and format
+                        return Object.entries(dayMap)
+                          .sort((a, b) => a[0] - b[0])
+                          .map(([dayIdx, slotArr]) => {
+                            slotArr.sort((a, b) => a - b);
+                            // Merge consecutive slots
+                            const ranges = [];
+                            let start = null, end = null;
+                            for (const s of slotArr) {
+                              if (start === null) { start = end = s; }
+                              else if (s === end + 1) { end = s; }
+                              else { ranges.push([start, end]); start = end = s; }
+                            }
+                            if (start !== null) ranges.push([start, end]);
+                            // Display as: 0 1-3; 1 5
+                            return `${dayIdx} ${ranges.map(([st, en]) => st === en ? st : `${st}-${en}`).join(', ')}`;
+                          })
+                          .join('; ');
+                      })()}
+                    </td>
                     <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.location}</td>
                     <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.credits}</td>
                     <td style={{ padding: 8, borderBottom: '1px solid #e2e8f0' }}>{c.registered}/{c.capacity}</td>

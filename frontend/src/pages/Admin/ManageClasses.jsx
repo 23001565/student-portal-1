@@ -148,7 +148,7 @@ const ManageClasses = () => {
     setEditingClass(cls);
     setClassForm({
       code: cls.code,
-      courseCode: cls.courseId, // keep as code input, admin knows
+      courseCode: cls.course.code, // display current course code
       semester: cls.semester,
       year: cls.year,
       capacity: cls.capacity,
@@ -208,7 +208,7 @@ const ManageClasses = () => {
   );
 
   const dayName = (d) =>
-    ["CN", "T2", "T3", "T4", "T5", "T6", "T7"][d] || "?";
+    ["?", "CN", "T2", "T3", "T4", "T5", "T6", "T7"][d] || "?";
 
   return (
     <Container fluid className="py-4">
@@ -240,7 +240,7 @@ const ManageClasses = () => {
           <div className="d-flex gap-2 flex-wrap">
             <InputGroup style={{ width: 220 }}>
               <FormControl
-                placeholder="Tìm lớp (client)"
+                placeholder="Tìm lớp"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -284,7 +284,7 @@ const ManageClasses = () => {
               />
             </InputGroup>
             <Button onClick={loadClasses} disabled={loading}>
-              {loading ? "Đang lọc..." : "Lọc (API)"}
+              {loading ? "Đang lọc..." : "Lọc"}
             </Button>
           </div>
 

@@ -46,6 +46,8 @@ async function getAvailableClasses(req, res) {
 
     const classes = await getClassesForRegistration(semester, year, filterCurriculumId, q);
 
+    const dayName = (d) =>
+    ["?", "CN", "T2", "T3", "T4", "T5", "T6", "T7"][d] || "?";
     // Format for frontend
     const formatted = classes.map(cls => ({
       id: cls.id,
@@ -53,7 +55,7 @@ async function getAvailableClasses(req, res) {
       courseName: cls.courseName,
       credits: cls.credits,
       sectionId: cls.code, // class code as sectionId
-      schedule: cls.dayOfWeek ? `${cls.dayOfWeek} ${cls.startPeriod}-${cls.endPeriod}` : '',
+      schedule: cls.dayOfWeek ? `${dayName(cls.dayOfWeek)} ${cls.startPeriod}-${cls.endPeriod}` : '',
       location: cls.location,
       capacity: cls.capacity,
       registered: cls.seatsTaken,

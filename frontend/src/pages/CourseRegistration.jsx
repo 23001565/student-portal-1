@@ -1,3 +1,9 @@
+// Mapping between T2-T7/CN and dayOfWeek 1-7 (Sun-Sat)
+const dayOfWeekToLabel = ['', 'CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+const labelToDayOfWeek = { 'CN': 1, 'T2': 2, 'T3': 3, 'T4': 4, 'T5': 5, 'T6': 6, 'T7': 7 };
+const dayName = (d) =>
+    ["?", "CN", "T2", "T3", "T4", "T5", "T6", "T7"][d] || "?";
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { getOpenCourses, enrollInClass, dropClass, getMyEnrollments } from '../api/registrationApi';
 
@@ -9,19 +15,27 @@ function parseScheduleToSlots(schedule) {
   for (const it of items) {
     if (!it) continue;
     if (typeof it === 'string') {
-      // e.g., 'T2 7-9; T5 1-3'
+      // e.g., 'T2 7-9; T5 1-3; CN 1-3; 1 7-9'
       const parts = it.split(';').map(s => s.trim()).filter(Boolean);
       for (const p of parts) {
-        const m = p.match(/T(\d)\s+(\d+)(?:-(\d+))?/i);
+        const m = p.match(/(T[2-7]|CN|\d+)\s+(\d+)(?:-(\d+))?/i);
         if (m) {
-          const day = `T${m[1]}`;
+          let day = m[1].toUpperCase();
+          if (/^\d+$/.test(day)) {
+            day = dayOfWeekToLabel[parseInt(day, 10)] || day;
+          }
           const start = parseInt(m[2], 10);
           const end = m[3] ? parseInt(m[3], 10) : start;
           for (let s = start; s <= end; s++) normalize.push(`${day}-${s}`);
         }
       }
     } else if (typeof it === 'object' && it.day && it.slots) {
-      for (const s of it.slots) normalize.push(`${it.day}-${s}`);
+      // Accept both T2-T7/CN and 1-7
+      let dayLabel = it.day;
+      if (typeof dayLabel === 'number') {
+        dayLabel = dayOfWeekToLabel[dayLabel];
+      }
+      for (const s of it.slots) normalize.push(`${dayLabel}-${s}`);
     }
   }
   return new Set(normalize);
@@ -84,7 +98,7 @@ export default function CourseRegistration() {
         courseName: e.class.course.name,
         credits: e.class.course.credits,
         sectionId: e.class.code,
-        schedule: `${e.class.dayOfWeek} ${e.class.startPeriod}-${e.class.endPeriod}`,
+        schedule: `${dayName(e.class.dayOfWeek)} ${e.class.startPeriod}-${e.class.endPeriod}`,
         location: e.class.location,
         capacity: e.class.capacity,
         registered: 0, // will be updated

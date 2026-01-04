@@ -210,10 +210,11 @@ async function releaseSeat(classId) {
 // Enroll student in class
 async function enrollStudent(studentId, classId, semester, year) {
   // Check if already enrolled
+  const stId = await getStudentId(studentId);
   const existing = await prisma.enrollment.findUnique({
     where: {
       studentId_classId_semester_year: {
-        studentId,
+        studentId: stId,
         classId,
         semester,
         year
@@ -235,7 +236,7 @@ async function enrollStudent(studentId, classId, semester, year) {
   await prisma.enrollment.upsert({
     where: {
       studentId_classId_semester_year: {
-        studentId,
+        studentId: stId,
         classId,
         semester,
         year
@@ -246,7 +247,7 @@ async function enrollStudent(studentId, classId, semester, year) {
       updatedAt: new Date()
     },
     create: {
-      studentId,
+      studentId: stId,
       classId,
       semester,
       year,
@@ -259,10 +260,11 @@ async function enrollStudent(studentId, classId, semester, year) {
 
 // Drop enrollment
 async function dropEnrollment(studentId, classId, semester, year) {
+  const stId = await getStudentId(studentId);
   const enrollment = await prisma.enrollment.findUnique({
     where: {
       studentId_classId_semester_year: {
-        studentId,
+        studentId: stId,
         classId,
         semester,
         year
@@ -309,9 +311,10 @@ function hasSameCourseConflict(enrolledClasses, newClass) {
 
 // Get student's enrollments
 async function getStudentEnrollments(studentId, semester, year) {
+  const stId = await getStudentId(studentId);
   return prisma.enrollment.findMany({
     where: {
-      studentId,
+      studentId: stId,
       semester,
       year,
       status: 'ENROLLED'
@@ -328,6 +331,7 @@ async function getStudentEnrollments(studentId, semester, year) {
 
 // Check for conflicts before enrolling
 async function checkEnrollmentConflicts(studentId, classId, semester, year) {
+  //const stId = await getStudentId(studentId);
   // Get the class to enroll in
   const newClass = await prisma.class.findUnique({
     where: { id: classId },
