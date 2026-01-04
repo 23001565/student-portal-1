@@ -81,7 +81,7 @@ const handleSubmit = async (e) => {
                     type="text"
                     required
                     className="form-control-custom"
-                    placeholder="ví dụ: sv123@school.edu"
+                    placeholder=""
                     value={formData.email}
                     onChange={handleChange}
                   />
