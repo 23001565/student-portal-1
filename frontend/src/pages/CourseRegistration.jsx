@@ -59,7 +59,7 @@ function checkConflicts(cart) {
 }
 
 export default function CourseRegistration() {
-  const [filters, setFilters] = useState({ curriculumId: null, q: '' });
+  const [filters, setFilters] = useState({ curriculumId: 'my-curriculum', q: '' });
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -130,6 +130,7 @@ export default function CourseRegistration() {
       await enrollInClass(c.id);
       setCart([...cart, c]);
       setMessage('Đăng ký thành công');
+      loadCourses();
     } catch (e) {
       setMessage(e.message || 'Đăng ký thất bại');
     }
@@ -140,6 +141,7 @@ export default function CourseRegistration() {
       await dropClass(c.id);
       setCart(cart.filter(x => x.id !== c.id));
       setMessage('Hủy đăng ký thành công');
+      loadCourses();
     } catch (e) {
       setMessage(e.message || 'Hủy đăng ký thất bại');
     }
