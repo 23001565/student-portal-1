@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Card, Table, Button, Modal, Form, Badge, Tabs, Tab } from "react-bootstrap";
+import { Container, Row, Col, Card, Table, Button, Modal, Form, Badge, Tabs, Tab, Pagination, InputGroup, Spinner } from "react-bootstrap";
 import Layout from "../../components/Layout";
-import adminApi from "../../api/adminApi"; // API
+import adminApi from "../../api/adminApi";
 
 const ManageCourses = () => {
   const [activeTab, setActiveTab] = useState("courses");
@@ -9,6 +9,12 @@ const ManageCourses = () => {
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   
+  // --- STATE BỘ LỌC & PHÂN TRANG (MỚI) ---
+  const [searchTerm, setSearchTerm] = useState(""); // Tìm theo Mã môn
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  // ---------------------------------------
+
   // Modals
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [showClassModal, setShowClassModal] = useState(false);
@@ -23,6 +29,12 @@ const ManageCourses = () => {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Reset trang và tìm kiếm khi chuyển Tab
+  useEffect(() => {
+    setSearchTerm("");
+    setCurrentPage(1);
+  }, [activeTab]);
 
   const loadData = async () => {
     setLoading(true);
@@ -40,6 +52,35 @@ const ManageCourses = () => {
     }
   };
 
+  // --- XỬ LÝ LỌC & PHÂN TRANG ---
+  // 1. Xác định dữ liệu nguồn (Môn học hay Lớp học)
+  const sourceData = activeTab === "courses" ? courses : classes;
+
+  // 2. Logic lọc (Filter theo yêu cầu: Mã môn học)
+  const filteredData = sourceData.filter(item => {
+    const term = searchTerm.toLowerCase();
+    if (activeTab === "courses") {
+      // Tab Môn học: Tìm theo Mã môn (code) hoặc Tên (name)
+      return item.code.toLowerCase().includes(term) || item.name.toLowerCase().includes(term);
+    } else {
+      // Tab Lớp học: Tìm theo Mã lớp HOẶC Mã môn học (course.code)
+      return (
+        item.code.toLowerCase().includes(term) || 
+        item.course?.code.toLowerCase().includes(term) || 
+        item.course?.name.toLowerCase().includes(term)
+      );
+    }
+  });
+
+  // 3. Logic phân trang
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  // ------------------------------
+
   const handleAddCourse = async (e) => {
     e.preventDefault();
     try {
@@ -50,28 +91,22 @@ const ManageCourses = () => {
     } catch (err) { alert("Lỗi: " + err.message); }
   };
 
-// src/admin/pages/ManageCourses.jsx
-
   const handleAddClass = async (e) => {
     e.preventDefault();
     try {
-      // 1. Xử lý chuỗi "1-3" thành mảng [1, 2, 3]
       const processSlots = (slotStr) => {
         if (slotStr.includes('-')) {
             const [start, end] = slotStr.split('-').map(Number);
             const range = [];
-            for (let i = start; i <= end; i++) {
-                range.push(i);
-            }
+            for (let i = start; i <= end; i++) range.push(i);
             return range;
         }
-        // Nếu nhập kiểu "1,2,3" hoặc số đơn "1"
         return slotStr.split(',').map(Number);
       };
 
       const scheduleJSON = [{
-        day: classForm.day, // VD: "T2"
-        slots: processSlots(classForm.slots), // SỬA TẠI ĐÂY: Dùng hàm processSlots
+        day: classForm.day,
+        slots: processSlots(classForm.slots),
         room: classForm.room
       }];
 
@@ -89,21 +124,18 @@ const ManageCourses = () => {
     } catch (err) { alert("Lỗi: " + err.message); }
   };
 
-  // [MỚI] Hàm xử lý xóa lớp
-const handleDeleteClass = async (id, code) => {
-    // Cảnh báo gắt hơn
-    if (window.confirm(`CẢNH BÁO: Lớp ${code} có thể đang có sinh viên theo học.\n\nHành động xóa này sẽ:\n1. Xóa vĩnh viễn lớp học.\n2. Hủy đăng ký của tất cả sinh viên trong lớp.\n3. XÓA TOÀN BỘ ĐIỂM SỐ của sinh viên trong lớp này.\n\nBạn có chắc chắn muốn tiếp tục?`)) {
+  const handleDeleteClass = async (id, code) => {
+    if (window.confirm(`CẢNH BÁO: Lớp ${code} có thể đang có sinh viên theo học.\nXóa lớp sẽ xóa toàn bộ điểm số và đăng ký.\nBạn có chắc chắn không?`)) {
         try {
             await adminApi.deleteClass(id);
-            alert("Đã xóa lớp và dọn dẹp dữ liệu thành công!");
+            alert("Đã xóa lớp thành công!");
             loadData();
         } catch (err) {
             alert("Lỗi xóa: " + (err.response?.data?.message || err.message));
         }
     }
-};
+  };
 
-  // Helper hiển thị lịch
   const renderSchedule = (sch) => {
     if(Array.isArray(sch)) return sch.map(s => `${s.day} (${s.slots.join('-')}) phòng ${s.room}`).join('; ');
     return JSON.stringify(sch);
@@ -114,75 +146,145 @@ const handleDeleteClass = async (id, code) => {
       <Container fluid className="py-4">
         <h2 className="mb-4">Quản lý Đào tạo</h2>
         
-        <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)} className="mb-4">
-          {/* TAB MÔN HỌC */}
+        <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)} className="mb-4 custom-tabs">
+          {/* TAB 1: MÔN HỌC */}
           <Tab eventKey="courses" title="Danh mục Môn học">
-            <Button className="mb-3" onClick={() => setShowCourseModal(true)}>+ Thêm Môn học</Button>
-            <Card className="shadow-sm">
-              <Table hover responsive className="align-middle mb-0">
-                <thead className="bg-light"><tr><th>Mã môn</th><th>Tên môn</th><th>Tín chỉ</th></tr></thead>
-                <tbody>
-                  {courses.map(c => (
-                    <tr key={c.id}>
-                      <td className="fw-bold">{c.code}</td>
-                      <td>{c.name}</td>
-                      <td>{c.credits}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </Card>
-          </Tab>
+            <Card className="shadow-sm border-0">
+               {/* Header Tab 1: Nút Thêm + Tìm kiếm */}
+               <Card.Header className="bg-white border-bottom-0 py-3">
+                   <div className="d-flex justify-content-between align-items-center">
+                       <Button variant="primary" onClick={() => setShowCourseModal(true)}>+ Thêm Môn học</Button>
+                       <div style={{ width: '300px' }}>
+                           <InputGroup>
+                               <InputGroup.Text className="bg-light"><i className="bi bi-search"></i></InputGroup.Text>
+                               <Form.Control 
+                                   placeholder="Tìm theo Mã môn..." 
+                                   value={searchTerm}
+                                   onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                               />
+                           </InputGroup>
+                       </div>
+                   </div>
+               </Card.Header>
 
-          {/* TAB LỚP HỌC PHẦN */}
-          <Tab eventKey="classes" title="Lớp học phần (Mở lớp)">
-             <Button className="mb-3" onClick={() => setShowClassModal(true)}>+ Mở Lớp mới</Button>
-             <Card className="shadow-sm">
-              <Table hover responsive className="align-middle mb-0">
-                <thead className="bg-light">
-                    <tr>
-                        <th>Mã lớp</th>
-                        <th>Môn học</th>
-                        <th>HK/Năm</th>
-                        <th>Lịch học</th>
-                        <th>Sĩ số</th>
-                        <th className="text-end">Hành động</th> {/* [MỚI] Thêm cột Action */}
-                    </tr>
-                </thead>
+               <Table hover responsive className="align-middle mb-0">
+                <thead className="bg-light"><tr><th className="ps-4">Mã môn</th><th>Tên môn</th><th>Tín chỉ</th></tr></thead>
                 <tbody>
-                  {classes.map(c => (
-                    <tr key={c.id}>
-                      <td className="fw-bold">{c.code}</td>
-                      <td>{c.course?.name}</td>
-                      <td>{c.semester}/{c.year}</td>
-                      <td className="small text-muted">{renderSchedule(c.schedule)}</td>
-                      <td>
-                        <Badge bg={c.enrolledCount >= c.capacity ? "danger" : "success"}>
-                            {c.enrolledCount}/{c.capacity}
-                        </Badge>
-                      </td>
-                      {/* [MỚI] Nút Xóa */}
-                      <td className="text-end">
-                        <Button 
-                            variant="outline-danger" 
-                            size="sm" 
-                            onClick={() => handleDeleteClass(c.id, c.code)}
-                        >
-                            <i className="bi bi-trash"></i> Xóa
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                  {classes.length === 0 && (
-                      <tr><td colSpan="6" className="text-center text-muted py-3">Chưa có lớp học phần nào</td></tr>
+                  {loading ? (
+                     <tr><td colSpan="3" className="text-center py-4"><Spinner animation="border"/></td></tr>
+                  ) : currentItems.length > 0 ? (
+                    currentItems.map(c => (
+                        <tr key={c.id}>
+                        <td className="ps-4 fw-bold">{c.code}</td>
+                        <td>{c.name}</td>
+                        <td>{c.credits}</td>
+                        </tr>
+                    ))
+                  ) : (
+                     <tr><td colSpan="3" className="text-center py-4 text-muted">Không tìm thấy môn học nào.</td></tr>
                   )}
                 </tbody>
               </Table>
+              
+              {/* Phân trang Tab 1 */}
+              {filteredData.length > itemsPerPage && (
+                  <Card.Footer className="bg-white border-top-0 d-flex justify-content-end py-3">
+                      <Pagination className="mb-0">
+                        <Pagination.Prev onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} />
+                        {[...Array(totalPages)].map((_, i) => (
+                            <Pagination.Item key={i+1} active={i+1 === currentPage} onClick={() => paginate(i+1)}>
+                                {i+1}
+                            </Pagination.Item>
+                        ))}
+                        <Pagination.Next onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages} />
+                      </Pagination>
+                  </Card.Footer>
+              )}
+            </Card>
+          </Tab>
+
+          {/* TAB 2: LỚP HỌC PHẦN */}
+          <Tab eventKey="classes" title="Lớp học phần (Mở lớp)">
+             <Card className="shadow-sm border-0">
+                 {/* Header Tab 2: Nút Thêm + Tìm kiếm */}
+                 <Card.Header className="bg-white border-bottom-0 py-3">
+                    <div className="d-flex justify-content-between align-items-center">
+                        <Button variant="success" onClick={() => setShowClassModal(true)}>+ Mở Lớp mới</Button>
+                        <div style={{ width: '300px' }}>
+                            <InputGroup>
+                                <InputGroup.Text className="bg-light"><i className="bi bi-search"></i></InputGroup.Text>
+                                <Form.Control 
+                                    placeholder="Tìm theo Mã lớp, Mã môn..." 
+                                    value={searchTerm}
+                                    onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                                />
+                            </InputGroup>
+                        </div>
+                    </div>
+                </Card.Header>
+
+                <Table hover responsive className="align-middle mb-0">
+                    <thead className="bg-light">
+                        <tr>
+                            <th className="ps-4">Mã lớp</th>
+                            <th>Môn học</th>
+                            <th>HK/Năm</th>
+                            <th>Lịch học</th>
+                            <th>Sĩ số</th>
+                            <th className="text-end pe-4">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading ? (
+                           <tr><td colSpan="6" className="text-center py-4"><Spinner animation="border"/></td></tr>
+                        ) : currentItems.length > 0 ? (
+                           currentItems.map(c => (
+                            <tr key={c.id}>
+                            <td className="ps-4 fw-bold">{c.code}</td>
+                            <td>{c.course?.name} <br/><small className="text-muted">{c.course?.code}</small></td>
+                            <td>{c.semester}/{c.year}</td>
+                            <td className="small text-muted" style={{maxWidth: '200px'}}>{renderSchedule(c.schedule)}</td>
+                            <td>
+                                <Badge bg={c.enrolledCount >= c.capacity ? "danger" : "success"}>
+                                    {c.enrolledCount}/{c.capacity}
+                                </Badge>
+                            </td>
+                            <td className="text-end pe-4">
+                                <Button 
+                                    variant="outline-danger" 
+                                    size="sm" 
+                                    onClick={() => handleDeleteClass(c.id, c.code)}
+                                >
+                                    <i className="bi bi-trash"></i> Xóa
+                                </Button>
+                            </td>
+                            </tr>
+                           ))
+                        ) : (
+                           <tr><td colSpan="6" className="text-center py-4 text-muted">Không tìm thấy lớp học phần nào.</td></tr>
+                        )}
+                    </tbody>
+                </Table>
+
+                {/* Phân trang Tab 2 */}
+                {filteredData.length > itemsPerPage && (
+                    <Card.Footer className="bg-white border-top-0 d-flex justify-content-end py-3">
+                        <Pagination className="mb-0">
+                            <Pagination.Prev onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} />
+                            {[...Array(totalPages)].map((_, i) => (
+                                <Pagination.Item key={i+1} active={i+1 === currentPage} onClick={() => paginate(i+1)}>
+                                    {i+1}
+                                </Pagination.Item>
+                            ))}
+                            <Pagination.Next onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages} />
+                        </Pagination>
+                    </Card.Footer>
+                )}
             </Card>
           </Tab>
         </Tabs>
 
-        {/* MODAL THÊM MÔN */}
+        {/* MODAL THÊM MÔN (Giữ nguyên) */}
         <Modal show={showCourseModal} onHide={() => setShowCourseModal(false)}>
           <Form onSubmit={handleAddCourse}>
             <Modal.Header closeButton><Modal.Title>Thêm Môn học</Modal.Title></Modal.Header>
@@ -201,28 +303,31 @@ const handleDeleteClass = async (id, code) => {
           </Form>
         </Modal>
 
-        {/* MODAL THÊM LỚP */}
-        <Modal show={showClassModal} onHide={() => setShowClassModal(false)}>
+        {/* MODAL THÊM LỚP (Giữ nguyên) */}
+        <Modal show={showClassModal} onHide={() => setShowClassModal(false)} size="lg">
            <Form onSubmit={handleAddClass}>
             <Modal.Header closeButton><Modal.Title>Mở Lớp học phần</Modal.Title></Modal.Header>
             <Modal.Body>
                <Row>
                  <Col><Form.Group className="mb-3"><Form.Label>Mã lớp (VD: INT3306 1)</Form.Label>
-                    <Form.Control required onChange={e => setClassForm({...classForm, code: e.target.value})} />
+                   <Form.Control required onChange={e => setClassForm({...classForm, code: e.target.value})} />
                  </Form.Group></Col>
                  <Col><Form.Group className="mb-3"><Form.Label>Môn học (ID)</Form.Label>
-                    <Form.Select onChange={e => setClassForm({...classForm, courseId: e.target.value})}>
-                        <option>Chọn môn...</option>
-                        {courses.map(c => <option key={c.id} value={c.id}>{c.code} - {c.name}</option>)}
-                    </Form.Select>
+                   <Form.Select onChange={e => setClassForm({...classForm, courseId: e.target.value})}>
+                       <option>Chọn môn...</option>
+                       {courses.map(c => <option key={c.id} value={c.id}>{c.code} - {c.name}</option>)}
+                   </Form.Select>
                  </Form.Group></Col>
                </Row>
                <Row>
                  <Col><Form.Group className="mb-3"><Form.Label>Học kỳ</Form.Label>
-                    <Form.Control type="number" value={classForm.semester} onChange={e => setClassForm({...classForm, semester: e.target.value})} />
+                   <Form.Control type="number" value={classForm.semester} onChange={e => setClassForm({...classForm, semester: e.target.value})} />
                  </Form.Group></Col>
                  <Col><Form.Group className="mb-3"><Form.Label>Năm học</Form.Label>
-                    <Form.Control type="number" value={classForm.year} onChange={e => setClassForm({...classForm, year: e.target.value})} />
+                   <Form.Control type="number" value={classForm.year} onChange={e => setClassForm({...classForm, year: e.target.value})} />
+                 </Form.Group></Col>
+                 <Col><Form.Group className="mb-3"><Form.Label>Sĩ số</Form.Label>
+                   <Form.Control type="number" value={classForm.capacity} onChange={e => setClassForm({...classForm, capacity: e.target.value})} />
                  </Form.Group></Col>
                </Row>
                <Form.Label>Lịch học</Form.Label>

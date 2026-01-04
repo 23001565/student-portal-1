@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Container, Row, Col, Card, Table, Button, Badge } from "react-bootstrap";
+import { Container, Row, Col, Card, Table, Button, Badge, Spinner } from "react-bootstrap";
 import Layout from "../../components/Layout";
 import PageFrame from "../../components/PageFrame";
 import adminApi from "../../api/adminApi";
@@ -11,34 +11,51 @@ const StudentDetail = () => {
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Hàm tải dữ liệu
+  const fetchDetail = async () => {
+    try {
+      setLoading(true);
+      const data = await adminApi.getStudentById(id);
+      setStudent(data);
+    } catch (error) {
+      console.error(error); // Log lỗi để dễ debug
+      alert("Không tìm thấy sinh viên hoặc lỗi kết nối!");
+      navigate("/admin/students");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchDetail = async () => {
-      try {
-        const data = await adminApi.getStudentById(id);
-        setStudent(data);
-      } catch (error) {
-        alert("Không tìm thấy sinh viên!");
-        navigate("/admin/students");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDetail();
   }, [id, navigate]);
 
-  if (loading) return <Layout><div>Đang tải...</div></Layout>;
+  // --- HÀM XỬ LÝ XÓA MÔN HỌC ---
+  const handleDeleteEnrollment = async (enrollmentId, courseName) => {
+    if (window.confirm(`⚠️ CẢNH BÁO ADMIN:\n\nBạn có chắc chắn muốn xóa môn "${courseName}"?\n\n- Điểm số của sinh viên này sẽ bị XÓA VĨNH VIỄN.\n- Sĩ số lớp học sẽ giảm đi 1.`)) {
+      try {
+        await adminApi.deleteEnrollment(enrollmentId);
+        alert("Đã xóa thành công!");
+        fetchDetail(); // Tải lại bảng điểm sau khi xóa
+      } catch (error) {
+        alert("Lỗi xóa: " + (error.response?.data?.message || error.message));
+      }
+    }
+  };
+
+  if (loading) return <Layout><div className="text-center py-5"><Spinner animation="border"/></div></Layout>;
   if (!student) return null;
 
   return (
     <Layout>
       <PageFrame title={`Hồ sơ: ${student.name}`} subtitle={`MSSV: ${student.code}`}>
         <Container fluid className="p-0">
-          <div className="mb-3">
-             <Button variant="outline-secondary" onClick={() => navigate("/admin/students")} className="me-2">
-                <i className="bi bi-arrow-left"></i> Quay lại
+          <div className="mb-3 d-flex justify-content-between align-items-center">
+             <Button variant="outline-secondary" onClick={() => navigate("/admin/students")}>
+                <i className="bi bi-arrow-left me-2"></i> Quay lại
              </Button>
              <Button variant="primary" onClick={() => navigate(`/admin/students/${id}/edit`)}>
-                <i className="bi bi-pencil-square"></i> Chỉnh sửa thông tin
+                <i className="bi bi-pencil-square me-2"></i> Chỉnh sửa thông tin
              </Button>
           </div>
 
@@ -49,7 +66,7 @@ const StudentDetail = () => {
                 <Card.Header className="bg-white fw-bold text-primary">Thông tin cá nhân</Card.Header>
                 <Card.Body>
                     <div className="text-center mb-3">
-                        <div className="rounded-circle bg-light d-inline-flex align-items-center justify-content-center" style={{width: 80, height: 80, fontSize: 32}}>
+                        <div className="rounded-circle bg-light d-inline-flex align-items-center justify-content-center fw-bold text-secondary" style={{width: 80, height: 80, fontSize: 32}}>
                             {student.name.charAt(0)}
                         </div>
                     </div>
@@ -61,7 +78,9 @@ const StudentDetail = () => {
                         <hr />
                         <li className="mb-2"><strong>Lớp:</strong> {student.className}</li>
                         <li className="mb-2"><strong>Ngành:</strong> {student.major?.name}</li>
-                        <li className="mb-2"><strong>Niên khóa:</strong> {student.year}</li>
+                        <li className="mb-2">
+                          <strong>Niên khóa:</strong> {student.curriculum?.startYear} - {student.curriculum?.endYear}
+                        </li>
                     </ul>
                 </Card.Body>
               </Card>
@@ -70,27 +89,29 @@ const StudentDetail = () => {
             {/* CỘT PHẢI: BẢNG ĐIỂM CHI TIẾT */}
             <Col md={8}>
               <Card className="shadow-sm border-0">
-                <Card.Header className="bg-white fw-bold text-success d-flex justify-content-between">
+                <Card.Header className="bg-white fw-bold text-success d-flex justify-content-between align-items-center">
                     <span>Kết quả học tập</span>
                     <Badge bg="info">Tổng: {student.enrollments?.length || 0} môn</Badge>
                 </Card.Header>
                 <Card.Body className="p-0">
-                    <Table hover responsive className="mb-0">
+                    <Table hover responsive className="mb-0 align-middle">
                         <thead className="bg-light">
                             <tr>
-                                <th>Môn học</th>
+                                <th className="ps-4">Môn học</th>
                                 <th className="text-center">Số TC</th>
                                 <th className="text-center">Giữa kỳ</th>
                                 <th className="text-center">Cuối kỳ</th>
-                                <th className="text-center fw-bold">Tổng kết (10)</th>
+                                <th className="text-center fw-bold">Tổng kết</th>
                                 <th className="text-center">Điểm chữ</th>
+                                {/* Cột Hành động */}
+                                <th className="text-end pe-4">HÀNH ĐỘNG</th>
                             </tr>
                         </thead>
                         <tbody>
                             {student.enrollments && student.enrollments.length > 0 ? (
                                 student.enrollments.map((en) => (
                                     <tr key={en.id}>
-                                        <td>
+                                        <td className="ps-4">
                                             <div className="fw-medium">{en.class?.course?.name}</div>
                                             <small className="text-muted">{en.class?.course?.code}</small>
                                         </td>
@@ -99,11 +120,24 @@ const StudentDetail = () => {
                                         <td className="text-center">{en.finalExam ?? "-"}</td>
                                         <td className="text-center fw-bold text-primary">{en.total10 ?? "-"}</td>
                                         <td className="text-center fw-bold">{en.letterGrade ?? "-"}</td>
+                                        
+                                        {/* --- [QUAN TRỌNG] NÚT XÓA Ở ĐÂY --- */}
+                                        <td className="text-end pe-4">
+                                            <Button 
+                                                variant="outline-danger" 
+                                                size="sm"
+                                                title="Xóa môn học này"
+                                                onClick={() => handleDeleteEnrollment(en.id, en.class?.course?.name)}
+                                            >
+                                                <i className="bi bi-trash"></i> Xóa
+                                            </Button>
+                                        </td>
+                                        {/* ---------------------------------- */}
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="6" className="text-center py-4 text-muted">Chưa có dữ liệu điểm môn nào.</td>
+                                    <td colSpan="7" className="text-center py-4 text-muted">Chưa có dữ liệu điểm môn nào.</td>
                                 </tr>
                             )}
                         </tbody>

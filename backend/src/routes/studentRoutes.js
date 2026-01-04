@@ -15,6 +15,6 @@ router.get('/announcements', authMiddleware, studentController.getAnnouncements)
 router.get('/enrollments', authMiddleware, studentController.getMyEnrollments);
 router.put('/profile', authMiddleware, studentController.updateProfile);
 router.post('/enroll', authMiddleware, enrollmentController.registerClass);
-router.post('/enroll/cancel', authMiddleware, enrollmentController.cancelRegistration);
+router.delete('/enrollments/:id', enrollmentController.cancelRegistration);
 
 module.exports = router;

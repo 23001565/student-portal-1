@@ -177,7 +177,9 @@ const ProfilePage = () => {
                     <div className="col-md-6">
                       <label className="form-label text-muted small">Niên khóa</label>
                       <input type="text" className="form-control bg-light" 
-                             value={profile.year ? `${profile.year} - ${profile.year + 4}` : ""} disabled />
+                             value={profile.curriculum ? `${profile.curriculum.startYear} - ${profile.curriculum.endYear}` : ""} 
+disabled 
+/>
                     </div>
                   </div>
                 </form>

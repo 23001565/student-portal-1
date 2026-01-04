@@ -1,172 +1,240 @@
 import React, { useState, useEffect } from "react";
-// Import đầy đủ để tránh lỗi màn hình trắng
-import { Container, Row, Col, Card, Table, Badge, ProgressBar, Form, Button } from "react-bootstrap";
+import { Container, Card, Table, Badge, Button, Row, Col, Form, Pagination, Spinner } from "react-bootstrap";
 import Layout from "../../components/Layout";
 import PageFrame from "../../components/PageFrame";
 import adminApi from "../../api/adminApi";
 
-const ProgressMonitor = () => {
-  const [students, setStudents] = useState([]);
+const AcademicProgress = () => {
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState("all"); // all, warning, danger, normal
+
+  // --- STATE QUẢN LÝ BỘ LỌC & PHÂN TRANG ---
+  const [statusFilter, setStatusFilter] = useState('all'); // all, warning, danger
+  const [classFilter, setClassFilter] = useState('');      // Lọc theo lớp
+  const [majorFilter, setMajorFilter] = useState('');      // Lọc theo ngành
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // Số lượng hiển thị mỗi trang
 
   useEffect(() => {
-    loadData();
+    const fetchData = async () => {
+      try {
+        // Gọi API lấy toàn bộ dữ liệu tiến độ
+        const response = await adminApi.getAcademicProgress(); 
+        setData(response);
+      } catch (error) {
+        console.error("Lỗi tải dữ liệu:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
   }, []);
 
-const loadData = async () => {
-    setLoading(true);
-    try {
-      // 1. Gọi API
-      const response = await adminApi.getAcademicProgress();
-      console.log("🔍 Dữ liệu gốc từ API:", response); // Bật F12 xem dòng này
+  // 1. TẠO DANH SÁCH LỰA CHỌN CHO DROPDOWN (Lấy duy nhất)
+  // Set giúp loại bỏ các giá trị trùng lặp
+  const uniqueClasses = [...new Set(data.map(item => item.class))].sort();
+  const uniqueMajors = [...new Set(data.map(item => item.major))].sort();
 
-      let finalData = [];
+  // 2. XỬ LÝ LỌC DỮ LIỆU
+  const filteredData = data.filter(item => {
+    // Lọc theo Trạng thái (Nút bấm)
+    const matchStatus = statusFilter === 'all' 
+      ? true 
+      : statusFilter === 'warning' 
+        ? item.status === 'warning' 
+        : item.status === 'danger';
 
-      // 2. Kiểm tra và trích xuất mảng dữ liệu an toàn
-      if (Array.isArray(response)) {
-        // Trường hợp A: API trả về mảng luôn -> Quá tốt
-        finalData = response;
-      } 
-      else if (response && Array.isArray(response.data)) {
-        // Trường hợp B: API trả về { data: [...] } -> Lấy phần .data
-        finalData = response.data;
-      } 
-      else if (response && Array.isArray(response.students)) {
-         // Trường hợp C: API trả về { students: [...] } (ví dụ)
-         finalData = response.students;
-      }
-      else if (response && response.result && Array.isArray(response.result)) {
-        // Trường hợp D: API trả về { result: [...] }
-        finalData = response.result;
-      }
-      else {
-        console.warn("⚠️ Cảnh báo: Dữ liệu nhận được không phải là mảng!", response);
-        // Không set dữ liệu bậy để tránh crash
-        finalData = [];
-      }
+    // Lọc theo Lớp (Dropdown)
+    const matchClass = classFilter ? item.class === classFilter : true;
 
-      // 3. Cập nhật State
-      setStudents(finalData);
+    // Lọc theo Ngành (Dropdown)
+    const matchMajor = majorFilter ? item.major === majorFilter : true;
 
-    } catch (error) {
-      console.error("❌ Lỗi tải dữ liệu:", error);
-      // Có thể thêm thông báo lỗi UI ở đây nếu muốn
-      setStudents([]); 
-    } finally {
-      setLoading(false);
-    }
-};
+    return matchStatus && matchClass && matchMajor;
+  });
 
+  // 3. XỬ LÝ PHÂN TRANG
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+  // Hàm chuyển trang
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Helper hiển thị trạng thái
   const getStatusBadge = (status) => {
     switch (status) {
-      case "danger": return <Badge bg="danger">Nguy cơ thôi học</Badge>;
-      case "warning": return <Badge bg="warning" text="dark">Cảnh báo học vụ</Badge>;
+      case 'danger': return <Badge bg="danger">NGUY CƠ THÔI HỌC</Badge>;
+      case 'warning': return <Badge bg="warning" text="dark">CẢNH BÁO HỌC VỤ</Badge>;
       default: return <Badge bg="success">Bình thường</Badge>;
     }
   };
-
-  const getGpaColor = (gpa) => {
-    if (gpa >= 3.6) return "success";
-    if (gpa >= 3.2) return "primary";
-    if (gpa >= 2.5) return "info";
-    if (gpa >= 2.0) return "warning";
-    return "danger";
-  };
-
-  // Lọc dữ liệu hiển thị
-  const filteredStudents = students.filter(s => 
-    filterStatus === "all" ? true : s.status === filterStatus
-  );
 
   return (
     <Layout>
       <PageFrame title="Theo dõi Tiến độ học tập" subtitle="Giám sát GPA và Cảnh báo học vụ">
         <Container fluid className="p-0">
           
-          {/* Bộ lọc trạng thái */}
-          <Card className="mb-4 shadow-sm border-0">
-            <Card.Body className="py-3">
-                <div className="d-flex align-items-center gap-3">
-                    <span className="fw-bold text-muted"><i className="bi bi-funnel"></i> Lọc trạng thái:</span>
+          <Card className="shadow-sm border-0 mb-4">
+            <Card.Body>
+              {/* --- KHU VỰC BỘ LỌC --- */}
+              <Row className="g-3 mb-4">
+                {/* Nhóm lọc trạng thái (Buttons) */}
+                <Col md={12} lg={5}>
+                  <label className="form-label fw-bold d-block">Trạng thái hồ sơ:</label>
+                  <div className="btn-group" role="group">
                     <Button 
-                        variant={filterStatus === 'all' ? 'primary' : 'outline-secondary'} 
-                        size="sm" onClick={() => setFilterStatus('all')}
+                      variant={statusFilter === 'all' ? "success" : "outline-secondary"} 
+                      onClick={() => { setStatusFilter('all'); setCurrentPage(1); }}
                     >
-                        Tất cả
+                      Tất cả
                     </Button>
                     <Button 
-                        variant={filterStatus === 'warning' ? 'warning' : 'outline-warning'} 
-                        size="sm" onClick={() => setFilterStatus('warning')}
+                      variant={statusFilter === 'warning' ? "warning" : "outline-secondary"} 
+                      onClick={() => { setStatusFilter('warning'); setCurrentPage(1); }}
                     >
-                        Cảnh báo
+                      Cảnh báo
                     </Button>
                     <Button 
-                        variant={filterStatus === 'danger' ? 'danger' : 'outline-danger'} 
-                        size="sm" onClick={() => setFilterStatus('danger')}
+                      variant={statusFilter === 'danger' ? "danger" : "outline-secondary"} 
+                      onClick={() => { setStatusFilter('danger'); setCurrentPage(1); }}
                     >
-                        Nguy cơ
+                      Nguy cơ
                     </Button>
-                </div>
-            </Card.Body>
-          </Card>
+                  </div>
+                </Col>
 
-          <Card className="shadow-sm border-0">
-            {loading ? (
-                <div className="text-center p-5">
-                    <div className="spinner-border text-primary" role="status"></div>
-                    <p className="mt-2 text-muted">Đang phân tích dữ liệu điểm...</p>
+                {/* Nhóm lọc chi tiết (Dropdowns) */}
+                <Col md={6} lg={3}>
+                  <Form.Group>
+                    <Form.Label className="fw-bold">Lọc theo Lớp:</Form.Label>
+                    <Form.Select 
+                      value={classFilter} 
+                      onChange={(e) => { setClassFilter(e.target.value); setCurrentPage(1); }}
+                    >
+                      <option value="">-- Tất cả lớp --</option>
+                      {uniqueClasses.map((cls, idx) => (
+                        <option key={idx} value={cls}>{cls}</option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+
+                <Col md={6} lg={4}>
+                  <Form.Group>
+                    <Form.Label className="fw-bold">Lọc theo Ngành:</Form.Label>
+                    <Form.Select 
+                      value={majorFilter} 
+                      onChange={(e) => { setMajorFilter(e.target.value); setCurrentPage(1); }}
+                    >
+                      <option value="">-- Tất cả ngành --</option>
+                      {uniqueMajors.map((m, idx) => (
+                        <option key={idx} value={m}>{m}</option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+              </Row>
+
+              {/* --- BẢNG DỮ LIỆU --- */}
+              {loading ? (
+                <div className="text-center py-5">
+                  <Spinner animation="border" variant="primary" />
+                  <p className="mt-2">Đang tính toán GPA...</p>
                 </div>
-            ) : (
-                <Table hover responsive className="mb-0 align-middle">
-                    <thead className="bg-light">
+              ) : (
+                <>
+                  <div className="table-responsive">
+                    <Table hover className="align-middle">
+                      <thead className="bg-light">
                         <tr>
-                            <th>MSSV</th>
-                            <th>Sinh viên</th>
-                            <th>Lớp / Ngành</th>
-                            <th>GPA Tích lũy</th>
-                            <th>Tín chỉ tích lũy</th>
-                            <th>TC Nợ</th>
-                            <th>Trạng thái</th>
+                          <th>MSSV</th>
+                          <th>SINH VIÊN</th>
+                          <th>LỚP / NGÀNH</th>
+                          <th className="text-center">GPA TÍCH LŨY</th>
+                          <th className="text-center">TÍN CHỈ TÍCH LŨY</th>
+                          <th className="text-center">TC NỢ</th>
+                          <th className="text-end">TRẠNG THÁI</th>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {filteredStudents.length > 0 ? filteredStudents.map((sv) => (
+                      </thead>
+                      <tbody>
+                        {currentItems.length > 0 ? (
+                          currentItems.map((sv) => (
                             <tr key={sv.id}>
-                                <td className="fw-bold">{sv.code}</td>
-                                <td>
-                                    <div className="fw-medium">{sv.name}</div>
-                                </td>
-                                <td className="small text-muted">
-                                    <div>{sv.class}</div>
-                                    <div>{sv.major}</div>
-                                </td>
-                                <td style={{width: '150px'}}>
-                                    <div className="d-flex align-items-center">
-                                        <span className={`fw-bold me-2 text-${getGpaColor(sv.gpa)}`}>{sv.gpa}</span>
-                                        <ProgressBar 
-                                            now={(sv.gpa / 4) * 100} 
-                                            variant={getGpaColor(sv.gpa)} 
-                                            style={{height: '6px', flexGrow: 1}} 
-                                        />
-                                    </div>
-                                </td>
-                                <td className="text-center">{sv.totalCredits}</td>
-                                <td className={`text-center fw-bold ${sv.failedCredits > 0 ? 'text-danger' : 'text-muted'}`}>
-                                    {sv.failedCredits}
-                                </td>
-                                <td>{getStatusBadge(sv.status)}</td>
+                              <td className="fw-bold">{sv.code}</td>
+                              <td className="fw-semibold">{sv.name}</td>
+                              <td>
+                                <div className="small fw-bold">{sv.class}</div>
+                                <div className="small text-muted">{sv.major}</div>
+                              </td>
+                              <td className="text-center">
+                                <span className={`fw-bold ${sv.gpa < 2.0 ? 'text-danger' : 'text-success'}`}>
+                                  {sv.gpa}
+                                </span>
+                                {/* Thanh tiến trình GPA nhỏ */}
+                                <div className="progress mt-1" style={{height: '4px', width: '60px', margin: '0 auto'}}>
+                                  <div 
+                                    className={`progress-bar ${sv.gpa < 2.0 ? 'bg-danger' : 'bg-success'}`} 
+                                    role="progressbar" 
+                                    style={{width: `${(sv.gpa/4)*100}%`}}
+                                  ></div>
+                                </div>
+                              </td>
+                              <td className="text-center">{sv.totalCredits}</td>
+                              <td className="text-center text-danger fw-bold">{sv.failedCredits}</td>
+                              <td className="text-end">{getStatusBadge(sv.status)}</td>
                             </tr>
-                        )) : (
-                            <tr>
-                                <td colSpan="7" className="text-center py-4 text-muted">
-                                    Không tìm thấy sinh viên nào theo bộ lọc.
-                                </td>
-                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="7" className="text-center py-4 text-muted">
+                              Không tìm thấy sinh viên nào phù hợp với bộ lọc.
+                            </td>
+                          </tr>
                         )}
-                    </tbody>
-                </Table>
-            )}
+                      </tbody>
+                    </Table>
+                  </div>
+
+                  {/* --- THANH PHÂN TRANG --- */}
+                  {filteredData.length > itemsPerPage && (
+                    <div className="d-flex justify-content-between align-items-center mt-3">
+                      <div className="small text-muted">
+                        Hiển thị {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredData.length)} trên tổng số {filteredData.length} sinh viên
+                      </div>
+                      <Pagination>
+                        <Pagination.First onClick={() => paginate(1)} disabled={currentPage === 1} />
+                        <Pagination.Prev onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} />
+                        
+                        {/* Logic hiển thị số trang rút gọn nếu quá nhiều trang */}
+                        {[...Array(totalPages)].map((_, index) => {
+                           const page = index + 1;
+                           // Chỉ hiện trang đầu, trang cuối, và các trang xung quanh trang hiện tại
+                           if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                             return (
+                               <Pagination.Item 
+                                 key={page} 
+                                 active={page === currentPage}
+                                 onClick={() => paginate(page)}
+                               >
+                                 {page}
+                               </Pagination.Item>
+                             );
+                           } else if (page === currentPage - 2 || page === currentPage + 2) {
+                             return <Pagination.Ellipsis key={page} disabled />;
+                           }
+                           return null;
+                        })}
+
+                        <Pagination.Next onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages} />
+                        <Pagination.Last onClick={() => paginate(totalPages)} disabled={currentPage === totalPages} />
+                      </Pagination>
+                    </div>
+                  )}
+                </>
+              )}
+            </Card.Body>
           </Card>
         </Container>
       </PageFrame>
@@ -174,4 +242,4 @@ const loadData = async () => {
   );
 };
 
-export default ProgressMonitor;
+export default AcademicProgress;

@@ -12,6 +12,7 @@ const adminApi = {
   deleteStudent: (id) => axiosClient.delete(`/admin/students/${id}`),
   getReports: (params) => axiosClient.get('/admin/reports', { params }),
   getAcademicProgress: () => axiosClient.get('/admin/progress'),
+  deleteEnrollment: (id) => axiosClient.delete(`/admin/enrollments/${id}`),
 
   // --- Quản lý Môn học (Courses) ---
   getAllCourses: () => axiosClient.get('/admin/courses'),

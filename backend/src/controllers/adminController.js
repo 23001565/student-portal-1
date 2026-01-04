@@ -575,3 +575,34 @@ exports.updateGrade = async (req, res) => {
     res.status(500).json({ message: "Lỗi cập nhật điểm: " + err.message });
   }
 };
+exports.deleteEnrollmentByAdmin = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+
+    // 1. Tìm bản ghi
+    const enrollment = await prisma.enrollment.findUnique({
+      where: { id: id }
+    });
+
+    if (!enrollment) {
+      return res.status(404).json({ message: "Không tìm thấy dữ liệu." });
+    }
+
+    // 2. Thực hiện xóa và trả lại sĩ số
+    await prisma.$transaction([
+      prisma.enrollment.delete({
+        where: { id: id }
+      }),
+      prisma.class.update({
+        where: { id: enrollment.classId },
+        data: { enrolledCount: { decrement: 1 } }
+      })
+    ]);
+
+    res.json({ message: "Đã xóa môn học và điểm số thành công." });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Lỗi server: " + err.message });
+  }
+};

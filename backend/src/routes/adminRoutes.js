@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
 const upload = require('../middleware/uploadMiddleware');
+const enrollmentController = require('../controllers/enrollmentController');
 
 // Students
 router.get('/students', adminController.getAllStudents);
@@ -50,5 +51,6 @@ router.delete('/announcements/:id', adminController.deleteAnnouncement); // API 
 router.post('/grades/upload', upload.single('file'), adminController.uploadGrades);
 router.get('/classes/:classId/grades', adminController.getClassEnrollments); // Lấy bảng điểm lớp
 router.put('/grades/update', adminController.updateGrade); // Lưu điểm
+router.delete('/enrollments/:id', enrollmentController.deleteEnrollmentByAdmin);
 
 module.exports = router;

@@ -102,52 +102,57 @@ exports.registerClass = async (req, res) => {
 exports.cancelRegistration = async (req, res) => {
   try {
     const studentId = req.user.id;
-    const { classId } = req.body;
+    
+    // Lấy ID từ URL (vì route là DELETE /enrollments/:id)
+    const enrollmentId = parseInt(req.params.id);
 
-    // 1. LẤY CẤU HÌNH ĐỢT ĐĂNG KÝ TỪ SYSTEM_CONFIG
-    // (Dùng lại đúng cái key 'REGISTRATION_PERIOD' mà Admin đã set)
+    if (!enrollmentId) {
+        return res.status(400).json({ message: "Thiếu thông tin mã đăng ký (enrollmentId)" });
+    }
+
+    // 1. Kiểm tra Cấu hình thời gian (Giữ nguyên logic của bạn)
     const config = await prisma.systemConfig.findUnique({
         where: { key: 'REGISTRATION_PERIOD' }
     });
 
-    // Kiểm tra xem Admin đã cấu hình chưa
     if (!config || !config.isActive) {
         return res.status(400).json({ message: "Hệ thống đang ĐÓNG cổng đăng ký/hủy tín chỉ." });
     }
 
-    // 2. KIỂM TRA THỜI GIAN (So sánh giờ hiện tại với config)
     const now = new Date();
-    
-    if (now < new Date(config.startDate)) {
-        return res.status(400).json({ 
-            message: `Chưa đến giờ mở cổng. Thời gian bắt đầu: ${new Date(config.startDate).toLocaleString('vi-VN')}` 
-        });
+    if (config.startDate && now < config.startDate) {
+        return res.status(400).json({ message: "Chưa đến giờ mở cổng." });
+    }
+    if (config.endDate && now > config.endDate) {
+        return res.status(400).json({ message: "Đã hết hạn hủy đăng ký." });
     }
 
-    if (now > new Date(config.endDate)) {
-        return res.status(400).json({ 
-            message: `Đã hết hạn thao tác. Hạn chót là: ${new Date(config.endDate).toLocaleString('vi-VN')}` 
-        });
-    }
-
-    // 3. LOGIC HỦY (Phần này giữ nguyên không đổi)
-    const enrollment = await prisma.enrollment.findFirst({
-        where: {
-            studentId: studentId,
-            classId: parseInt(classId)
-        }
+    // 2. Tìm bản ghi Enrollment
+    const enrollment = await prisma.enrollment.findUnique({
+        where: { id: enrollmentId },
+        include: { class: true }
     });
 
     if (!enrollment) {
-        return res.status(404).json({ message: "Bạn chưa đăng ký lớp học này." });
+        return res.status(404).json({ message: "Không tìm thấy dữ liệu đăng ký này." });
+    }
+    
+    if (enrollment.studentId !== studentId) {
+        return res.status(403).json({ message: "Bạn không có quyền hủy đăng ký của người khác." });
     }
 
+    // 3. Kiểm tra điểm số
+    if (enrollment.total10 !== null) {
+        return res.status(400).json({ message: "Không thể hủy lớp đã có điểm tổng kết." });
+    }
+
+    // 4. Thực hiện hủy
     await prisma.$transaction([
         prisma.enrollment.delete({
-            where: { id: enrollment.id }
+            where: { id: enrollmentId }
         }),
         prisma.class.update({
-            where: { id: parseInt(classId) },
+            where: { id: enrollment.classId },
             data: { enrolledCount: { decrement: 1 } }
         })
     ]);
@@ -155,7 +160,38 @@ exports.cancelRegistration = async (req, res) => {
     res.json({ message: "Hủy học phần thành công!" });
 
   } catch (err) {
-    console.error(err);
+    console.error("Lỗi hủy học phần:", err);
     res.status(500).json({ message: "Lỗi hệ thống: " + err.message });
+  }
+};
+exports.deleteEnrollmentByAdmin = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+
+    // 1. Tìm bản ghi
+    const enrollment = await prisma.enrollment.findUnique({
+      where: { id: id }
+    });
+
+    if (!enrollment) {
+      return res.status(404).json({ message: "Không tìm thấy dữ liệu." });
+    }
+
+    // 2. Thực hiện xóa và trả lại sĩ số
+    await prisma.$transaction([
+      prisma.enrollment.delete({
+        where: { id: id }
+      }),
+      prisma.class.update({
+        where: { id: enrollment.classId },
+        data: { enrolledCount: { decrement: 1 } }
+      })
+    ]);
+
+    res.json({ message: "Đã xóa môn học và điểm số thành công." });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Lỗi server: " + err.message });
   }
 };

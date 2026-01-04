@@ -151,26 +151,30 @@ exports.getMyEnrollments = async (req, res) => {
     const enrollments = await prisma.enrollment.findMany({
       where: { studentId: req.user.id },
       include: { 
-        class: { 
-          include: { course: true } 
-        } 
+        class: { include: { course: true } } 
       }
     });
 
-    // Map dữ liệu trả về đúng format Dashboard cần (schedule, courseName, credits)
     const formatted = enrollments.map(en => ({
-      id: en.class.id,
+      // --- SỬA ĐOẠN NÀY QUAN TRỌNG NHẤT ---
+      id: en.id,             // ID của Enrollment (Dùng để HỦY)
+      classId: en.class.id,  // ID của Lớp (Dùng để tham khảo)
+      // ------------------------------------
+      
       courseName: en.class.course.name,
       classCode: en.class.code,
-      courseCode: en.class.course.code, // Mã môn (INTxxxx)
+      courseCode: en.class.course.code,
       credits: en.class.course.credits,
       schedule: en.class.schedule,
       room: en.class.room,
-      // Thêm các trường này để khớp với giao diện của bạn:
       semester: en.class.semester,
       year: en.class.year,
       enrolledCount: en.class.enrolledCount,
-      capacity: en.class.capacity
+      capacity: en.class.capacity,
+      
+      // Thêm điểm số để Frontend phân loại tab
+      total10: en.total10,
+      letterGrade: en.letterGrade
     }));
 
     res.json(formatted);

@@ -66,30 +66,6 @@ const AdminDashboard = () => {
                       👥
                     </span>
                   </div>
-                  <small
-                    className={`d-inline-flex align-items-center ${
-                      stats.studentsGrowth > 0
-                        ? "text-success"
-                        : stats.studentsGrowth < 0
-                        ? "text-danger"
-                        : "text-muted"
-                    }`}
-                  >
-                    {typeof stats.studentsGrowth === "number" ? (
-                      <>
-                        <span className="me-1">
-                          {stats.studentsGrowth > 0
-                            ? "▲"
-                            : stats.studentsGrowth < 0
-                            ? "▼"
-                            : "•"}
-                        </span>
-                        {Math.abs(stats.studentsGrowth)}% so với kỳ trước
-                      </>
-                    ) : (
-                      "—"
-                    )}
-                  </small>
                 </Card.Body>
               </Card>
             </Col>
@@ -121,80 +97,10 @@ const AdminDashboard = () => {
                       📘
                     </span>
                   </div>
-                  <small
-                    className={`d-inline-flex align-items-center ${
-                      stats.classesGrowth > 0
-                        ? "text-success"
-                        : stats.classesGrowth < 0
-                        ? "text-danger"
-                        : "text-muted"
-                    }`}
-                  >
-                    {typeof stats.classesGrowth === "number" ? (
-                      <>
-                        <span className="me-1">
-                          {stats.classesGrowth > 0
-                            ? "▲"
-                            : stats.classesGrowth < 0
-                            ? "▼"
-                            : "•"}
-                        </span>
-                        {Math.abs(stats.classesGrowth)}% so với kỳ này
-                      </>
-                    ) : (
-                      "—"
-                    )}
-                  </small>
-                </Card.Body>
-              </Card>
-            </Col>
-            {/* Bạn có thể thêm các thẻ thống kê khác nếu API trả về */}
-          </Row>
-
-          {/* Biểu đồ tổng quan */}
-          <Row className="g-3 g-md-4 mb-4">
-            <Col xs={12} lg={7}>
-              <Card className="shadow-sm border-0 h-100">
-                <Card.Header className="bg-white py-3">
-                  <h5 className="mb-0">Biểu đồ học sinh</h5>
-                </Card.Header>
-                <Card.Body>
-                  <div
-                    style={{
-                      minHeight: 260,
-                      border: "1px dashed var(--border-color)",
-                      borderRadius: 12,
-                      background: "var(--bg-tertiary)",
-                    }}
-                    className="w-100 d-flex align-items-center justify-content-center text-muted"
-                  >
-                    <span>Placeholder biểu đồ (tích hợp chart sau)</span>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col xs={12} lg={5}>
-              <Card className="shadow-sm border-0 h-100">
-                <Card.Header className="bg-white py-3">
-                  <h5 className="mb-0">Phân loại học lực</h5>
-                </Card.Header>
-                <Card.Body>
-                  <div
-                    style={{
-                      minHeight: 260,
-                      border: "1px dashed var(--border-color)",
-                      borderRadius: 12,
-                      background: "var(--bg-tertiary)",
-                    }}
-                    className="w-100 d-flex align-items-center justify-content-center text-muted"
-                  >
-                    <span>Placeholder cột phân loại</span>
-                  </div>
                 </Card.Body>
               </Card>
             </Col>
           </Row>
-
           <Row className="g-3 g-md-4">
             {/* Danh sách thông báo mới nhất */}
             <Col xs={12} lg={7}>
@@ -230,18 +136,6 @@ const AdminDashboard = () => {
                       Chưa có thông báo nào
                     </Alert>
                   )}
-                </Card.Body>
-              </Card>
-            </Col>
-
-            {/* Chừa chỗ cho các widget khác cho cân đối bố cục */}
-            <Col xs={12} lg={5}>
-              <Card className="shadow-sm border-0 h-100">
-                <Card.Body className="d-flex align-items-center justify-content-center text-muted">
-                  <div className="text-center">
-                    <div className="mb-1">Khu vực widget</div>
-                    <small>Thêm báo cáo/tiến độ để cân đối bố cục</small>
-                  </div>
                 </Card.Body>
               </Card>
             </Col>
