@@ -212,8 +212,8 @@ export default function AdminCourseRegistration() {
                               else { ranges.push([start, end]); start = end = s; }
                             }
                             if (start !== null) ranges.push([start, end]);
-                            // Display as: 0 1-3; 1 5
-                            return `${dayIdx} ${ranges.map(([st, en]) => st === en ? st : `${st}-${en}`).join(', ')}`;
+                            // Display as: T2 (1-3); CN (5)
+                            return `${dayOfWeekToLabel[dayIdx]} (${ranges.map(([st, en]) => st === en ? st : `${st}-${en}`).join(', ')})`;
                           })
                           .join('; ');
                       })()}
