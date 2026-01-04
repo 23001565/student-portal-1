@@ -191,131 +191,163 @@ exports.createAnnouncement = async (req, res) => {
 
 exports.getReports = async (req, res) => {
   try {
-    const { year, semester } = req.query; // Có thể dùng để lọc theo kỳ (tạm thời lấy all)
+    // 1. Lấy tham số từ Frontend gửi lên (nếu không có thì lấy mặc định)
+    const year = parseInt(req.query.year) || new Date().getFullYear();
+    const semester = parseInt(req.query.semester) || 1;
 
-    // 1. Thống kê Sinh viên
-    const totalStudents = await prisma.student.count();
+    console.log(`Loading reports for: Năm ${year} - HK${semester}`);
+
+    // Điều kiện lọc chung cho các query liên quan đến Lớp học
+    const classFilter = {
+      year: year,
+      semester: semester
+    };
+
+    // --- A. THỐNG KÊ TỔNG QUAN (Theo kỳ đã chọn) ---
     
-    // Group by Year
+    // 1. Tổng sinh viên (Đếm tất cả SV đang hoạt động)
+    const totalStudents = await prisma.student.count();
+
+    // 2. Tổng môn học (Đếm số LỚP HỌC PHẦN mở trong kỳ này)
+    const totalCourses = await prisma.class.count({
+      where: classFilter
+    });
+
+    // 3. Tổng lượt đăng ký (Trong kỳ này)
+    const totalEnrollments = await prisma.enrollment.count({
+      where: {
+        class: classFilter
+      }
+    });
+
+    // 4. Điểm trung bình toàn trường (Trong kỳ này)
+    const gradeAgg = await prisma.enrollment.aggregate({
+      where: {
+        class: classFilter,
+        total10: { not: null } // Chỉ tính những người đã có điểm
+      },
+      _avg: { total10: true }
+    });
+    const averageGrade = gradeAgg._avg.total10 ? parseFloat(gradeAgg._avg.total10.toFixed(2)) : 0;
+
+
+    // --- B. BIỂU ĐỒ & PHÂN TÍCH ---
+
+    // 5. Sinh viên theo ngành (Thống kê chung)
+    const studentsByMajorRaw = await prisma.student.groupBy({
+      by: ['majorId'],
+      _count: { id: true }
+    });
+    // Map lại tên ngành (Cần gọi thêm query lấy tên ngành hoặc dùng include nếu query kiểu khác)
+    // Để đơn giản, ta lấy list ngành trước
+    const majors = await prisma.major.findMany();
+    const byMajor = {};
+    studentsByMajorRaw.forEach(item => {
+      const m = majors.find(x => x.id === item.majorId);
+      if (m) byMajor[m.name] = item._count.id;
+    });
+
+    // 6. Sinh viên theo năm (Khóa học) - Thống kê chung
+    // Logic: Dựa vào MSSV (VD: 2102xxxx => K66) hoặc trường enrollmentYear
+    // Ở đây giả lập dữ liệu tĩnh hoặc count theo field 'enrollmentYear' trong Student
     const studentsByYearRaw = await prisma.student.groupBy({
-      by: ['year'],
-      _count: { _all: true },
+      by: ['curriculumId'], // Giả sử curriculum đại diện cho khóa
+      _count: { id: true }
     });
-    // Convert array [{year:1, _count:10}] -> object {1: 10}
-    const studentsByYear = studentsByYearRaw.reduce((acc, curr) => {
-      acc[curr.year] = curr._count._all;
-      return acc;
-    }, {});
-
-    // Group by Major
-    const majors = await prisma.major.findMany({
-      include: { _count: { select: { students: true } } }
+    // (Bạn có thể tùy chỉnh lại logic này tùy theo DB của bạn)
+    const byYear = { "Năm 1": 0, "Năm 2": 0, "Năm 3": 0, "Năm 4": 0 };
+    // Demo dữ liệu tạm nếu DB chưa chuẩn hóa khóa học
+    const allStudents = await prisma.student.findMany({ select: { code: true }});
+    allStudents.forEach(s => {
+       // Giả sử mã SV bắt đầu bằng 2 số năm: 21xxxxx, 22xxxxx
+       const prefix = s.code.substring(0, 2); 
+       if(prefix === '24') byYear["Năm 1"]++;
+       else if(prefix === '23') byYear["Năm 2"]++;
+       else if(prefix === '22') byYear["Năm 3"]++;
+       else byYear["Năm 4"]++;
     });
-    const studentsByMajor = majors.reduce((acc, curr) => {
-      acc[curr.name] = curr._count.students;
-      return acc;
-    }, {});
 
-    // 2. Thống kê Môn học
-    const totalCourses = await prisma.course.count();
-    // Lấy top 5 lớp đông nhất
-    const topClasses = await prisma.class.findMany({
+
+    // --- C. TAB MÔN HỌC & ĐIỂM SỐ ---
+
+    // 7. Các lớp đông nhất (Trong kỳ này)
+    const popularCoursesRaw = await prisma.class.findMany({
+      where: classFilter,
+      include: {
+        course: true
+      },
       orderBy: { enrolledCount: 'desc' },
-      take: 5,
-      include: { course: true }
+      take: 5
     });
-    const popularCourses = topClasses.map(c => ({
-      name: c.course.name,
+    const popularCourses = popularCoursesRaw.map(c => ({
+      name: `${c.course.name} (${c.code})`,
       enrollments: c.enrolledCount
     }));
 
-    // 3. Thống kê Đăng ký (Enrollment)
-    const totalEnrollments = await prisma.enrollment.count();
-    const activeEnrollments = await prisma.enrollment.count({ where: { status: 'ENROLLED' } });
+    // 8. Phân phối điểm (Trong kỳ này)
+    const grades = await prisma.enrollment.findMany({
+      where: {
+        class: classFilter,
+        total10: { not: null }
+      },
+      select: { letterGrade: true }
+    });
     
-    // 4. Thống kê Điểm số
-    // Lấy tất cả enrollment đã có điểm hệ 10
-    const gradedEnrollments = await prisma.enrollment.findMany({
-      where: { total10: { not: null } },
-      include: { student: true }
+    const gradeDistribution = { "A": 0, "B": 0, "C": 0, "D": 0, "F": 0 };
+    grades.forEach(g => {
+      // Giả sử letterGrade là "A", "A+", "B"... ta gộp nhóm
+      const letter = g.letterGrade ? g.letterGrade.charAt(0) : "F";
+      if (gradeDistribution[letter] !== undefined) gradeDistribution[letter]++;
+      else gradeDistribution["F"]++;
     });
 
-    let averageGrade = 0;
-    const gradeDistribution = {
-      "A (8.5-10)": 0, "B (7.0-8.4)": 0, "C (5.5-6.9)": 0, "D (4.0-5.4)": 0, "F (< 4.0)": 0
-    };
-
-    if (gradedEnrollments.length > 0) {
-      const totalScore = gradedEnrollments.reduce((sum, en) => sum + (en.total10 || 0), 0);
-      averageGrade = (totalScore / gradedEnrollments.length).toFixed(1);
-
-      // Tính phân phối
-      gradedEnrollments.forEach(en => {
-        const s = en.total10 || 0;
-        if (s >= 8.5) gradeDistribution["A (8.5-10)"]++;
-        else if (s >= 7.0) gradeDistribution["B (7.0-8.4)"]++;
-        else if (s >= 5.5) gradeDistribution["C (5.5-6.9)"]++;
-        else if (s >= 4.0) gradeDistribution["D (4.0-5.4)"]++;
-        else gradeDistribution["F (< 4.0)"]++;
-      });
-    }
-
-    // Top sinh viên (Logic đơn giản: lấy điểm cao nhất trong list gradedEnrollments)
-    // Thực tế cần tính GPA trung bình của từng SV, ở đây demo lấy top điểm đơn lẻ
-    const topPerformers = gradedEnrollments
-      .sort((a, b) => b.total10 - a.total10)
-      .slice(0, 3)
-      .map(en => ({
-        student: en.student.name,
-        average: en.total10,
-        courses: 1 
-      }));
-
-    // 5. Hoạt động gần đây (Lấy enrollment mới nhất)
-    const recentActivityRaw = await prisma.enrollment.findMany({
-      take: 5,
-      orderBy: { id: 'desc' },
-      include: { student: true, class: { include: { course: true } } }
+    // 9. Top sinh viên điểm cao (Trong kỳ này)
+    // (Logic phức tạp hơn: cần group by student và tính avg)
+    // Ở đây ta lấy top 5 enrollment điểm cao nhất làm đại diện
+    const topGrades = await prisma.enrollment.findMany({
+      where: {
+        class: classFilter,
+        total10: { not: null }
+      },
+      include: {
+        student: true,
+        class: { include: { course: true } }
+      },
+      orderBy: { total10: 'desc' },
+      take: 5
     });
-
-    const recentActivity = recentActivityRaw.map(act => ({
-      id: act.id,
-      type: "Đăng ký",
-      description: `Đăng ký môn ${act.class.course.code}`,
-      student: act.student.name,
-      timestamp: act.id // Prisma không mặc định có createdAt ở Enrollment nếu chưa define, tạm dùng ID
+    const topPerformers = topGrades.map(e => ({
+      student: e.student.name,
+      average: e.total10
     }));
 
+
+    // --- KẾT QUẢ TRẢ VỀ ---
     res.json({
       studentStats: {
         total: totalStudents,
-        byYear: studentsByYear,
-        byMajor: studentsByMajor,
+        byYear: byYear,
+        byMajor: byMajor
       },
       courseStats: {
         total: totalCourses,
-        active: totalCourses, // Demo
-        archived: 0,
         popularCourses: popularCourses
       },
       enrollmentStats: {
         total: totalEnrollments,
-        active: activeEnrollments,
-        completed: 0, canceled: 0,
-        bySemester: { 1: totalEnrollments, 2: 0 } // Demo
+        bySemester: {} // Có thể để trống hoặc thêm chart theo tháng
       },
       gradeStats: {
-        averageGrade,
-        gradeDistribution,
-        passRate: gradedEnrollments.length > 0 ? ((gradedEnrollments.length - gradeDistribution["F (< 4.0)"]) / gradedEnrollments.length * 100).toFixed(1) : 0,
-        topPerformers
+        averageGrade: averageGrade,
+        gradeDistribution: gradeDistribution,
+        topPerformers: topPerformers
       },
-      recentActivity
+      recentActivity: [] // Có thể query bảng AuditLog nếu có
     });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: err.message });
+    console.error("Report Error:", err);
+    res.status(500).json({ message: "Lỗi tạo báo cáo: " + err.message });
   }
 };
 // [MỚI] Lấy tiến độ học tập (GPA, Cảnh báo)
@@ -575,34 +607,164 @@ exports.updateGrade = async (req, res) => {
     res.status(500).json({ message: "Lỗi cập nhật điểm: " + err.message });
   }
 };
-exports.deleteEnrollmentByAdmin = async (req, res) => {
+exports.getReports = async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    // 1. Lấy tham số từ Frontend gửi lên (nếu không có thì lấy mặc định)
+    const year = parseInt(req.query.year) || new Date().getFullYear();
+    const semester = parseInt(req.query.semester) || 1;
 
-    // 1. Tìm bản ghi
-    const enrollment = await prisma.enrollment.findUnique({
-      where: { id: id }
+    console.log(`Loading reports for: Năm ${year} - HK${semester}`);
+
+    // Điều kiện lọc chung cho các query liên quan đến Lớp học
+    const classFilter = {
+      year: year,
+      semester: semester
+    };
+
+    // --- A. THỐNG KÊ TỔNG QUAN (Theo kỳ đã chọn) ---
+    
+    // 1. Tổng sinh viên (Đếm tất cả SV đang hoạt động)
+    const totalStudents = await prisma.student.count();
+
+    // 2. Tổng môn học (Đếm số LỚP HỌC PHẦN mở trong kỳ này)
+    const totalCourses = await prisma.class.count({
+      where: classFilter
     });
 
-    if (!enrollment) {
-      return res.status(404).json({ message: "Không tìm thấy dữ liệu." });
-    }
+    // 3. Tổng lượt đăng ký (Trong kỳ này)
+    const totalEnrollments = await prisma.enrollment.count({
+      where: {
+        class: classFilter
+      }
+    });
 
-    // 2. Thực hiện xóa và trả lại sĩ số
-    await prisma.$transaction([
-      prisma.enrollment.delete({
-        where: { id: id }
-      }),
-      prisma.class.update({
-        where: { id: enrollment.classId },
-        data: { enrolledCount: { decrement: 1 } }
-      })
-    ]);
+    // 4. Điểm trung bình toàn trường (Trong kỳ này)
+    const gradeAgg = await prisma.enrollment.aggregate({
+      where: {
+        class: classFilter,
+        total10: { not: null } // Chỉ tính những người đã có điểm
+      },
+      _avg: { total10: true }
+    });
+    const averageGrade = gradeAgg._avg.total10 ? parseFloat(gradeAgg._avg.total10.toFixed(2)) : 0;
 
-    res.json({ message: "Đã xóa môn học và điểm số thành công." });
+
+    // --- B. BIỂU ĐỒ & PHÂN TÍCH ---
+
+    // 5. Sinh viên theo ngành (Thống kê chung)
+    const studentsByMajorRaw = await prisma.student.groupBy({
+      by: ['majorId'],
+      _count: { id: true }
+    });
+    // Map lại tên ngành (Cần gọi thêm query lấy tên ngành hoặc dùng include nếu query kiểu khác)
+    // Để đơn giản, ta lấy list ngành trước
+    const majors = await prisma.major.findMany();
+    const byMajor = {};
+    studentsByMajorRaw.forEach(item => {
+      const m = majors.find(x => x.id === item.majorId);
+      if (m) byMajor[m.name] = item._count.id;
+    });
+
+    // 6. Sinh viên theo năm (Khóa học) - Thống kê chung
+    // Logic: Dựa vào MSSV (VD: 2102xxxx => K66) hoặc trường enrollmentYear
+    // Ở đây giả lập dữ liệu tĩnh hoặc count theo field 'enrollmentYear' trong Student
+    const studentsByYearRaw = await prisma.student.groupBy({
+      by: ['curriculumId'], // Giả sử curriculum đại diện cho khóa
+      _count: { id: true }
+    });
+    // (Bạn có thể tùy chỉnh lại logic này tùy theo DB của bạn)
+    const byYear = { "Năm 1": 0, "Năm 2": 0, "Năm 3": 0, "Năm 4": 0 };
+    // Demo dữ liệu tạm nếu DB chưa chuẩn hóa khóa học
+    const allStudents = await prisma.student.findMany({ select: { code: true }});
+    allStudents.forEach(s => {
+       // Giả sử mã SV bắt đầu bằng 2 số năm: 21xxxxx, 22xxxxx
+       const prefix = s.code.substring(0, 2); 
+       if(prefix === '24') byYear["Năm 1"]++;
+       else if(prefix === '23') byYear["Năm 2"]++;
+       else if(prefix === '22') byYear["Năm 3"]++;
+       else byYear["Năm 4"]++;
+    });
+
+
+    // --- C. TAB MÔN HỌC & ĐIỂM SỐ ---
+
+    // 7. Các lớp đông nhất (Trong kỳ này)
+    const popularCoursesRaw = await prisma.class.findMany({
+      where: classFilter,
+      include: {
+        course: true
+      },
+      orderBy: { enrolledCount: 'desc' },
+      take: 5
+    });
+    const popularCourses = popularCoursesRaw.map(c => ({
+      name: `${c.course.name} (${c.code})`,
+      enrollments: c.enrolledCount
+    }));
+
+    // 8. Phân phối điểm (Trong kỳ này)
+    const grades = await prisma.enrollment.findMany({
+      where: {
+        class: classFilter,
+        total10: { not: null }
+      },
+      select: { letterGrade: true }
+    });
+    
+    const gradeDistribution = { "A": 0, "B": 0, "C": 0, "D": 0, "F": 0 };
+    grades.forEach(g => {
+      // Giả sử letterGrade là "A", "A+", "B"... ta gộp nhóm
+      const letter = g.letterGrade ? g.letterGrade.charAt(0) : "F";
+      if (gradeDistribution[letter] !== undefined) gradeDistribution[letter]++;
+      else gradeDistribution["F"]++;
+    });
+
+    // 9. Top sinh viên điểm cao (Trong kỳ này)
+    // (Logic phức tạp hơn: cần group by student và tính avg)
+    // Ở đây ta lấy top 5 enrollment điểm cao nhất làm đại diện
+    const topGrades = await prisma.enrollment.findMany({
+      where: {
+        class: classFilter,
+        total10: { not: null }
+      },
+      include: {
+        student: true,
+        class: { include: { course: true } }
+      },
+      orderBy: { total10: 'desc' },
+      take: 5
+    });
+    const topPerformers = topGrades.map(e => ({
+      student: e.student.name,
+      average: e.total10
+    }));
+
+
+    // --- KẾT QUẢ TRẢ VỀ ---
+    res.json({
+      studentStats: {
+        total: totalStudents,
+        byYear: byYear,
+        byMajor: byMajor
+      },
+      courseStats: {
+        total: totalCourses,
+        popularCourses: popularCourses
+      },
+      enrollmentStats: {
+        total: totalEnrollments,
+        bySemester: {} // Có thể để trống hoặc thêm chart theo tháng
+      },
+      gradeStats: {
+        averageGrade: averageGrade,
+        gradeDistribution: gradeDistribution,
+        topPerformers: topPerformers
+      },
+      recentActivity: [] // Có thể query bảng AuditLog nếu có
+    });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Lỗi server: " + err.message });
+    console.error("Report Error:", err);
+    res.status(500).json({ message: "Lỗi tạo báo cáo: " + err.message });
   }
 };
