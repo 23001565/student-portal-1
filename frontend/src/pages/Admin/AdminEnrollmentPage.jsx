@@ -33,6 +33,11 @@ export default function AdminEnrollmentPage() {
     finalExam: '',
     total10Scale: '',
   });
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addForm, setAddForm] = useState({
+    classCode: '',
+    studentCode: '',
+  });
 
   const fetchEnrollments = async () => {
     setLoading(true);
@@ -52,14 +57,17 @@ export default function AdminEnrollmentPage() {
     // eslint-disable-next-line
   }, [filters]);
 
-  const handleAdd = async () => {
-    // Prompt for classCode and studentCode
-    const classCode = prompt('Class Code?');
-    const studentCode = prompt('Student Code?');
-    if (!classCode || !studentCode) return;
+  const handleAdd = () => {
+    setAddForm({ classCode: '', studentCode: '' });
+    setShowAddModal(true);
+  };
+
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
     try {
-      await addEnrollment({ classCode, studentCode });
+      await addEnrollment(addForm);
       fetchEnrollments();
+      setShowAddModal(false);
     } catch (e) {
       alert(e.message);
     }
@@ -285,6 +293,43 @@ export default function AdminEnrollmentPage() {
               </Button>
               <Button type="submit">
                 Update Grades
+              </Button>
+            </Modal.Footer>
+          </Form>
+        </Modal>
+
+        {/* Add Enrollment Modal */}
+        <Modal show={showAddModal} onHide={() => setShowAddModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Add Enrollment</Modal.Title>
+          </Modal.Header>
+          <Form onSubmit={handleAddSubmit}>
+            <Modal.Body>
+              <Form.Group className="mb-3">
+                <Form.Label>Class Code</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={addForm.classCode}
+                  onChange={(e) => setAddForm({ ...addForm, classCode: e.target.value })}
+                  required
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Student Code</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={addForm.studentCode}
+                  onChange={(e) => setAddForm({ ...addForm, studentCode: e.target.value })}
+                  required
+                />
+              </Form.Group>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={() => setShowAddModal(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                Add Enrollment
               </Button>
             </Modal.Footer>
           </Form>

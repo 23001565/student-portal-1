@@ -11,6 +11,7 @@ async function getStudentId(studentCode) {
 
 // Student: List their enrollments with grade details, filtered
 async function studentListEnrollments({ studentId, semester, year, courseCode, classCode }) {
+  console.log('studentListEnrollments called with:', { studentId, semester, year, courseCode, classCode });
   let classIds = undefined;
   // If classCode is given, get classId
   if (classCode) {
@@ -97,9 +98,57 @@ async function adminListEnrollments({ semester, year, classCode, courseCode, stu
 // Admin: Add enrollment
 async function adminAddEnrollment({ classCode, studentCode }) {
   // Find class and student
+  console.log('adminAddEnrollment called with:', { classCode, studentCode });
+  console.log('Looking up class with code:', classCode, 'type:', typeof classCode);
+  console.log('Looking up student with code:', studentCode, 'type:', typeof studentCode);
   const classObj = await prisma.class.findUnique({ where: { code: classCode } });
+  console.log('classObj:', classObj);
   const studentObj = await prisma.student.findUnique({ where: { code: studentCode } });
+  console.log('studentObj:', studentObj);
   if (!classObj || !studentObj) throw new Error('Class or student not found');
+
+  console.log("Validating enrollment for student:", studentObj.id, "in class:", classObj.id);
+  // Get existing enrollments for the student in the semester/year
+  const existingEnrollments = await prisma.enrollment.findMany({
+    where: {
+      studentId: studentObj.id,
+      semester: classObj.semester,
+      year: classObj.year,
+      status: 'ENROLLED'
+    },
+    include: {
+      class: {
+        include: { course: true }
+      }
+    }
+  });
+
+  // Check for duplicate course enrollment
+  const duplicateCourse = existingEnrollments.some(enr => enr.class.courseId === classObj.courseId);
+  if (duplicateCourse) {
+    throw new Error('Student is already enrolled in this course');
+  }
+
+  // Check for time conflicts
+  for (const enr of existingEnrollments) {
+    if (hasTimeConflict(enr.class, classObj)) {
+      throw new Error(`Time conflict with enrolled class ${enr.class.code} (${enr.class.course.code})`);
+    }
+  }
+
+  // Check class capacity
+  const enrolledCount = await prisma.enrollment.count({
+    where: {
+      classId: classObj.id,
+      status: 'ENROLLED'
+    }
+  });
+  if (enrolledCount >= classObj.capacity) {
+    throw new Error('Class is full');
+  }
+
+  console.log("Creating enrollment record...");
+
   return prisma.enrollment.create({
     data: {
       classId: classObj.id,
@@ -110,7 +159,6 @@ async function adminAddEnrollment({ classCode, studentCode }) {
     }
   });
 }
-
 // Admin: Delete enrollment
 async function adminDeleteEnrollment(enrollmentId) {
   return prisma.enrollment.delete({ where: { id: enrollmentId } });

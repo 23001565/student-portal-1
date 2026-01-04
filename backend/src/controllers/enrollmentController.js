@@ -22,7 +22,10 @@ async function listAdminStudentEnrollments(req, res) {
 // Student: List their enrollments with grade details
 async function listStudentEnrollments(req, res) {
   try {
+    console.log('listStudentEnrollments called for user:', req.user);
     const studentId = await getStudentId(req.user.id);
+    console.log('Resolved studentId:', studentId);
+    console.log('Query params:', req.query);
     const { semester, year, courseCode, classCode } = req.query;
     const enrollments = await studentListEnrollments({ studentId, semester, year, courseCode, classCode });
     res.json({ items: enrollments });
@@ -45,9 +48,15 @@ async function listEnrollments(req, res) {
 
 // Add enrollment (admin)
 async function addEnrollment(req, res) {
+
   try {
+    console.log('addEnrollment called with body:', req.body);
     const { classCode, studentCode } = req.body;
-    const enrollment = await adminAddEnrollment({ classCode, studentCode });
+    const studentCodeNum = Number(studentCode);
+    if (isNaN(studentCodeNum)) {
+      return res.status(400).json({ error: 'studentCode must be a number' });
+    }
+    const enrollment = await adminAddEnrollment({ classCode, studentCode: studentCodeNum });
     res.json({ item: enrollment });
   } catch (e) {
     res.status(400).json({ error: e.message });

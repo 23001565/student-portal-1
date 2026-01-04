@@ -45,7 +45,7 @@ app.use('/auth', auth);
 app.use('/auth', authRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/admin/students', adminStudentRoutes);
-//app.use('/api/enrollments', enrollmentRoutes);
+app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/admin/classes', classRoutes);
 app.use('/api/admin/curriculum', curriculumRoutes);
 app.use('/api/students', curriculumRoutes);
@@ -54,7 +54,7 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/admin/announcements', adminAnnouncementRoutes);
 app.use('/api/admin/registration-windows', adminRegistrationWindowRoutes);
 app.use('/api/registration', studentRegistrationRoutes);
-app.use('/api/admin/enrollments', enrollmentRoutes);
+//app.use('/api/admin/enrollments', enrollmentRoutes);
 app.use('/api/password', passwordRoutes);
 
 
