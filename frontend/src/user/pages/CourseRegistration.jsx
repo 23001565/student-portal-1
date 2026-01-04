@@ -139,7 +139,7 @@ export default function CourseRegistration() {
   // --- GIAO DIỆN KHÔNG THAY ĐỔI ---
   return (
     <Layout>
-      <PageFrame title="Đăng ký tín chỉ" subtitle="Học kỳ 1 - Năm học 2025-2026">
+      <PageFrame title="Đăng ký tín chỉ">
         <Container fluid className="p-0">
             {message && <Alert variant={message.type}>{message.text}</Alert>}
             

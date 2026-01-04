@@ -214,67 +214,6 @@ const Reports = () => {
                     </Col>
                 </Row>
               </Tab>
-
-              {/* TAB 3: PHÂN TÍCH ĐIỂM */}
-              <Tab eventKey="grades" title="Điểm số">
-                <Row className="g-3">
-                  <Col md={6}>
-                    <Card className="shadow-sm h-100">
-                      <Card.Header className="bg-white"><h5 className="mb-0">Phân phối điểm</h5></Card.Header>
-                      <Card.Body>
-                        {Object.entries(reportData.gradeStats.gradeDistribution || {}).map(([grade, count]) => (
-                          <div key={grade} className="mb-3">
-                            <div className="d-flex justify-content-between mb-1">
-                              <span>{grade}</span>
-                              <span className="fw-bold">{count} SV</span>
-                            </div>
-                            <ProgressBar now={(count / (reportData.enrollmentStats.total || 1)) * 100} variant="info" style={{ height: "10px" }} />
-                          </div>
-                        ))}
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                  <Col md={6}>
-                    <Card className="shadow-sm h-100">
-                      <Card.Header className="bg-white"><h5 className="mb-0">Top sinh viên điểm cao</h5></Card.Header>
-                      <Card.Body>
-                        <Table hover size="sm">
-                          <thead><tr><th>Sinh viên</th><th>Điểm</th></tr></thead>
-                          <tbody>
-                            {reportData.gradeStats.topPerformers?.map((p, idx) => (
-                              <tr key={idx}>
-                                <td>{p.student}</td>
-                                <td><Badge bg={getGradeColor(p.average)}>{p.average}</Badge></td>
-                              </tr>
-                            ))}
-                            {reportData.gradeStats.topPerformers?.length === 0 && <tr><td colSpan="2">Chưa có dữ liệu điểm</td></tr>}
-                          </tbody>
-                        </Table>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                </Row>
-              </Tab>
-
-              {/* TAB 4: HOẠT ĐỘNG */}
-              <Tab eventKey="activity" title="Hoạt động">
-                 <Card className="shadow-sm">
-                    <Card.Body>
-                        {reportData.recentActivity?.length > 0 ? (
-                            reportData.recentActivity.map(act => (
-                                <div key={act.id} className="d-flex align-items-center mb-3 pb-3 border-bottom">
-                                    <div className="me-3 fs-2">{getActivityIcon(act.type)}</div>
-                                    <div>
-                                        <h6 className="mb-0">{act.description}</h6>
-                                        <small className="text-muted">Sinh viên: {act.student} • {formatDateTime(act.timestamp)}</small>
-                                    </div>
-                                </div>
-                            ))
-                        ) : <div className="text-muted">Chưa có hoạt động nào gần đây</div>}
-                    </Card.Body>
-                 </Card>
-              </Tab>
-
             </Tabs>
           </Col>
         </Row>

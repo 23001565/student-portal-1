@@ -81,7 +81,7 @@ const RegistrationManager = () => {
     e.preventDefault();
     try {
       await adminApi.setRegistrationConfig(config); // Hoặc setRegistrationPeriod tùy tên hàm trong api của bạn
-      alert("Đã cập nhật cấu hình đợt đăng ký!");
+      alert("Đã cập nhật thời gian đợt đăng ký!");
     } catch (error) {
       alert("Lỗi lưu cấu hình: " + error.message);
     }
@@ -147,7 +147,7 @@ const RegistrationManager = () => {
 
   return (
     <Layout>
-      <PageFrame title="Quản lý Đăng ký Tín chỉ" subtitle="Cấu hình thời gian và mở lớp học phần">
+      <PageFrame title="Quản lý Đăng ký Tín chỉ" subtitle="Thiết lập thời gian và mở lớp học phần">
         <Container fluid className="p-0">
           
           {/* PHẦN 1: CẤU HÌNH THỜI GIAN */}
