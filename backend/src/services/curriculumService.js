@@ -240,10 +240,13 @@ async function cloneCurriculum({ fromCode, toCode, startYear, endYear, majorName
 }
 
 async function getStudentCurriculum(id) {
-  const student = await prisma.student.findUnique({ where: { code: id } });
-  if (!student) { const err = new Error('Student not found'); err.status = 404; throw err; }
+  const student = await prisma.student.findUnique({
+    where: { code: id },
+    select: { curriculum: { select: { code: true } } }
+  });
+  if (!student || !student.curriculum) { const err = new Error('Student not found'); err.status = 404; throw err; }
 
-  const curriculum = await getCurriculumByCode(student.curriculumCode);
+  const curriculum = await getCurriculumByCode(student.curriculum.code);
   return curriculum;
 }
 
