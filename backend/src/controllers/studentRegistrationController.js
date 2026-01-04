@@ -73,9 +73,8 @@ async function enrollInClass(req, res) {
     console.log('ENROLL IN CLASS REQ USER:', req.user);
 
     const { classId } = req.body;
-    const studentId = await getStudentId(req.user.id);
+    const studentId = req.user.id;
 
-    console.log('STUDENT ID:', studentId);
 
     // Check active window
     const window = await getActiveRegistrationWindow();

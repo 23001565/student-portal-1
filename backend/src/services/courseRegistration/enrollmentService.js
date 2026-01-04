@@ -209,8 +209,10 @@ async function releaseSeat(classId) {
 
 // Enroll student in class
 async function enrollStudent(studentId, classId, semester, year) {
+  console.log('enrollStudent called with:', { studentId, classId, semester, year });
   // Check if already enrolled
   const stId = await getStudentId(studentId);
+  console.log('Resolved student ID:', stId);
   const existing = await prisma.enrollment.findUnique({
     where: {
       studentId_classId_semester_year: {
