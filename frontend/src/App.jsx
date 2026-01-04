@@ -35,12 +35,19 @@ function App() {
             <Route path="/grades" element={<GradesPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/registration" element={<CourseRegistration />} />
+            
+            {/* ADMIN ROUTES */}
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/courses" element={<ManageCourses />} />
             <Route path="/admin/students" element={<ManageStudents />} />
-            <Route path="/admin/students/new" element={<CreateStudent />} />
+            
+            {/* [SỬA] Đổi từ 'new' thành 'add' để khớp với nút bấm ở trang ManageStudents */}
+            {/* Lưu ý: Đặt route này TRƯỚC route /:id để tránh bị nhận diện nhầm */}
+            <Route path="/admin/students/add" element={<CreateStudent />} />
+            
             <Route path="/admin/students/:id" element={<StudentDetail />} />
             <Route path="/admin/students/:id/edit" element={<EditStudent />} />
+            
             <Route path="/admin/reports" element={<Reports />} />
             <Route path="/admin/progress-monitor" element={<ProgressMonitor />} />
             <Route path="/admin/announcements" element={<Announcements />} />
