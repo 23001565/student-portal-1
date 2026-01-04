@@ -13,7 +13,11 @@ const {
 async function listAdminStudentEnrollments(req, res) {
   try {
     const { studentCode, semester, year, courseCode, classCode } = req.query;
-    const enrollments = await adminStudentEnrollments({ studentCode, semester, year, courseCode, classCode });
+    const studentCodeNum = Number(studentCode);
+    if (isNaN(studentCodeNum)) {
+      return res.status(400).json({ error: 'studentCode must be a number' });
+    }
+    const enrollments = await adminStudentEnrollments({ studentCode: studentCodeNum, semester, year, courseCode, classCode });
     res.json({ items: enrollments });
   } catch (e) {
     res.status(400).json({ error: e.message });

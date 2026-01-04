@@ -108,7 +108,7 @@ const ManageStudents = () => {
 
   // View enrollments for a student (admin)
   const handleViewEnrollments = (student) => {
-    navigate(`/admin/students/${student.code}/enrollments`);
+    navigate(`/admin/enrollments/${student.code}`);
   };
 
   /* ---------------- ACTIONS ---------------- */
