@@ -1,39 +1,103 @@
-/*
-import { reserveSeat } from "../services/enrollmentService.js";
-import { validateCourseSelection } from "../services/validationService.js";
-import { getStudentClasses } from "../services/registrationService";
 
-export async function getRegistrationPage(req, res) {
-  const { studentId } = req.user;
-  const { curriculumId, term, year } = req.query;
-
-  const classes = await getStudentClasses(studentId, curriculumId, term, year);
-  res.json({ classes });
+const {
+  adminListEnrollments,
+  getStudentId,
+  adminAddEnrollment,
+  adminDeleteEnrollment,
+  adminUpdateGrade,
+  adminUploadGradeCSV,
+  studentListEnrollments,
+  adminStudentEnrollments,
+} = require('../services/courseRegistration/enrollmentService.js');
+// Admin: View any student's enrollments (with grade details)
+async function listAdminStudentEnrollments(req, res) {
+  try {
+    const { studentCode, semester, year, courseCode, classCode } = req.query;
+    const enrollments = await adminStudentEnrollments({ studentCode, semester, year, courseCode, classCode });
+    res.json({ items: enrollments });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+}
+// Student: List their enrollments with grade details
+async function listStudentEnrollments(req, res) {
+  try {
+    const studentId = await getStudentId(req.user.id);
+    const { semester, year, courseCode, classCode } = req.query;
+    const enrollments = await studentListEnrollments({ studentId, semester, year, courseCode, classCode });
+    res.json({ items: enrollments });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
 }
 
-export async function saveEnrollment(req, res) {
-  const { courseId } = req.body;
-  const studentId = req.user.id;
-
-  const validation = await validateCourseSelection(studentId, { course_id: courseId });
-  if (!validation.valid) {
-    return res.status(400).json({ success: false, message: validation.message });
+// List enrollments (admin)
+async function listEnrollments(req, res) {
+  try {
+    const { semester, year, classCode, courseCode, studentCode, status } = req.query;
+    console.log('listEnrollments called with params:', req.query);
+    const enrollments = await adminListEnrollments({ semester, year, classCode, courseCode, studentCode, status });
+    res.json({ items: enrollments });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
-
-  const seat = await reserveSeat(courseId);
-  if (!seat.success) {
-    return res.status(400).json({ success: false, message: seat.message });
-  }
-
-  // If both valid and reserved successfully → save enrollment in DB
-  await db.query(
-    "INSERT INTO enrollments (student_id, course_id, status) VALUES ($1, $2, 'submitted')",
-    [studentId, courseId]
-  );
-
-  res.status(200).json({ success: true });
 }
 
-*/
+// Add enrollment (admin)
+async function addEnrollment(req, res) {
+  try {
+    const { classCode, studentCode } = req.body;
+    const enrollment = await adminAddEnrollment({ classCode, studentCode });
+    res.json({ item: enrollment });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+}
+
+// Delete enrollment (admin)
+async function deleteEnrollment(req, res) {
+  try {
+    const { id } = req.params;
+    await adminDeleteEnrollment(Number(id));
+    res.json({ success: true });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+}
+
+// Update grade for enrollment (admin)
+async function updateGrade(req, res) {
+  try {
+    const { id } = req.params;
+    const { midTerm, finalExam, total10Scale } = req.body;
+    const updated = await adminUpdateGrade(Number(id), { midTerm, finalExam, total10Scale });
+    res.json({ item: updated });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+}
+
+// Upload grade CSV for class (admin)
+async function uploadGradeCSV(req, res) {
+  try {
+    const { classCode } = req.body;
+    const csvText = req.file ? req.file.buffer.toString() : req.body.csvText;
+    const results = await adminUploadGradeCSV(classCode, csvText);
+    res.json({ items: results });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+}
+
+module.exports = {
+  listEnrollments,
+  addEnrollment,
+  deleteEnrollment,
+  updateGrade,
+  uploadGradeCSV,
+  listStudentEnrollments,
+  listAdminStudentEnrollments,
+};
+
 
 

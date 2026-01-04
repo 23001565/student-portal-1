@@ -24,6 +24,8 @@ import ClassCSVUpload from "./pages/Admin/ClassCSVUpload";
 import CourseCSVUpload from "./pages/Admin/CourseCSVUpload";
 import ManageRegistrationWindows from "./pages/Admin/ManageRegistrationWindows";
 import AdminCourseRegistration from "./pages/Admin/AdminCourseRegistration";
+import AdminEnrollmentPage from "./pages/Admin/AdminEnrollmentPage";
+import StudentEnrollmentPage from "./pages/StudentEnrollmentPage";
 import UploadCurriculum from "./pages/Admin/UploadCurriculum";
 import Navbar from "./components/Navbar";
 import { useAuth } from "./context/authContext";
@@ -39,6 +41,8 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/courses" element={<CoursesPage />} />
           <Route path="/grades" element={<GradesPage />} />
+          <Route path="/enrollments" element={<StudentEnrollmentPage />} />
+          <Route path="/admin/enrollments/:studentCode" element={<StudentEnrollmentPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/curriculum" element={<CurriculumPage />} />
           <Route path="/registration" element={<CourseRegistration />} />
@@ -57,6 +61,7 @@ function App() {
           <Route path="/admin/progress-monitor" element={<ProgressMonitor />} />
           <Route path="/admin/registration-windows" element={<ManageRegistrationWindows />} />
           <Route path="/admin/course-registration" element={<AdminCourseRegistration />} />
+          <Route path="/admin/enrollments" element={<AdminEnrollmentPage />} />
         </Routes>
       </div>
     </div>

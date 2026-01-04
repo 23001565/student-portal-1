@@ -15,6 +15,7 @@ const announcementRoutes = require('./routes/announcementRoutes.js');
 const adminAnnouncementRoutes = require('./routes/adminAnnouncementRoutes.js');
 const adminRegistrationWindowRoutes = require('./routes/adminRegistrationWindowRoutes.js');
 const studentRegistrationRoutes = require('./routes/studentRegistrationRoutes.js');
+const enrollmentRoutes = require('./routes/enrollmentRoutes.js');
 const passwordRoutes = require('./routes/passwordRoutes.js');
 
 const app = express();
@@ -53,6 +54,7 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/admin/announcements', adminAnnouncementRoutes);
 app.use('/api/admin/registration-windows', adminRegistrationWindowRoutes);
 app.use('/api/registration', studentRegistrationRoutes);
+app.use('/api/admin/enrollments', enrollmentRoutes);
 app.use('/api/password', passwordRoutes);
 
 

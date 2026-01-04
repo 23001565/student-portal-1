@@ -105,6 +105,12 @@ const ManageStudents = () => {
     }
   };
 
+
+  // View enrollments for a student (admin)
+  const handleViewEnrollments = (student) => {
+    navigate(`/admin/students/${student.code}/enrollments`);
+  };
+
   /* ---------------- ACTIONS ---------------- */
 
   const handleEdit = (student) => {
@@ -119,231 +125,215 @@ const ManageStudents = () => {
     });
     setShowModal(true);
   };
-
-  const handleArchive = async (code) => {
-    if (!window.confirm("Lưu trữ sinh viên này?")) return;
-    await archiveStudent(code);
-    fetchStudents();
-  };
-
-  const handleDelete = async (code) => {
-    if (!window.confirm("Xóa vĩnh viễn sinh viên này?")) return;
-    await deleteStudent(code);
-    fetchStudents();
-  };
-
-  /* ---------------- RENDER ---------------- */
-
   return (
-    <Container className="py-4">
-      <div className="d-flex justify-content-between mb-3">
-        <h2>Quản lý Sinh viên</h2>
-        <Button onClick={() => navigate("/admin/dashboard")}>
-          Quay lại
-        </Button>
-      </div>
+  <Container className="mt-4">
+    <Card>
+      <Card.Body>
+        <h2>Manage Students</h2>
 
-      <Card>
-        <Card.Header>
-          <div className="d-flex justify-content-between mb-3">
-            <Form className="d-flex" style={{ flex: 1, marginRight: 10 }}>
-              <Row className="g-2" style={{ flex: 1 }}>
-                <Col md={2}>
-                  <FormControl
-                    placeholder="Mã sinh viên"
-                    value={filters.studentCode}
-                    onChange={(e) => setFilters({ ...filters, studentCode: e.target.value })}
-                  />
-                </Col>
-                <Col md={2}>
-                  <FormControl
-                    placeholder="Năm"
-                    value={filters.year}
-                    onChange={(e) => setFilters({ ...filters, year: e.target.value })}
-                  />
-                </Col>
-                <Col md={2}>
-                  <FormControl
-                    placeholder="Tên ngành"
-                    value={filters.majorName}
-                    onChange={(e) => setFilters({ ...filters, majorName: e.target.value })}
-                  />
-                </Col>
-                <Col md={2}>
-                  <FormControl
-                    placeholder="Mã chương trình"
-                    value={filters.curriculumCode}
-                    onChange={(e) => setFilters({ ...filters, curriculumCode: e.target.value })}
-                  />
-                </Col>
-                <Col md={2}>
-                  <Button onClick={handleFilter} variant="outline-primary">
-                    Lọc
-                  </Button>
-                </Col>
-              </Row>
-            </Form>
+        {/* FILTERS */}
+        <div className="mb-3">
+          <InputGroup>
+            <FormControl
+              placeholder="Student Code"
+              value={filters.studentCode}
+              onChange={(e) =>
+                setFilters({ ...filters, studentCode: e.target.value })
+              }
+            />
+            <FormControl
+              placeholder="Year"
+              value={filters.year}
+              onChange={(e) =>
+                setFilters({ ...filters, year: e.target.value })
+              }
+            />
+            <FormControl
+              placeholder="Major Name"
+              value={filters.majorName}
+              onChange={(e) =>
+                setFilters({ ...filters, majorName: e.target.value })
+              }
+            />
+            <FormControl
+              placeholder="Curriculum Code"
+              value={filters.curriculumCode}
+              onChange={(e) =>
+                setFilters({ ...filters, curriculumCode: e.target.value })
+              }
+            />
+            <Button onClick={handleFilter}>Filter</Button>
+          </InputGroup>
+        </div>
 
-            <Button
-              onClick={() => {
-                setEditingStudent(null);
-                setForm({
-                  code: "",
-                  email: "",
-                  name: "",
-                  password: "",
-                  year: "",
-                  curriculumCode: "",
-                });
-                setShowModal(true);
-              }}
-            >
-              Thêm sinh viên
-            </Button>
-          </div>
-        </Card.Header>
-
-        <Card.Body>
-          {loading && <Spinner />}
-          {error && <Alert variant="danger">{error}</Alert>}
-
-          <Table hover responsive>
-            <thead>
+        {/* TABLE */}
+        <Table striped bordered hover responsive>
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Year</th>
+              <th>Curriculum</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
               <tr>
-                <th>MSSV</th>
-                <th>Tên</th>
-                <th>Email</th>
-                <th>Năm</th>
-                <th>Ngành</th>
-                <th>Chương trình</th>
-                <th>Trạng thái</th>
-                <th>Hành động</th>
+                <td colSpan={6} className="text-center">
+                  <Spinner animation="border" size="sm" /> Loading...
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {students.map((s) => (
-                <tr key={s.code}>
-                  <td>{s.code}</td>
-                  <td>{s.name}</td>
-                  <td>{s.email}</td>
-                  <td>{s.year}</td>
-                  <td>{s.majorName}</td>
-                  <td>{s.curriculumCode}</td>
-                  <td>
-                    {s.archivedAt ? (
-                      <Badge bg="secondary">Đã lưu trữ</Badge>
-                    ) : (
-                      <Badge bg="success">Hoạt động</Badge>
-                    )}
-                  </td>
+            ) : students.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="text-center">
+                  No students found
+                </td>
+              </tr>
+            ) : (
+              students.map((student) => (
+                <tr key={student.code}>
+                  <td>{student.code}</td>
+                  <td>{student.name}</td>
+                  <td>{student.email}</td>
+                  <td>{student.year}</td>
+                  <td>{student.curriculumCode}</td>
                   <td>
                     <Button
                       size="sm"
-                      variant="outline-primary"
-                      onClick={() => handleEdit(s)}
+                      variant="info"
                       className="me-2"
+                      onClick={() => handleEdit(student)}
                     >
-                      Sửa
+                      Edit
                     </Button>
-                    {!s.archivedAt && (
-                      <Button
-                        size="sm"
-                        variant="outline-warning"
-                        onClick={() => handleArchive(s.code)}
-                        className="me-2"
-                      >
-                        Lưu trữ
-                      </Button>
-                    )}
                     <Button
                       size="sm"
-                      variant="outline-danger"
-                      onClick={() => handleDelete(s.code)}
+                      variant="secondary"
+                      className="me-2"
+                      onClick={() => handleViewEnrollments(student)}
                     >
-                      Xóa
+                      View Enrollments
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={() => handleDelete(student)}
+                    >
+                      Delete
                     </Button>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
-        </Card.Body>
-      </Card>
+              ))
+            )}
+          </tbody>
+        </Table>
+      </Card.Body>
+    </Card>
 
-      {/* MODAL */}
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {editingStudent ? "Cập nhật sinh viên" : "Thêm sinh viên"}
-          </Modal.Title>
-        </Modal.Header>
+    {/* SINGLE MODAL */}
+    <Modal show={showModal} onHide={() => setShowModal(false)}>
+      <Modal.Header closeButton>
+        <Modal.Title>
+          {editingStudent ? "Edit Student" : "Add Student"}
+        </Modal.Title>
+      </Modal.Header>
 
-        <Form onSubmit={handleSubmit}>
-          <Modal.Body>
-            {!editingStudent && (
+      <Form onSubmit={handleSubmit}>
+        <Modal.Body>
+          {!editingStudent && (
+            <Form.Group className="mb-2">
+              <Form.Label>Code</Form.Label>
               <Form.Control
-                className="mb-2"
-                placeholder="Mã sinh viên"
+                type="number"
                 value={form.code}
                 onChange={(e) =>
                   setForm({ ...form, code: e.target.value })
                 }
                 required
               />
-            )}
+            </Form.Group>
+          )}
+
+          <Form.Group className="mb-2">
+            <Form.Label>Email</Form.Label>
             <Form.Control
-              className="mb-2"
-              placeholder="Email"
+              type="email"
               value={form.email}
               onChange={(e) =>
                 setForm({ ...form, email: e.target.value })
               }
               required
             />
+          </Form.Group>
+
+          <Form.Group className="mb-2">
+            <Form.Label>Name</Form.Label>
             <Form.Control
-              className="mb-2"
-              placeholder="Tên"
               value={form.name}
               onChange={(e) =>
                 setForm({ ...form, name: e.target.value })
               }
               required
             />
+          </Form.Group>
+
+          <Form.Group className="mb-2">
+            <Form.Label>Password</Form.Label>
             <Form.Control
-              className="mb-2"
               type="password"
-              placeholder="Mật khẩu"
               value={form.password}
               onChange={(e) =>
                 setForm({ ...form, password: e.target.value })
               }
+              placeholder={
+                editingStudent
+                  ? "Leave blank to keep current password"
+                  : ""
+              }
+              required={!editingStudent}
             />
+          </Form.Group>
+
+          <Form.Group className="mb-2">
+            <Form.Label>Year</Form.Label>
             <Form.Control
-              className="mb-2"
               type="number"
-              placeholder="Năm nhập học"
               value={form.year}
               onChange={(e) =>
                 setForm({ ...form, year: e.target.value })
               }
+              required
             />
+          </Form.Group>
+
+          <Form.Group className="mb-2">
+            <Form.Label>Curriculum Code</Form.Label>
             <Form.Control
-              className="mb-2"
-              placeholder="Chương trình học"
               value={form.curriculumCode}
               onChange={(e) =>
                 setForm({ ...form, curriculumCode: e.target.value })
               }
+              required
             />
-          </Modal.Body>
+          </Form.Group>
+        </Modal.Body>
 
-          <Modal.Footer>
-            <Button type="submit">Lưu</Button>
-          </Modal.Footer>
-        </Form>
-      </Modal>
-    </Container>
-  );
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowModal(false)}
+          >
+            Cancel
+          </Button>
+          <Button type="submit">Save</Button>
+        </Modal.Footer>
+      </Form>
+    </Modal>
+  </Container>
+);
+
 };
 
 export default ManageStudents;

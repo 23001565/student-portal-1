@@ -1,5 +1,185 @@
 const redisClient = require("../../data/redis.js");
 const prisma = require("../../data/prisma.js");
+const csvParser = require('csv-parser');
+const streamifier = require('streamifier');
+
+async function getStudentId(studentCode) {
+  const student = await prisma.student.findUnique({ where: { code: studentCode } });
+  if (!student) throw new Error('Student not found');
+  return student.id;
+}
+
+// Student: List their enrollments with grade details, filtered
+async function studentListEnrollments({ studentId, semester, year, courseCode, classCode }) {
+  let classIds = undefined;
+  // If classCode is given, get classId
+  if (classCode) {
+    const classObj = await prisma.class.findUnique({ where: { code: classCode } });
+    if (!classObj) throw new Error('Class not found');
+    classIds = [classObj.id];
+  } else if (courseCode) {
+    // If only courseCode is given, get all classes for that course (optionally filter by semester/year)
+    const course = await prisma.course.findUnique({ where: { code: courseCode } });
+    if (!course) throw new Error('Course not found');
+    const classWhere = { courseId: course.id };
+    if (semester) classWhere.semester = Number(semester);
+    if (year) classWhere.year = Number(year);
+    const classes = await prisma.class.findMany({ where: classWhere });
+    classIds = classes.map(c => c.id);
+    if (classIds.length === 0) return [];
+  }
+  const where = {
+    studentId,
+    ...(semester && { semester: Number(semester) }),
+    ...(year && { year: Number(year) }),
+    ...(classIds && { classId: { in: classIds } }),
+  };
+  return prisma.enrollment.findMany({
+    where,
+    include: {
+      class: { include: { course: true } },
+      grade: true,
+    },
+  });
+}
+
+// Admin: View any student's enrollments (with grade details)
+async function adminStudentEnrollments({ studentCode, semester, year, courseCode, classCode }) {
+  const student = await prisma.student.findUnique({ where: { code: studentCode } });
+  if (!student) throw new Error('Student not found');
+  return studentListEnrollments({ studentId: student.id, semester, year, courseCode, classCode });
+}
+
+
+// Admin: List enrollments with filters
+async function adminListEnrollments({ semester, year, classCode, courseCode, studentCode, status = 'ENROLLED' }) {
+  // Build filter for classId, studentId
+  let classIds = undefined;
+  let studentId = undefined;
+
+  // If classCode is given, get classId
+  if (classCode) {
+    const classObj = await prisma.class.findUnique({ where: { code: classCode } });
+    if (!classObj) throw new Error('Class not found');
+    classIds = [classObj.id];
+    // If courseCode is also given, check match
+    if (courseCode) {
+      const course = await prisma.course.findUnique({ where: { code: courseCode } });
+      if (!course) throw new Error('Course not found');
+      if (classObj.courseId !== course.id) throw new Error('Class does not belong to the specified course');
+    }
+  } else if (courseCode) {
+    // If only courseCode is given, get all classes for that course (optionally filter by semester/year)
+    const course = await prisma.course.findUnique({ where: { code: courseCode } });
+    if (!course) throw new Error('Course not found');
+    const classWhere = { courseId: course.id };
+    if (semester) classWhere.semester = Number(semester);
+    if (year) classWhere.year = Number(year);
+    const classes = await prisma.class.findMany({ where: classWhere });
+    classIds = classes.map(c => c.id);
+    if (classIds.length === 0) return [];
+  }
+
+  // If studentCode is given, get studentId
+  if (studentCode) {
+    const student = await prisma.student.findUnique({ where: { code: studentCode } });
+    if (!student) throw new Error('Student not found');
+    studentId = student.id;
+  }
+
+  // Build where clause for enrollment
+  const where = {
+    status,
+    ...(semester && { semester: Number(semester) }),
+    ...(year && { year: Number(year) }),
+    ...(classIds && { classId: { in: classIds } }),
+    ...(studentId && { studentId }),
+  };
+  // Return with class and student info for display
+  return prisma.enrollment.findMany({
+    where,
+    include: {
+      class: true,
+      student: true,
+    },
+  });
+}
+
+// Admin: Add enrollment
+async function adminAddEnrollment({ classCode, studentCode }) {
+  // Find class and student
+  const classObj = await prisma.class.findUnique({ where: { code: classCode } });
+  const studentObj = await prisma.student.findUnique({ where: { code: studentCode } });
+  if (!classObj || !studentObj) throw new Error('Class or student not found');
+  return prisma.enrollment.create({
+    data: {
+      classCode,
+      studentCode,
+      status: 'ENROLLED',
+    }
+  });
+}
+
+// Admin: Delete enrollment
+async function adminDeleteEnrollment(enrollmentId) {
+  return prisma.enrollment.delete({ where: { id: enrollmentId } });
+}
+
+// Admin: View/edit/add grade for enrollment
+async function adminUpdateGrade(enrollmentId, { midTerm, finalExam, total10Scale }) {
+  // Default conversion
+  function convert10to4(total10) {
+    if (total10 >= 8.5) return 4.0;
+    if (total10 >= 7.0) return 3.0;
+    if (total10 >= 5.5) return 2.0;
+    if (total10 >= 4.0) return 1.0;
+    return 0.0;
+  }
+  function getLetterGrade(total10) {
+    if (total10 >= 8.5) return 'A';
+    if (total10 >= 7.0) return 'B';
+    if (total10 >= 5.5) return 'C';
+    if (total10 >= 4.0) return 'D';
+    return 'F';
+  }
+  const total4Scale = convert10to4(total10Scale);
+  const letterGrade = getLetterGrade(total10Scale);
+  return prisma.enrollment.update({
+    where: { id: enrollmentId },
+    data: { midTerm, finalExam, total10Scale, total4Scale, letterGrade }
+  });
+}
+
+// Admin: Upload grade CSV for class
+async function adminUploadGradeCSV(classCode, csvText) {
+  // CSV format: studentCode,midTerm,final,total10Scale
+  const results = [];
+  const records = await new Promise((resolve, reject) => {
+    const out = [];
+    const stream = streamifier.createReadStream(csvText);
+    stream
+      .pipe(csvParser())
+      .on('data', (row) => out.push(row))
+      .on('end', () => resolve(out))
+      .on('error', reject);
+  });
+  for (const rec of records) {
+    const enrollment = await prisma.enrollment.findFirst({
+      where: { classCode, studentCode: rec.studentCode }
+    });
+    if (enrollment) {
+      const updated = await adminUpdateGrade(enrollment.id, {
+        midTerm: Number(rec.midTerm),
+        finalExam: Number(rec.final),
+        total10Scale: Number(rec.total10Scale)
+      });
+      results.push(updated);
+    }
+  }
+  return results;
+}
+
+
 
 async function getCurriculumIdForStudent(studentId) {
   const student = await prisma.student.findUnique({
@@ -370,5 +550,13 @@ module.exports = {
   getStudentEnrollments,
   checkEnrollmentConflicts,
   getCurriculumIdForStudent,
-  getStudentId
+  getStudentId,
+  adminListEnrollments,
+  adminAddEnrollment,
+  adminDeleteEnrollment,
+  adminUpdateGrade,
+  adminUploadGradeCSV,
+  studentListEnrollments,
+  adminStudentEnrollments,
+  getStudentId,
 };
