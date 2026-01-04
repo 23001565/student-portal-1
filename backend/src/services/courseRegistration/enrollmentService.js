@@ -31,6 +31,7 @@ async function studentListEnrollments({ studentId, semester, year, courseCode, c
   }
   const where = {
     studentId,
+    status: 'ENROLLED',
     ...(semester && { semester: Number(semester) }),
     ...(year && { year: Number(year) }),
     ...(classIds && { classId: { in: classIds } }),
@@ -53,10 +54,10 @@ async function adminStudentEnrollments({ studentCode, semester, year, courseCode
 
 
 // Admin: List enrollments with filters
-async function adminListEnrollments({ semester, year, classCode, courseCode, studentCode, status = 'ENROLLED' }) {
+async function adminListEnrollments({ semester, year, classCode, courseCode, studentCode }) {
   // Build where clause for enrollment with partial matching
   const where = {
-    status,
+    status: 'ENROLLED',
     ...(semester && { semester: Number(semester) }),
     ...(year && { year: Number(year) }),
     ...(classCode || courseCode ? {

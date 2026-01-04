@@ -41,9 +41,9 @@ async function listStudentEnrollments(req, res) {
 // List enrollments (admin)
 async function listEnrollments(req, res) {
   try {
-    const { semester, year, classCode, courseCode, studentCode, status } = req.query;
+    const { semester, year, classCode, courseCode, studentCode } = req.query;
     console.log('listEnrollments called with params:', req.query);
-    const enrollments = await adminListEnrollments({ semester, year, classCode, courseCode, studentCode, status });
+    const enrollments = await adminListEnrollments({ semester, year, classCode, courseCode, studentCode });
     res.json({ items: enrollments });
   } catch (e) {
     res.status(500).json({ error: e.message });
