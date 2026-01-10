@@ -1,8 +1,8 @@
 // Vercel serverless function: GET /api/student/my-enrollments
-import prisma from '../../src/prisma';
-import { getUserFromRequest } from '../../src/utils/auth';
+const prisma = require('../../src/prisma');
+const { getUserFromRequest } = require('../../src/utils/auth');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ message: 'Method not allowed' });
   const user = getUserFromRequest(req);
   if (!user) return res.status(401).json({ message: 'Unauthorized' });
@@ -31,4 +31,4 @@ export default async function handler(req, res) {
   } catch (error) {
     res.status(500).json({ message: 'Lỗi lấy lịch học: ' + error.message });
   }
-}
+};

@@ -1,9 +1,9 @@
 // Vercel serverless function: PUT /api/student/update-profile
-import prisma from '../../src/prisma';
-import bcrypt from 'bcryptjs';
-import { getUserFromRequest } from '../../src/utils/auth';
+const prisma = require('../../src/prisma');
+const bcrypt = require('bcryptjs');
+const { getUserFromRequest } = require('../../src/utils/auth');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'PUT') return res.status(405).json({ message: 'Method not allowed' });
   const user = getUserFromRequest(req);
   if (!user) return res.status(401).json({ message: 'Unauthorized' });
@@ -29,4 +29,4 @@ export default async function handler(req, res) {
   } catch (err) {
     res.status(500).json({ message: "Lỗi cập nhật: " + err.message });
   }
-}
+};

@@ -1,7 +1,7 @@
 // backend/src/utils/auth.js
-import jwt from 'jsonwebtoken';
+const jwt = require('jsonwebtoken');
 
-export function getUserFromRequest(req) {
+exports.getUserFromRequest = function getUserFromRequest(req) {
   const auth = req.headers.authorization || req.headers.Authorization;
   if (!auth || !auth.startsWith('Bearer ')) return null;
   const token = auth.replace('Bearer ', '');
