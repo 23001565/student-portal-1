@@ -1,3 +1,5 @@
+//This file is not used in Vercel serverless deployment.
+/*
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -24,3 +26,5 @@ console.log('GROQ KEY:', process.env.GROQ_API_KEY?.slice(0,10));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server chạy tại http://localhost:${PORT}`));
+*/
+
