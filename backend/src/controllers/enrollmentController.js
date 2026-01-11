@@ -1,6 +1,5 @@
 // backend/src/controllers/enrollmentController.js
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../prisma');
 
 // --- HÀM PHỤ TRỢ: KIỂM TRA TRÙNG LỊCH ---
 // scheduleA và scheduleB có dạng: [{ day: "T2", slots: [1,2,3], room: "101" }]

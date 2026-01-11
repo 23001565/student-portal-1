@@ -23,8 +23,7 @@ router.get('/curriculums', adminController.getAllCurriculums);
 router.post('/config/registration-period', adminController.setRegistrationPeriod);
 router.get('/config/registration-period', async (req, res) => {
     // Viết nhanh logic lấy config tại đây hoặc chuyển vào controller
-    const { PrismaClient } = require('@prisma/client');
-    const prisma = new PrismaClient();
+    const prisma = require('../prisma');
     try {
         const config = await prisma.systemConfig.findUnique({
             where: { key: 'REGISTRATION_PERIOD' }
