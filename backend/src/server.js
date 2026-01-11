@@ -7,11 +7,11 @@ const studentRoutes = require('./routes/studentRoutes');
 const chatRoutes = require('./routes/chat'); // Gom import lên đầu cho gọn
 
 const app = express();
-FRONTEND_URL = "https://student-portal-1-xruk.vercel.app"
 // --- 1. CẤU HÌNH CORS (QUAN TRỌNG KHI DEPLOY) ---
 // Cho phép Frontend (Vercel) gọi API
 const allowedOrigins = [
   'http://localhost:5173', // Cho phép chạy local
+  'https://student-portal-1-xruk.vercel.app',
   process.env.FRONTEND_URL // Link Vercel của bạn (sẽ cài trong Environment Variables trên Render)
 ];
 
